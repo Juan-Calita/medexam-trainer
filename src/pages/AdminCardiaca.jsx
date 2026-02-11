@@ -262,12 +262,23 @@ export default function AdminCardiaca() {
                   </label>
                   <div className="space-y-2">
                     {formData.options.map((option, index) => (
-                      <div key={index} className="flex gap-2">
+                      <div key={index} className="flex gap-2 items-center">
                         <Input
                           value={option}
                           onChange={(e) => updateOption(index, e.target.value)}
                           placeholder={`Opção ${index + 1}`}
+                          className="flex-1"
                         />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={formData.correct_answer === option ? "default" : "outline"}
+                          onClick={() => setFormData({ ...formData, correct_answer: option })}
+                          disabled={!option}
+                          className={formData.correct_answer === option ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+                        >
+                          {formData.correct_answer === option ? '✓ Correta' : 'Marcar'}
+                        </Button>
                         {formData.options.length > 2 && (
                           <Button
                             type="button"
