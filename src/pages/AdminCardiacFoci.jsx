@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
 
-const DEFAULT_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/180901897_1.png';
+const DEFAULT_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/8b2272e72_image.png';
 
 export default function AdminCardiacFoci() {
   const [editingRegion, setEditingRegion] = useState(null);
