@@ -15,28 +15,28 @@ export default function StatsOverview({ progressData }) {
 
   const stats = [
     { 
-      label: 'Total Points', 
+      label: 'Total de Pontos', 
       value: totalPoints, 
       icon: Trophy, 
       color: 'text-amber-500',
       bg: 'bg-amber-50'
     },
     { 
-      label: 'Avg Accuracy', 
+      label: 'Precisão Média', 
       value: `${avgAccuracy}%`, 
       icon: Target, 
       color: 'text-teal-500',
       bg: 'bg-teal-50'
     },
     { 
-      label: 'Games Played', 
+      label: 'Jogos Jogados', 
       value: totalGames, 
       icon: TrendingUp, 
       color: 'text-indigo-500',
       bg: 'bg-indigo-50'
     },
     { 
-      label: 'Avg Time', 
+      label: 'Tempo Médio', 
       value: `${Math.floor(avgTime / 60)}:${(avgTime % 60).toString().padStart(2, '0')}`, 
       icon: Clock, 
       color: 'text-slate-500',

@@ -43,7 +43,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-800">MedExam Trainer</h1>
-              <p className="text-xs text-slate-500">Physical Examination Training</p>
+              <p className="text-xs text-slate-500">Treinamento em Exame Físico</p>
             </div>
           </div>
         </div>
@@ -58,21 +58,21 @@ export default function Home() {
         >
           <div className="flex items-center gap-2 mb-2">
             <GraduationCap className="w-5 h-5 text-teal-600" />
-            <span className="text-sm font-medium text-teal-600">Learning Hub</span>
+            <span className="text-sm font-medium text-teal-600">Central de Aprendizado</span>
           </div>
           <h2 className="text-3xl font-bold text-slate-800 mb-2">
-            Master Clinical Skills
+            Domine Habilidades Clínicas
           </h2>
           <p className="text-slate-600 max-w-2xl">
-            Interactive games designed to help medical students develop expertise in 
-            physical examination techniques through hands-on practice.
+            Jogos interativos desenvolvidos para ajudar estudantes de medicina a desenvolver 
+            expertise em técnicas de exame físico através de prática hands-on.
           </p>
         </motion.div>
 
         {/* Stats Overview */}
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-            Your Progress
+            Seu Progresso
           </h3>
           <StatsOverview progressData={progressData} />
         </div>
@@ -80,20 +80,20 @@ export default function Home() {
         {/* Games Grid */}
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-            Training Modules
+            Módulos de Treinamento
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
             <GameCard
-              title="Abdominal Regions"
-              description="Learn the 9 anatomical regions of the abdomen through drag-and-drop"
+              title="Regiões Abdominais"
+              description="Aprenda as 9 regiões anatômicas do abdome através de arrastar e soltar"
               icon={Grid3X3}
               pageName="AbdominalGame"
               color="teal"
               stats={abdominalStats}
             />
             <GameCard
-              title="Auscultation Quiz"
-              description="Identify breath and heart sounds through audio challenges"
+              title="Quiz de Ausculta"
+              description="Identifique sons respiratórios e cardíacos através de desafios de áudio"
               icon={HeartPulse}
               pageName="AuscultationGame"
               color="indigo"
@@ -109,11 +109,11 @@ export default function Home() {
           transition={{ delay: 0.5 }}
           className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white"
         >
-          <h3 className="text-lg font-semibold mb-2">Why Practice Matters</h3>
+          <h3 className="text-lg font-semibold mb-2">Por Que a Prática Importa</h3>
           <p className="text-slate-300 text-sm leading-relaxed">
-            Repetitive practice with immediate feedback is proven to enhance pattern recognition 
-            and clinical reasoning. These games are designed to reinforce your knowledge of 
-            anatomy and diagnostic skills essential for physical examination.
+            A prática repetitiva com feedback imediato é comprovadamente eficaz para melhorar o reconhecimento 
+            de padrões e o raciocínio clínico. Estes jogos são projetados para reforçar seu conhecimento de 
+            anatomia e habilidades diagnósticas essenciais para o exame físico.
           </p>
         </motion.div>
       </main>

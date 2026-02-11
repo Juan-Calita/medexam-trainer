@@ -57,20 +57,20 @@ export default function GameCard({
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2 text-slate-600">
                     <Trophy className="w-4 h-4 text-amber-500" />
-                    <span>Best Score</span>
+                    <span>Melhor Pontuação</span>
                   </div>
                   <span className="font-semibold text-slate-800">{stats.bestScore || 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2 text-slate-600">
                     <Target className="w-4 h-4 text-teal-500" />
-                    <span>Best Accuracy</span>
+                    <span>Melhor Precisão</span>
                   </div>
                   <span className="font-semibold text-slate-800">{stats.bestAccuracy || 0}%</span>
                 </div>
                 <div>
                   <div className="flex justify-between text-xs text-slate-500 mb-1">
-                    <span>Games Played</span>
+                    <span>Jogos Jogados</span>
                     <span>{stats.gamesPlayed || 0}</span>
                   </div>
                   <Progress value={Math.min((stats.gamesPlayed || 0) * 10, 100)} className="h-1.5" />
@@ -78,7 +78,7 @@ export default function GameCard({
               </div>
             ) : (
               <p className="text-sm text-slate-500 text-center py-2">
-                Start playing to track your progress
+                Comece a jogar para acompanhar seu progresso
               </p>
             )}
           </CardContent>

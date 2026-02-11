@@ -21,10 +21,10 @@ export default function GameSummary({
   };
 
   const getGrade = () => {
-    if (accuracy >= 90) return { label: 'Excellent!', color: 'text-emerald-600', bg: 'bg-emerald-100' };
-    if (accuracy >= 70) return { label: 'Good Job!', color: 'text-teal-600', bg: 'bg-teal-100' };
-    if (accuracy >= 50) return { label: 'Keep Practicing', color: 'text-amber-600', bg: 'bg-amber-100' };
-    return { label: 'Needs Review', color: 'text-rose-600', bg: 'bg-rose-100' };
+    if (accuracy >= 90) return { label: 'Excelente!', color: 'text-emerald-600', bg: 'bg-emerald-100' };
+    if (accuracy >= 70) return { label: 'Bom Trabalho!', color: 'text-teal-600', bg: 'bg-teal-100' };
+    if (accuracy >= 50) return { label: 'Continue Praticando', color: 'text-amber-600', bg: 'bg-amber-100' };
+    return { label: 'Precisa Revisar', color: 'text-rose-600', bg: 'bg-rose-100' };
   };
 
   const grade = getGrade();
@@ -48,7 +48,7 @@ export default function GameSummary({
             <Trophy className={`w-10 h-10 ${grade.color}`} />
           </motion.div>
           <h1 className={`text-3xl font-bold ${grade.color}`}>{grade.label}</h1>
-          <p className="text-slate-500 mt-2">Game Complete</p>
+          <p className="text-slate-500 mt-2">Jogo Completo</p>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-8">
@@ -56,21 +56,21 @@ export default function GameSummary({
             <CardContent className="p-4 text-center">
               <Trophy className="w-6 h-6 text-amber-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-slate-800">{score}</p>
-              <p className="text-xs text-slate-500">of {totalPossible} points</p>
+              <p className="text-xs text-slate-500">de {totalPossible} pontos</p>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur">
             <CardContent className="p-4 text-center">
               <Target className="w-6 h-6 text-teal-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-slate-800">{accuracy}%</p>
-              <p className="text-xs text-slate-500">accuracy</p>
+              <p className="text-xs text-slate-500">precisão</p>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur">
             <CardContent className="p-4 text-center">
               <Clock className="w-6 h-6 text-slate-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-slate-800">{formatTime(timeElapsed)}</p>
-              <p className="text-xs text-slate-500">time</p>
+              <p className="text-xs text-slate-500">tempo</p>
             </CardContent>
           </Card>
         </div>
@@ -80,7 +80,7 @@ export default function GameSummary({
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
-                <h3 className="font-semibold text-slate-800">Areas to Review</h3>
+                <h3 className="font-semibold text-slate-800">Áreas para Revisar</h3>
               </div>
               <div className="space-y-3">
                 {mistakes.slice(0, 5).map((mistake, index) => (
@@ -103,7 +103,7 @@ export default function GameSummary({
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
                 <BookOpen className="w-5 h-5 text-teal-500" />
-                <h3 className="font-semibold text-slate-800">Suggested Review Topics</h3>
+                <h3 className="font-semibold text-slate-800">Tópicos Sugeridos para Revisão</h3>
               </div>
               <div className="flex flex-wrap gap-2">
                 {reviewTopics.map((topic, index) => (
@@ -125,7 +125,7 @@ export default function GameSummary({
             className="flex-1 bg-teal-600 hover:bg-teal-700"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
-            Play Again
+            Jogar Novamente
           </Button>
           <Button 
             variant="outline" 
@@ -134,7 +134,7 @@ export default function GameSummary({
           >
             <Link to={createPageUrl('Home')}>
               <Home className="w-4 h-4 mr-2" />
-              Home
+              Início
             </Link>
           </Button>
         </div>

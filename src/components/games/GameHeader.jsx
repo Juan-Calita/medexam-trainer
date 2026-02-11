@@ -27,7 +27,7 @@ export default function GameHeader({
             className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Exit</span>
+            <span className="text-sm font-medium">Sair</span>
           </Link>
           <h1 className="text-lg font-semibold text-slate-800">{title}</h1>
           <div className="w-16" />

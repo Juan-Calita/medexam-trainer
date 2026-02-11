@@ -51,7 +51,7 @@ export default function FeedbackModal({
               </div>
               <div className="flex-1">
                 <h3 className={`font-semibold text-lg ${isCorrect ? 'text-emerald-800' : 'text-rose-800'}`}>
-                  {isCorrect ? 'Correct!' : 'Not quite right'}
+                  {isCorrect ? 'Correto!' : 'Não está certo'}
                 </h3>
                 <p className="text-slate-600 font-medium mt-1">{title}</p>
               </div>
@@ -69,7 +69,7 @@ export default function FeedbackModal({
                 onClick={onClose}
                 className="w-full mt-4 bg-slate-800 hover:bg-slate-700"
               >
-                Try Again
+                Tentar Novamente
               </Button>
             )}
           </motion.div>

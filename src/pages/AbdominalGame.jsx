@@ -11,32 +11,32 @@ import DraggableLabel from '@/components/games/DraggableLabel';
 import FeedbackModal from '@/components/games/FeedbackModal';
 
 const REGIONS_DATA = {
-  'Right hypochondrium': {
-    explanation: 'Located in the upper right quadrant, below the ribs. Contains the liver and gallbladder. Pain here may indicate hepatitis, cholecystitis, or biliary colic.'
+  'Hipocôndrio direito': {
+    explanation: 'Localizado no quadrante superior direito, abaixo das costelas. Contém o fígado e a vesícula biliar. Dor aqui pode indicar hepatite, colecistite ou cólica biliar.'
   },
-  'Epigastrium': {
-    explanation: 'The central upper region between the costal margins. Contains the stomach, duodenum, and pancreas. Common site for peptic ulcer pain and GERD symptoms.'
+  'Epigástrio': {
+    explanation: 'A região central superior entre as margens costais. Contém o estômago, duodeno e pâncreas. Local comum para dor de úlcera péptica e sintomas de DRGE.'
   },
-  'Left hypochondrium': {
-    explanation: 'Upper left quadrant below the ribs. Contains the spleen and splenic flexure of the colon. Pain here may indicate splenic injury or gastric issues.'
+  'Hipocôndrio esquerdo': {
+    explanation: 'Quadrante superior esquerdo abaixo das costelas. Contém o baço e a flexura esplênica do cólon. Dor aqui pode indicar lesão esplênica ou problemas gástricos.'
   },
-  'Right flank': {
-    explanation: 'Also called right lumbar region. Contains the ascending colon and right kidney. Flank pain may indicate renal colic or pyelonephritis.'
+  'Flanco direito': {
+    explanation: 'Também chamado de região lombar direita. Contém o cólon ascendente e o rim direito. Dor no flanco pode indicar cólica renal ou pielonefrite.'
   },
-  'Umbilical region': {
-    explanation: 'Central region around the navel. Contains parts of the small intestine and transverse colon. Early appendicitis often presents as periumbilical pain.'
+  'Região umbilical': {
+    explanation: 'Região central ao redor do umbigo. Contém partes do intestino delgado e cólon transverso. Apendicite precoce frequentemente apresenta dor periumbilical.'
   },
-  'Left flank': {
-    explanation: 'Also called left lumbar region. Contains the descending colon and left kidney. Similar pathologies to the right flank may present here.'
+  'Flanco esquerdo': {
+    explanation: 'Também chamado de região lombar esquerda. Contém o cólon descendente e o rim esquerdo. Patologias similares ao flanco direito podem se apresentar aqui.'
   },
-  'Right iliac fossa': {
-    explanation: 'Lower right quadrant. Contains the cecum, appendix, and right ovary/fallopian tube. Classic location for appendicitis (McBurney\'s point).'
+  'Fossa ilíaca direita': {
+    explanation: 'Quadrante inferior direito. Contém o ceco, apêndice e ovário/trompa direita. Localização clássica para apendicite (ponto de McBurney).'
   },
-  'Hypogastrium': {
-    explanation: 'Also called suprapubic region. Contains the bladder, uterus (in females), and sigmoid colon. Pain here may indicate cystitis or gynecological issues.'
+  'Hipogástrio': {
+    explanation: 'Também chamado de região suprapúbica. Contém a bexiga, útero (em mulheres) e cólon sigmoide. Dor aqui pode indicar cistite ou problemas ginecológicos.'
   },
-  'Left iliac fossa': {
-    explanation: 'Lower left quadrant. Contains the sigmoid colon and left ovary/fallopian tube. Diverticulitis classically presents with pain here.'
+  'Fossa ilíaca esquerda': {
+    explanation: 'Quadrante inferior esquerdo. Contém o cólon sigmoide e ovário/trompa esquerda. Diverticulite classicamente apresenta dor aqui.'
   },
 };
 
@@ -123,13 +123,13 @@ export default function AbdominalGame() {
       setRetries(prev => ({ ...prev, [label]: prev[label] - 1 }));
       setFeedbackRegion({ region: targetRegion, status: 'incorrect' });
       setMistakes(prev => [...prev, {
-        question: `Place "${label}"`,
+        question: `Colocar "${label}"`,
         user_answer: targetRegion,
         correct_answer: label
       }]);
       setFeedback({
         isCorrect: false,
-        title: `That's ${targetRegion}`,
+        title: `Este é ${targetRegion}`,
         explanation: REGIONS_DATA[targetRegion].explanation
       });
     }
@@ -195,8 +195,8 @@ export default function AbdominalGame() {
         >
           <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-slate-600">
-            <span className="font-medium text-slate-800">Drag each label</span> to its correct 
-            anatomical position on the abdomen. You have {MAX_RETRIES} attempts per region.
+            <span className="font-medium text-slate-800">Arraste cada rótulo</span> para sua posição 
+            anatômica correta no abdome. Você tem {MAX_RETRIES} tentativas por região.
           </p>
         </motion.div>
 
@@ -204,7 +204,7 @@ export default function AbdominalGame() {
           {/* Diagram */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-              Abdominal Regions
+              Regiões Abdominais
             </h3>
             <AbdominalDiagram
               placedLabels={placedLabels}
@@ -217,7 +217,7 @@ export default function AbdominalGame() {
           {/* Labels */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
             <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
-              Anatomical Labels ({remainingLabels.length} remaining)
+              Rótulos Anatômicos ({remainingLabels.length} restantes)
             </h3>
             <div className="flex flex-wrap gap-2">
               <AnimatePresence mode="popLayout">
@@ -242,7 +242,7 @@ export default function AbdominalGame() {
 
             {remainingLabels.length === 0 && (
               <p className="text-center text-slate-500 py-8">
-                All labels have been placed!
+                Todos os rótulos foram colocados!
               </p>
             )}
           </div>

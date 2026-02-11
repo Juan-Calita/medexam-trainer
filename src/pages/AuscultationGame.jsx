@@ -15,81 +15,81 @@ const QUESTIONS = [
   {
     id: 1,
     difficulty: 'easy',
-    category: 'Lung Sounds',
-    audioDescription: 'Clear vesicular breath sounds',
-    correctAnswer: 'Normal vesicular breath sound',
-    options: ['Normal vesicular breath sound', 'Wheezes', 'Crackles'],
-    explanation: 'Vesicular breath sounds are soft, low-pitched, and heard throughout inspiration with a short expiratory phase. This is the normal breath sound heard over most lung fields.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' // Placeholder
+    category: 'Sons Pulmonares',
+    audioDescription: 'Murmúrios vesiculares claros',
+    correctAnswer: 'Murmúrio vesicular normal',
+    options: ['Murmúrio vesicular normal', 'Sibilos', 'Estertores'],
+    explanation: 'Os murmúrios vesiculares são suaves, de baixa frequência, ouvidos durante toda a inspiração com uma fase expiratória curta. Este é o som respiratório normal ouvido na maioria dos campos pulmonares.',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
   },
   {
     id: 2,
     difficulty: 'easy',
-    category: 'Lung Sounds',
-    audioDescription: 'High-pitched musical sounds',
-    correctAnswer: 'Wheezes',
-    options: ['Normal vesicular breath sound', 'Wheezes', 'Rhonchi'],
-    explanation: 'Wheezes are high-pitched, musical sounds caused by narrowed airways. They are commonly heard in asthma and COPD exacerbations.',
+    category: 'Sons Pulmonares',
+    audioDescription: 'Sons musicais de alta frequência',
+    correctAnswer: 'Sibilos',
+    options: ['Murmúrio vesicular normal', 'Sibilos', 'Roncos'],
+    explanation: 'Sibilos são sons musicais de alta frequência causados pelo estreitamento das vias aéreas. São comumente ouvidos em exacerbações de asma e DPOC.',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
   },
   {
     id: 3,
     difficulty: 'medium',
-    category: 'Lung Sounds',
-    audioDescription: 'Discontinuous popping sounds',
-    correctAnswer: 'Crackles',
-    options: ['Crackles', 'Rhonchi', 'Pleural rub'],
-    explanation: 'Crackles (also called rales) are discontinuous, non-musical sounds caused by sudden opening of small airways. Fine crackles suggest pulmonary fibrosis; coarse crackles suggest pneumonia or heart failure.',
+    category: 'Sons Pulmonares',
+    audioDescription: 'Sons descontínuos tipo estouro',
+    correctAnswer: 'Estertores',
+    options: ['Estertores', 'Roncos', 'Atrito pleural'],
+    explanation: 'Estertores (também chamados de crepitações) são sons descontínuos, não musicais, causados pela abertura súbita de pequenas vias aéreas. Estertores finos sugerem fibrose pulmonar; estertores grossos sugerem pneumonia ou insuficiência cardíaca.',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
   },
   {
     id: 4,
     difficulty: 'medium',
-    category: 'Lung Sounds',
-    audioDescription: 'Low-pitched rumbling sounds',
-    correctAnswer: 'Rhonchi',
-    options: ['Wheezes', 'Rhonchi', 'Stridor'],
-    explanation: 'Rhonchi are low-pitched, continuous sounds resembling snoring. They occur when air flows through airways narrowed by secretions. Often clears with coughing.',
+    category: 'Sons Pulmonares',
+    audioDescription: 'Sons graves tipo ronco',
+    correctAnswer: 'Roncos',
+    options: ['Sibilos', 'Roncos', 'Estridor'],
+    explanation: 'Roncos são sons contínuos de baixa frequência semelhantes a roncar. Ocorrem quando o ar flui através de vias aéreas estreitadas por secreções. Frequentemente desaparecem com a tosse.',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'
   },
   {
     id: 5,
     difficulty: 'easy',
-    category: 'Heart Sounds',
-    audioDescription: 'Regular lub-dub pattern',
-    correctAnswer: 'Normal heart sounds (S1, S2)',
-    options: ['Normal heart sounds (S1, S2)', 'Systolic murmur', 'S3 gallop'],
-    explanation: 'S1 (lub) is caused by closure of mitral and tricuspid valves at the start of systole. S2 (dub) is caused by closure of aortic and pulmonary valves at the end of systole.',
+    category: 'Sons Cardíacos',
+    audioDescription: 'Padrão regular tum-tá',
+    correctAnswer: 'Bulhas cardíacas normais (B1, B2)',
+    options: ['Bulhas cardíacas normais (B1, B2)', 'Sopro sistólico', 'Galope B3'],
+    explanation: 'B1 (tum) é causada pelo fechamento das válvulas mitral e tricúspide no início da sístole. B2 (tá) é causada pelo fechamento das válvulas aórtica e pulmonar no final da sístole.',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
   },
   {
     id: 6,
     difficulty: 'medium',
-    category: 'Heart Sounds',
-    audioDescription: 'Harsh sound between S1 and S2',
-    correctAnswer: 'Systolic murmur',
-    options: ['Normal heart sounds (S1, S2)', 'Systolic murmur', 'Diastolic murmur'],
-    explanation: 'Systolic murmurs occur between S1 and S2. Common causes include aortic stenosis (crescendo-decrescendo), mitral regurgitation (holosystolic), and innocent flow murmurs.',
+    category: 'Sons Cardíacos',
+    audioDescription: 'Som áspero entre B1 e B2',
+    correctAnswer: 'Sopro sistólico',
+    options: ['Bulhas cardíacas normais (B1, B2)', 'Sopro sistólico', 'Sopro diastólico'],
+    explanation: 'Sopros sistólicos ocorrem entre B1 e B2. Causas comuns incluem estenose aórtica (crescendo-decrescendo), regurgitação mitral (holossistólico) e sopros de fluxo inocentes.',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'
   },
   {
     id: 7,
     difficulty: 'hard',
-    category: 'Heart Sounds',
-    audioDescription: 'Extra sound after S2',
-    correctAnswer: 'S3 gallop',
-    options: ['S3 gallop', 'S4 gallop', 'Opening snap'],
-    explanation: 'S3 is a low-pitched sound in early diastole caused by rapid ventricular filling. In young people it can be normal; in older adults it often indicates heart failure ("Kentucky" rhythm: lub-dub-ta).',
+    category: 'Sons Cardíacos',
+    audioDescription: 'Som extra após B2',
+    correctAnswer: 'Galope B3',
+    options: ['Galope B3', 'Galope B4', 'Estalido de abertura'],
+    explanation: 'B3 é um som de baixa frequência no início da diástole causado pelo enchimento ventricular rápido. Em jovens pode ser normal; em adultos mais velhos frequentemente indica insuficiência cardíaca (ritmo de galope: tum-tá-tá).',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'
   },
   {
     id: 8,
     difficulty: 'hard',
-    category: 'Lung Sounds',
-    audioDescription: 'Patient with clinical context: 65-year-old smoker with productive cough',
-    correctAnswer: 'Rhonchi',
-    options: ['Crackles', 'Rhonchi', 'Wheezes'],
-    explanation: 'In a smoker with productive cough, rhonchi are most likely due to secretions in larger airways from chronic bronchitis. The clinical context helps differentiate from similar sounds.',
+    category: 'Sons Pulmonares',
+    audioDescription: 'Contexto clínico: Paciente de 65 anos, tabagista, com tosse produtiva',
+    correctAnswer: 'Roncos',
+    options: ['Estertores', 'Roncos', 'Sibilos'],
+    explanation: 'Em um tabagista com tosse produtiva, roncos são mais provavelmente devido a secreções nas vias aéreas maiores por bronquite crônica. O contexto clínico ajuda a diferenciar de sons semelhantes.',
     audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
   },
 ];
@@ -246,7 +246,7 @@ export default function AuscultationGame() {
                 </Badge>
               </div>
               <span className="text-sm text-slate-500">
-                Question {currentIndex + 1} of {QUESTIONS.length}
+                Questão {currentIndex + 1} de {QUESTIONS.length}
               </span>
             </div>
 
@@ -255,7 +255,7 @@ export default function AuscultationGame() {
               <div className="flex items-center gap-2 mb-4">
                 <Volume2 className="w-5 h-5 text-slate-500" />
                 <span className="text-sm font-medium text-slate-700">
-                  Listen to the following sound
+                  Ouça o seguinte som
                 </span>
               </div>
               <AudioPlayer 
@@ -268,7 +268,7 @@ export default function AuscultationGame() {
                   <div className="flex items-start gap-2">
                     <Info className="w-4 h-4 text-slate-500 mt-0.5" />
                     <p className="text-sm text-slate-600">
-                      <span className="font-medium">Clinical Context: </span>
+                      <span className="font-medium">Contexto Clínico: </span>
                       {currentQuestion.audioDescription}
                     </p>
                   </div>
@@ -279,7 +279,7 @@ export default function AuscultationGame() {
             {/* Answer options */}
             <div className="space-y-3">
               <p className="text-sm font-medium text-slate-700">
-                What type of sound did you hear?
+                Que tipo de som você ouviu?
               </p>
               {currentQuestion.options.map((option, index) => (
                 <AnswerOption
@@ -337,14 +337,14 @@ export default function AuscultationGame() {
                   disabled={!selectedAnswer}
                   className="bg-indigo-600 hover:bg-indigo-700 px-8"
                 >
-                  Submit Answer
+                  Enviar Resposta
                 </Button>
               ) : (
                 <Button
                   onClick={handleNext}
                   className="bg-indigo-600 hover:bg-indigo-700 px-8"
                 >
-                  {currentIndex >= QUESTIONS.length - 1 ? 'See Results' : 'Next Question'}
+                  {currentIndex >= QUESTIONS.length - 1 ? 'Ver Resultados' : 'Próxima Questão'}
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
               )}
