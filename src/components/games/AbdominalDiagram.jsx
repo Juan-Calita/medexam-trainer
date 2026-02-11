@@ -30,24 +30,12 @@ export default function AbdominalDiagram({
 
   return (
     <div className="relative w-full max-w-md mx-auto">
-      {/* SVG Abdomen Diagram */}
-      <svg viewBox="0 0 114 100" className="w-full h-auto">
-        {/* Body outline */}
-        <ellipse cx="57" cy="45" rx="50" ry="48" fill="#FEF3C7" stroke="#D97706" strokeWidth="1.5" />
-        
-        {/* Navel */}
-        <circle cx="57" cy="45" r="2" fill="#D97706" />
-        
-        {/* Grid lines */}
-        <line x1="43" y1="8" x2="43" y2="85" stroke="#9CA3AF" strokeWidth="0.5" strokeDasharray="2,2" />
-        <line x1="71" y1="8" x2="71" y2="85" stroke="#9CA3AF" strokeWidth="0.5" strokeDasharray="2,2" />
-        <line x1="12" y1="34" x2="102" y2="34" stroke="#9CA3AF" strokeWidth="0.5" strokeDasharray="2,2" />
-        <line x1="12" y1="56" x2="102" y2="56" stroke="#9CA3AF" strokeWidth="0.5" strokeDasharray="2,2" />
-        
-        {/* Rib cage hints */}
-        <path d="M 30 15 Q 45 8 57 8 Q 69 8 84 15" fill="none" stroke="#D97706" strokeWidth="0.8" opacity="0.5" />
-        <path d="M 25 20 Q 45 12 57 12 Q 69 12 89 20" fill="none" stroke="#D97706" strokeWidth="0.8" opacity="0.5" />
-      </svg>
+      {/* Abdomen Image */}
+      <img 
+        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/c76a4c164_image.png" 
+        alt="Diagrama Abdominal"
+        className="w-full h-auto rounded-lg"
+      />
       
       {/* Drop zones overlay */}
       <div className="absolute inset-0">
