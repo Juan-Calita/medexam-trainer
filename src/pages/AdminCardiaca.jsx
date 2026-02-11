@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Save, X, Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 
 export default function AdminCardiaca() {
   const [editingQuestion, setEditingQuestion] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     game_type: 'auscultation_cardiaca',
     difficulty: 'easy',
@@ -122,6 +123,39 @@ export default function AdminCardiaca() {
     setFormData({ ...formData, options: newOptions });
   };
 
+  const handleAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      
+      const soundType = prompt('Digite o nome/tipo deste som (ex: B3, Sopro Sistólico):');
+      if (!soundType) {
+        toast.error('Nome do som é obrigatório');
+        setUploading(false);
+        return;
+      }
+
+      await base44.entities.AudioFile.create({
+        name: file.name,
+        file_url,
+        game_type: 'auscultation_cardiaca',
+        sound_type: soundType,
+        description: ''
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['audioFiles'] });
+      setFormData({ ...formData, correct_answer: soundType });
+      toast.success('Áudio enviado com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao enviar áudio');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
@@ -184,21 +218,42 @@ export default function AdminCardiaca() {
                   <label className="text-sm font-medium text-slate-700 mb-1 block">
                     Resposta Correta *
                   </label>
-                  <Select
-                    value={formData.correct_answer}
-                    onValueChange={(value) => setFormData({ ...formData, correct_answer: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o som" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {audioFiles.map(audio => (
-                        <SelectItem key={audio.id} value={audio.sound_type}>
-                          {audio.sound_type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.correct_answer}
+                      onValueChange={(value) => setFormData({ ...formData, correct_answer: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o som" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioFiles.map(audio => (
+                          <SelectItem key={audio.id} value={audio.sound_type}>
+                            {audio.sound_type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('audio-upload-input-cardiaca').click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <input
+                      id="audio-upload-input-cardiaca"
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleAudioUpload}
+                      className="hidden"
+                    />
+                  </div>
                 </div>
 
                 <div>
