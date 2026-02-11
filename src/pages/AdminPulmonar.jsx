@@ -274,11 +274,11 @@ export default function AdminPulmonar() {
                           type="button"
                           size="sm"
                           variant={formData.correct_answer === option ? "default" : "outline"}
-                          onClick={() => setFormData({ ...formData, correct_answer: option })}
-                          disabled={!option}
+                          onClick={() => updateOption(index, formData.correct_answer)}
+                          disabled={!formData.correct_answer}
                           className={formData.correct_answer === option ? "bg-emerald-600 hover:bg-emerald-700" : ""}
                         >
-                          {formData.correct_answer === option ? '✓ Correta' : 'Marcar'}
+                          {formData.correct_answer === option ? '✓ Correta' : 'Usar Correta'}
                         </Button>
                         {formData.options.length > 2 && (
                           <Button
