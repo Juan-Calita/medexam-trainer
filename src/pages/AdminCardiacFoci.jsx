@@ -205,6 +205,33 @@ export default function AdminCardiacFoci() {
                   />
                 </div>
 
+                {/* Preview */}
+                <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
+                  <p className="text-xs font-medium text-slate-600 mb-2">Preview da Região</p>
+                  <div className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200">
+                    <img 
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/4a49ca2e4_image.png"
+                      alt="Diagrama torácico"
+                      className="w-full h-full object-contain"
+                    />
+                    <div
+                      className="absolute border-2 border-rose-500 bg-rose-500/20 rounded"
+                      style={{
+                        left: `${formData.x}%`,
+                        top: `${formData.y}%`,
+                        width: `${formData.width}%`,
+                        height: `${formData.height}%`,
+                      }}
+                    >
+                      {formData.region_name && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-rose-700 whitespace-nowrap bg-white/90 px-1 rounded">
+                          {formData.region_name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   <Button type="submit" className="flex-1 bg-rose-600 hover:bg-rose-700">
                     <Save className="w-4 h-4 mr-2" />
