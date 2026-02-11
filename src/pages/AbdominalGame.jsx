@@ -23,7 +23,7 @@ const REGIONS_DATA = {
   'Flanco direito': {
     explanation: 'Também chamado de região lombar direita. Contém o cólon ascendente e o rim direito. Dor no flanco pode indicar cólica renal ou pielonefrite.'
   },
-  'Mesogástrio': {
+  'Mesogástrico': {
     explanation: 'Região central ao redor do umbigo. Contém partes do intestino delgado e cólon transverso. Apendicite precoce frequentemente apresenta dor periumbilical.'
   },
   'Flanco esquerdo': {

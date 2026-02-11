@@ -5,7 +5,7 @@ const REGION_POSITIONS = {
   'Epigástrio': { x: 36, y: 8, width: 28, height: 28 },
   'Hipocôndrio esquerdo': { x: 67, y: 8, width: 28, height: 28 },
   'Flanco direito': { x: 5, y: 36, width: 28, height: 28 },
-  'Mesogástrio': { x: 36, y: 36, width: 28, height: 28 },
+  'Mesogástrico': { x: 36, y: 36, width: 28, height: 28 },
   'Flanco esquerdo': { x: 67, y: 36, width: 28, height: 28 },
   'Fossa ilíaca direita': { x: 5, y: 64, width: 28, height: 28 },
   'Hipogástrio': { x: 36, y: 64, width: 28, height: 28 },
