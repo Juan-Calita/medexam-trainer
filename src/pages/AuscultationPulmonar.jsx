@@ -35,6 +35,13 @@ export default function AuscultationPulmonar() {
     queryFn: () => base44.entities.AudioFile.filter({ game_type: 'auscultation_pulmonar' }),
   });
 
+  const saveProgressMutation = useMutation({
+    mutationFn: (data) => base44.entities.GameProgress.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gameProgress'] });
+    }
+  });
+
   const QUESTIONS = dbQuestions
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map((q, index) => {
@@ -70,13 +77,6 @@ export default function AuscultationPulmonar() {
       </div>
     );
   }
-
-  const saveProgressMutation = useMutation({
-    mutationFn: (data) => base44.entities.GameProgress.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gameProgress'] });
-    }
-  });
 
   useEffect(() => {
     if (gameState !== 'playing') return;
