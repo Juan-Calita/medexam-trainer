@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import GameHeader from '@/components/games/GameHeader';
 import GameSummary from '@/components/games/GameSummary';
@@ -8,32 +8,13 @@ import CardiacFociDiagram from '@/components/games/CardiacFociDiagram';
 import DraggableLabel from '@/components/games/DraggableLabel';
 import FeedbackModal from '@/components/games/FeedbackModal';
 
-const FOCI_DATA = {
-  'Foco Aórtico': {
-    explanation: 'Localizado no 2° espaço intercostal (EIC) à direita da borda esternal. Principal local para auscultar a válvula aórtica e sopros de estenose aórtica.'
-  },
-  'Foco Pulmonar': {
-    explanation: 'Localizado no 2° EIC à esquerda da borda esternal. Melhor local para auscultar a válvula pulmonar e detectar desdobramento de B2.'
-  },
-  'Foco Aórtico acessório': {
-    explanation: 'Localizado no 3° EIC à esquerda da borda esternal (foco de Erb). Área acessória para auscultar sopros aórticos, especialmente regurgitação aórtica.'
-  },
-  'Foco Tricúspide': {
-    explanation: 'Localizado no 5° EIC à direita do esterno (borda esternal inferior esquerda). Melhor local para auscultar a válvula tricúspide.'
-  },
-  'Foco Mitral': {
-    explanation: 'Localizado no 5° EIC na linha hemiclavicular (ápice cardíaco). Principal local para auscultar a válvula mitral e identificar B1.'
-  },
-};
-
-const REGIONS = Object.keys(FOCI_DATA);
 const MAX_RETRIES = 2;
 const POINTS_PER_CORRECT = 20;
 
 export default function CardiacFociGame() {
-  const [gameState, setGameState] = useState('playing');
+  const [gameState, setGameState] = useState('loading');
   const [placedLabels, setPlacedLabels] = useState({});
-  const [availableLabels, setAvailableLabels] = useState(REGIONS);
+  const [availableLabels, setAvailableLabels] = useState([]);
   const [draggedLabel, setDraggedLabel] = useState(null);
   const [highlightedRegion, setHighlightedRegion] = useState(null);
   const [feedback, setFeedback] = useState(null);
@@ -45,12 +26,30 @@ export default function CardiacFociGame() {
 
   const queryClient = useQueryClient();
 
+  const { data: regions = [], isLoading } = useQuery({
+    queryKey: ['regions', 'cardiac_foci'],
+    queryFn: () => base44.entities.GameRegion.filter({ game_type: 'cardiac_foci', active: true }),
+  });
+
+  const REGIONS = regions.map(r => r.region_name);
+  const FOCI_DATA = regions.reduce((acc, r) => {
+    acc[r.region_name] = { explanation: r.explanation };
+    return acc;
+  }, {});
+
   const saveProgressMutation = useMutation({
     mutationFn: (data) => base44.entities.GameProgress.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gameProgress'] });
     }
   });
+
+  useEffect(() => {
+    if (!isLoading && regions.length > 0 && gameState === 'loading') {
+      setAvailableLabels(REGIONS);
+      setGameState('playing');
+    }
+  }, [isLoading, regions, gameState]);
 
   useEffect(() => {
     if (gameState !== 'playing') return;
@@ -140,7 +139,29 @@ export default function CardiacFociGame() {
   const correctCount = Object.entries(placedLabels).filter(([region, label]) => region === label).length;
   const totalPlaced = Object.keys(placedLabels).length;
   const accuracy = totalPlaced > 0 ? Math.round((correctCount / totalPlaced) * 100) : 100;
-  const progress = (totalPlaced / REGIONS.length) * 100;
+  const progress = REGIONS.length > 0 ? (totalPlaced / REGIONS.length) * 100 : 0;
+
+  if (isLoading || gameState === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Carregando jogo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (regions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="text-center bg-white rounded-xl p-8 shadow-lg max-w-md">
+          <p className="text-slate-700 mb-4">Nenhum foco cardíaco cadastrado ainda.</p>
+          <p className="text-sm text-slate-500">Configure os focos no painel administrativo primeiro.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (gameState === 'completed') {
     return (
