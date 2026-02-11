@@ -1,0 +1,68 @@
+import React from 'react';
+
+const FOCI_REGIONS = {
+  'Foco Aórtico': { x: 56, y: 18, width: 12, height: 10 },
+  'Foco Pulmonar': { x: 38, y: 18, width: 12, height: 10 },
+  'Foco Aórtico acessório': { x: 42, y: 28, width: 14, height: 10 },
+  'Foco Tricúspide': { x: 52, y: 42, width: 12, height: 10 },
+  'Foco Mitral': { x: 38, y: 48, width: 12, height: 10 },
+};
+
+export default function CardiacFociDiagram({ placedLabels, onDrop, highlightedRegion, feedback }) {
+  const handleDrop = (e, region) => {
+    e.preventDefault();
+    const label = e.dataTransfer.getData('text');
+    onDrop(region, label);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  return (
+    <div className="relative w-full max-w-2xl mx-auto">
+      <img 
+        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/e6ca32cb5_image.png"
+        alt="Diagrama do Tórax"
+        className="w-full h-auto rounded-lg"
+      />
+      
+      {Object.entries(FOCI_REGIONS).map(([region, coords]) => {
+        const isPlaced = placedLabels[region];
+        const isHighlighted = highlightedRegion === region;
+        const hasFeedback = feedback && feedback.region === region;
+        
+        return (
+          <div
+            key={region}
+            onDrop={(e) => handleDrop(e, region)}
+            onDragOver={handleDragOver}
+            className={`absolute border-2 rounded-lg transition-all duration-300 flex items-center justify-center ${
+              hasFeedback
+                ? feedback.correct
+                  ? 'border-emerald-500 bg-emerald-100/90'
+                  : 'border-rose-500 bg-rose-100/90'
+                : isPlaced
+                ? 'border-teal-500 bg-teal-100/70'
+                : isHighlighted
+                ? 'border-amber-400 bg-amber-100/50'
+                : 'border-slate-300 border-dashed bg-white/30'
+            }`}
+            style={{
+              left: `${coords.x}%`,
+              top: `${coords.y}%`,
+              width: `${coords.width}%`,
+              height: `${coords.height}%`,
+            }}
+          >
+            {isPlaced && (
+              <span className="text-xs font-medium text-slate-700 text-center px-1">
+                {placedLabels[region]}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

@@ -2,7 +2,7 @@ import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Stethoscope, Grid3X3, Wind, Heart, GraduationCap } from 'lucide-react';
+import { Stethoscope, Grid3X3, Wind, Heart, GraduationCap, MapPin } from 'lucide-react';
 import GameCard from '@/components/dashboard/GameCard';
 import StatsOverview from '@/components/dashboard/StatsOverview';
 
@@ -34,6 +34,16 @@ export default function Home() {
 
   const cardiacaStats = React.useMemo(() => {
     const games = progressData.filter(p => p.game_type === 'auscultation_cardiaca');
+    if (games.length === 0) return null;
+    return {
+      gamesPlayed: games.length,
+      bestScore: Math.max(...games.map(g => g.score || 0)),
+      bestAccuracy: Math.max(...games.map(g => g.accuracy || 0)),
+    };
+  }, [progressData]);
+
+  const cardiacFociStats = React.useMemo(() => {
+    const games = progressData.filter(p => p.game_type === 'cardiac_foci');
     if (games.length === 0) return null;
     return {
       gamesPlayed: games.length,
@@ -92,7 +102,7 @@ export default function Home() {
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
             Módulos de Treinamento
           </h3>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <GameCard
               title="Regiões Abdominais"
               description="Aprenda as 9 regiões anatômicas do abdome"
@@ -100,6 +110,14 @@ export default function Home() {
               pageName="AbdominalGame"
               color="teal"
               stats={abdominalStats}
+            />
+            <GameCard
+              title="Focos Cardíacos"
+              description="Identifique os pontos de ausculta cardíaca"
+              icon={MapPin}
+              pageName="CardiacFociGame"
+              color="purple"
+              stats={cardiacFociStats}
             />
             <GameCard
               title="Ausculta Pulmonar"

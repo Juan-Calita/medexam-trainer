@@ -51,6 +51,7 @@ import Home from './pages/Home';
 import AbdominalGame from './pages/AbdominalGame';
 import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import AuscultationCardiaca from './pages/AuscultationCardiaca';
+import CardiacFociGame from './pages/CardiacFociGame';
 import __Layout from './Layout.jsx';
 
 
@@ -59,6 +60,7 @@ export const PAGES = {
     "AbdominalGame": AbdominalGame,
     "AuscultationPulmonar": AuscultationPulmonar,
     "AuscultationCardiaca": AuscultationCardiaca,
+    "CardiacFociGame": CardiacFociGame,
 }
 
 export const pagesConfig = {
