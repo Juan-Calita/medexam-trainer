@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
-import { Upload, Check, Copy, ArrowLeft, Music } from 'lucide-react';
+import { Upload, Check, Copy, ArrowLeft, Music, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createPageUrl } from '@/utils';
 import { toast } from 'sonner';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function AudioUpload() {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [editingFile, setEditingFile] = useState({});
+  const queryClient = useQueryClient();
+
+  const saveAudioMutation = useMutation({
+    mutationFn: (audioData) => base44.entities.AudioFile.create(audioData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['audioFiles'] });
+      toast.success('Áudio salvo na biblioteca!');
+    },
+  });
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -43,6 +56,31 @@ export default function AudioUpload() {
   const copyToClipboard = (url) => {
     navigator.clipboard.writeText(url);
     toast.success('URL copiada!');
+  };
+
+  const handleSaveAudio = (index) => {
+    const file = uploadedFiles[index];
+    const metadata = editingFile[index] || {};
+    
+    if (!metadata.game_type || !metadata.sound_type) {
+      toast.error('Preencha o tipo de jogo e tipo de som');
+      return;
+    }
+
+    saveAudioMutation.mutate({
+      name: file.name,
+      file_url: file.url,
+      game_type: metadata.game_type,
+      sound_type: metadata.sound_type,
+      description: metadata.description || '',
+    });
+  };
+
+  const updateMetadata = (index, field, value) => {
+    setEditingFile(prev => ({
+      ...prev,
+      [index]: { ...prev[index], [field]: value }
+    }));
   };
 
   return (
@@ -92,10 +130,10 @@ export default function AudioUpload() {
                 <span className="text-sm font-medium text-slate-700">
                   Arquivos Enviados ({uploadedFiles.length}):
                 </span>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
+                <div className="space-y-3 max-h-96 overflow-y-auto">
                   {uploadedFiles.map((file, index) => (
-                    <div key={index} className="p-3 bg-slate-100 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
+                    <div key={index} className="p-4 bg-slate-100 rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-slate-700 truncate flex-1">
                           {file.name}
                         </span>
@@ -107,12 +145,46 @@ export default function AudioUpload() {
                           <Copy className="w-4 h-4" />
                         </Button>
                       </div>
-                      <div className="text-xs text-slate-500 break-all mb-2">
-                        {file.url}
-                      </div>
+                      
                       <audio controls className="w-full">
                         <source src={file.url} />
                       </audio>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select
+                          value={editingFile[index]?.game_type || ''}
+                          onValueChange={(value) => updateMetadata(index, 'game_type', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Tipo de jogo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="auscultation_pulmonar">Ausculta Pulmonar</SelectItem>
+                            <SelectItem value="auscultation_cardiaca">Ausculta Cardíaca</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Input
+                          placeholder="Tipo de som"
+                          value={editingFile[index]?.sound_type || ''}
+                          onChange={(e) => updateMetadata(index, 'sound_type', e.target.value)}
+                        />
+                      </div>
+
+                      <Input
+                        placeholder="Descrição (opcional)"
+                        value={editingFile[index]?.description || ''}
+                        onChange={(e) => updateMetadata(index, 'description', e.target.value)}
+                      />
+
+                      <Button
+                        size="sm"
+                        className="w-full bg-teal-600 hover:bg-teal-700"
+                        onClick={() => handleSaveAudio(index)}
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Salvar na Biblioteca
+                      </Button>
                     </div>
                   ))}
                 </div>
