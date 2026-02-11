@@ -178,7 +178,7 @@ export default function AbdominalGame() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <GameHeader
-        title="Abdominal Regions"
+        title="Regiões Abdominais"
         score={score}
         totalPossible={ALL_LABELS.length * POINTS_PER_CORRECT}
         accuracy={accuracy}
