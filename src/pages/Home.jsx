@@ -2,7 +2,7 @@ import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Stethoscope, Grid3X3, HeartPulse, GraduationCap } from 'lucide-react';
+import { Stethoscope, Grid3X3, Wind, Heart, GraduationCap } from 'lucide-react';
 import GameCard from '@/components/dashboard/GameCard';
 import StatsOverview from '@/components/dashboard/StatsOverview';
 
@@ -22,8 +22,18 @@ export default function Home() {
     };
   }, [progressData]);
 
-  const auscultationStats = React.useMemo(() => {
-    const games = progressData.filter(p => p.game_type === 'auscultation');
+  const pulmonarStats = React.useMemo(() => {
+    const games = progressData.filter(p => p.game_type === 'auscultation_pulmonar');
+    if (games.length === 0) return null;
+    return {
+      gamesPlayed: games.length,
+      bestScore: Math.max(...games.map(g => g.score || 0)),
+      bestAccuracy: Math.max(...games.map(g => g.accuracy || 0)),
+    };
+  }, [progressData]);
+
+  const cardiacaStats = React.useMemo(() => {
+    const games = progressData.filter(p => p.game_type === 'auscultation_cardiaca');
     if (games.length === 0) return null;
     return {
       gamesPlayed: games.length,
@@ -82,22 +92,30 @@ export default function Home() {
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
             Módulos de Treinamento
           </h3>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             <GameCard
               title="Regiões Abdominais"
-              description="Aprenda as 9 regiões anatômicas do abdome através de arrastar e soltar"
+              description="Aprenda as 9 regiões anatômicas do abdome"
               icon={Grid3X3}
               pageName="AbdominalGame"
               color="teal"
               stats={abdominalStats}
             />
             <GameCard
-              title="Quiz de Ausculta"
-              description="Identifique sons respiratórios e cardíacos através de desafios de áudio"
-              icon={HeartPulse}
-              pageName="AuscultationGame"
+              title="Ausculta Pulmonar"
+              description="Identifique sons respiratórios e suas patologias"
+              icon={Wind}
+              pageName="AuscultationPulmonar"
               color="indigo"
-              stats={auscultationStats}
+              stats={pulmonarStats}
+            />
+            <GameCard
+              title="Ausculta Cardíaca"
+              description="Reconheça bulhas, sopros e ritmos cardíacos"
+              icon={Heart}
+              pageName="AuscultationCardiaca"
+              color="rose"
+              stats={cardiacaStats}
             />
           </div>
         </div>

@@ -26,6 +26,12 @@ export default function GameCard({
       light: 'bg-indigo-50',
       text: 'text-indigo-600',
       border: 'border-indigo-200'
+    },
+    rose: {
+      bg: 'bg-gradient-to-br from-rose-500 to-pink-600',
+      light: 'bg-rose-50',
+      text: 'text-rose-600',
+      border: 'border-rose-200'
     }
   };
 

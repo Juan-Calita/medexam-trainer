@@ -10,12 +10,10 @@ import GameSummary from '@/components/games/GameSummary';
 import AudioPlayer from '@/components/games/AudioPlayer';
 import AnswerOption from '@/components/games/AnswerOption';
 
-// Audio questions with simulated URLs (in production, these would be real audio files)
 const QUESTIONS = [
   {
     id: 1,
     difficulty: 'easy',
-    category: 'Sons Pulmonares',
     audioDescription: 'Murmúrios vesiculares claros',
     correctAnswer: 'Murmúrio vesicular normal',
     options: ['Murmúrio vesicular normal', 'Sibilos', 'Estertores'],
@@ -25,7 +23,6 @@ const QUESTIONS = [
   {
     id: 2,
     difficulty: 'easy',
-    category: 'Sons Pulmonares',
     audioDescription: 'Sons musicais de alta frequência',
     correctAnswer: 'Sibilos',
     options: ['Murmúrio vesicular normal', 'Sibilos', 'Roncos'],
@@ -35,7 +32,6 @@ const QUESTIONS = [
   {
     id: 3,
     difficulty: 'medium',
-    category: 'Sons Pulmonares',
     audioDescription: 'Sons descontínuos tipo estouro',
     correctAnswer: 'Estertores',
     options: ['Estertores', 'Roncos', 'Atrito pleural'],
@@ -45,7 +41,6 @@ const QUESTIONS = [
   {
     id: 4,
     difficulty: 'medium',
-    category: 'Sons Pulmonares',
     audioDescription: 'Sons graves tipo ronco',
     correctAnswer: 'Roncos',
     options: ['Sibilos', 'Roncos', 'Estridor'],
@@ -54,50 +49,28 @@ const QUESTIONS = [
   },
   {
     id: 5,
-    difficulty: 'easy',
-    category: 'Sons Cardíacos',
-    audioDescription: 'Padrão regular tum-tá',
-    correctAnswer: 'Bulhas cardíacas normais (B1, B2)',
-    options: ['Bulhas cardíacas normais (B1, B2)', 'Sopro sistólico', 'Galope B3'],
-    explanation: 'B1 (tum) é causada pelo fechamento das válvulas mitral e tricúspide no início da sístole. B2 (tá) é causada pelo fechamento das válvulas aórtica e pulmonar no final da sístole.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
-  },
-  {
-    id: 6,
-    difficulty: 'medium',
-    category: 'Sons Cardíacos',
-    audioDescription: 'Som áspero entre B1 e B2',
-    correctAnswer: 'Sopro sistólico',
-    options: ['Bulhas cardíacas normais (B1, B2)', 'Sopro sistólico', 'Sopro diastólico'],
-    explanation: 'Sopros sistólicos ocorrem entre B1 e B2. Causas comuns incluem estenose aórtica (crescendo-decrescendo), regurgitação mitral (holossistólico) e sopros de fluxo inocentes.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'
-  },
-  {
-    id: 7,
     difficulty: 'hard',
-    category: 'Sons Cardíacos',
-    audioDescription: 'Som extra após B2',
-    correctAnswer: 'Galope B3',
-    options: ['Galope B3', 'Galope B4', 'Estalido de abertura'],
-    explanation: 'B3 é um som de baixa frequência no início da diástole causado pelo enchimento ventricular rápido. Em jovens pode ser normal; em adultos mais velhos frequentemente indica insuficiência cardíaca (ritmo de galope: tum-tá-tá).',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'
-  },
-  {
-    id: 8,
-    difficulty: 'hard',
-    category: 'Sons Pulmonares',
     audioDescription: 'Contexto clínico: Paciente de 65 anos, tabagista, com tosse produtiva',
     correctAnswer: 'Roncos',
     options: ['Estertores', 'Roncos', 'Sibilos'],
     explanation: 'Em um tabagista com tosse produtiva, roncos são mais provavelmente devido a secreções nas vias aéreas maiores por bronquite crônica. O contexto clínico ajuda a diferenciar de sons semelhantes.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
+  },
+  {
+    id: 6,
+    difficulty: 'hard',
+    audioDescription: 'Som de ranger/fricção durante respiração',
+    correctAnswer: 'Atrito pleural',
+    options: ['Atrito pleural', 'Estertores grossos', 'Roncos'],
+    explanation: 'O atrito pleural é um som áspero, tipo ranger, causado pela fricção entre as pleuras inflamadas. É ouvido tanto na inspiração quanto na expiração e não desaparece com a tosse.',
+    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'
   },
 ];
 
 const POINTS_PER_CORRECT = 10;
 const BONUS_POINTS = { easy: 0, medium: 5, hard: 10 };
 
-export default function AuscultationGame() {
+export default function AuscultationPulmonar() {
   const [gameState, setGameState] = useState('playing');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -106,7 +79,6 @@ export default function AuscultationGame() {
   const [correctCount, setCorrectCount] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [mistakes, setMistakes] = useState([]);
-  const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
 
   const queryClient = useQueryClient();
   const currentQuestion = QUESTIONS[currentIndex];
@@ -118,7 +90,6 @@ export default function AuscultationGame() {
     }
   });
 
-  // Timer
   useEffect(() => {
     if (gameState !== 'playing') return;
     const timer = setInterval(() => {
@@ -153,11 +124,10 @@ export default function AuscultationGame() {
 
   const handleNext = () => {
     if (currentIndex >= QUESTIONS.length - 1) {
-      // Game complete
       setGameState('completed');
       const accuracy = Math.round((correctCount / QUESTIONS.length) * 100);
       saveProgressMutation.mutate({
-        game_type: 'auscultation',
+        game_type: 'auscultation_pulmonar',
         score,
         total_possible: QUESTIONS.length * POINTS_PER_CORRECT + 
           QUESTIONS.reduce((sum, q) => sum + BONUS_POINTS[q.difficulty], 0),
@@ -171,7 +141,6 @@ export default function AuscultationGame() {
       setCurrentIndex(prev => prev + 1);
       setSelectedAnswer(null);
       setShowResult(false);
-      setHasPlayedAudio(false);
     }
   };
 
@@ -184,7 +153,6 @@ export default function AuscultationGame() {
     setCorrectCount(0);
     setTimeElapsed(0);
     setMistakes([]);
-    setHasPlayedAudio(false);
   };
 
   const accuracy = currentIndex > 0 ? Math.round((correctCount / currentIndex) * 100) : 100;
@@ -208,7 +176,7 @@ export default function AuscultationGame() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <GameHeader
-        title="Auscultation Quiz"
+        title="Ausculta Pulmonar"
         score={score}
         totalPossible={QUESTIONS.length * POINTS_PER_CORRECT + 
           QUESTIONS.reduce((sum, q) => sum + BONUS_POINTS[q.difficulty], 0)}
@@ -226,11 +194,10 @@ export default function AuscultationGame() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            {/* Question info */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-slate-600">
-                  {currentQuestion.category}
+                  Sons Pulmonares
                 </Badge>
                 <Badge 
                   className={
@@ -239,7 +206,8 @@ export default function AuscultationGame() {
                     'bg-rose-100 text-rose-700'
                   }
                 >
-                  {currentQuestion.difficulty}
+                  {currentQuestion.difficulty === 'easy' ? 'Fácil' : 
+                   currentQuestion.difficulty === 'medium' ? 'Médio' : 'Difícil'}
                   {currentQuestion.difficulty !== 'easy' && (
                     <span className="ml-1">+{BONUS_POINTS[currentQuestion.difficulty]}</span>
                   )}
@@ -250,7 +218,6 @@ export default function AuscultationGame() {
               </span>
             </div>
 
-            {/* Audio player */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
               <div className="flex items-center gap-2 mb-4">
                 <Volume2 className="w-5 h-5 text-slate-500" />
@@ -258,10 +225,7 @@ export default function AuscultationGame() {
                   Ouça o seguinte som
                 </span>
               </div>
-              <AudioPlayer 
-                audioUrl={currentQuestion.audioUrl}
-                onEnded={() => setHasPlayedAudio(true)}
-              />
+              <AudioPlayer audioUrl={currentQuestion.audioUrl} />
               
               {currentQuestion.difficulty !== 'easy' && (
                 <div className="mt-4 p-3 bg-slate-50 rounded-lg">
@@ -276,7 +240,6 @@ export default function AuscultationGame() {
               )}
             </div>
 
-            {/* Answer options */}
             <div className="space-y-3">
               <p className="text-sm font-medium text-slate-700">
                 Que tipo de som você ouviu?
@@ -295,7 +258,6 @@ export default function AuscultationGame() {
               ))}
             </div>
 
-            {/* Explanation */}
             <AnimatePresence>
               {showResult && (
                 <motion.div
@@ -329,20 +291,19 @@ export default function AuscultationGame() {
               )}
             </AnimatePresence>
 
-            {/* Action button */}
             <div className="flex justify-end">
               {!showResult ? (
                 <Button
                   onClick={handleSubmit}
                   disabled={!selectedAnswer}
-                  className="bg-indigo-600 hover:bg-indigo-700 px-8"
+                  className="bg-teal-600 hover:bg-teal-700 px-8"
                 >
                   Enviar Resposta
                 </Button>
               ) : (
                 <Button
                   onClick={handleNext}
-                  className="bg-indigo-600 hover:bg-indigo-700 px-8"
+                  className="bg-teal-600 hover:bg-teal-700 px-8"
                 >
                   {currentIndex >= QUESTIONS.length - 1 ? 'Ver Resultados' : 'Próxima Questão'}
                   <ChevronRight className="w-4 h-4 ml-1" />

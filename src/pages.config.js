@@ -49,14 +49,16 @@
  */
 import Home from './pages/Home';
 import AbdominalGame from './pages/AbdominalGame';
-import AuscultationGame from './pages/AuscultationGame';
+import AuscultationPulmonar from './pages/AuscultationPulmonar';
+import AuscultationCardiaca from './pages/AuscultationCardiaca';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Home": Home,
     "AbdominalGame": AbdominalGame,
-    "AuscultationGame": AuscultationGame,
+    "AuscultationPulmonar": AuscultationPulmonar,
+    "AuscultationCardiaca": AuscultationCardiaca,
 }
 
 export const pagesConfig = {
