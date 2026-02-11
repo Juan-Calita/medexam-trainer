@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Info, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -153,7 +153,21 @@ export default function AuscultationPulmonar() {
   const [mistakes, setMistakes] = useState([]);
 
   const queryClient = useQueryClient();
-  const currentQuestion = QUESTIONS[currentIndex];
+
+  const { data: audioFiles = [] } = useQuery({
+    queryKey: ['audioFiles', 'auscultation_pulmonar'],
+    queryFn: () => base44.entities.AudioFile.filter({ game_type: 'auscultation_pulmonar' }),
+  });
+
+  const questionsWithAudio = QUESTIONS.map(q => {
+    const audioFile = audioFiles.find(a => a.sound_type === q.correctAnswer);
+    return {
+      ...q,
+      audioUrl: audioFile?.file_url || q.audioUrl
+    };
+  });
+
+  const currentQuestion = questionsWithAudio[currentIndex];
 
   const saveProgressMutation = useMutation({
     mutationFn: (data) => base44.entities.GameProgress.create(data),
