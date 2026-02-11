@@ -13,6 +13,9 @@ import { toast } from 'sonner';
 
 export default function AdminCardiacFoci() {
   const [editingRegion, setEditingRegion] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [formData, setFormData] = useState({
     game_type: 'cardiac_foci',
     region_name: '',
@@ -102,6 +105,45 @@ export default function AdminCardiacFoci() {
     } else {
       createMutation.mutate(formData);
     }
+  };
+
+  const handleMouseDown = (e, type) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    if (type === 'drag') {
+      setIsDragging(true);
+      setDragStart({ x: x - formData.x, y: y - formData.y });
+    } else if (type === 'resize') {
+      setIsResizing(true);
+      setDragStart({ x, y });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging && !isResizing) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    if (isDragging) {
+      setFormData({
+        ...formData,
+        x: Math.max(0, Math.min(100 - formData.width, x - dragStart.x)),
+        y: Math.max(0, Math.min(100 - formData.height, y - dragStart.y))
+      });
+    } else if (isResizing) {
+      const width = Math.max(5, Math.min(50, x - formData.x));
+      const height = Math.max(5, Math.min(50, y - formData.y));
+      setFormData({ ...formData, width, height });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
   };
 
   return (
@@ -205,30 +247,50 @@ export default function AdminCardiacFoci() {
                   />
                 </div>
 
-                {/* Preview */}
+                {/* Preview Interativo */}
                 <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
-                  <p className="text-xs font-medium text-slate-600 mb-2">Preview da Região</p>
-                  <div className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200">
+                  <p className="text-xs font-medium text-slate-600 mb-2">
+                    Arraste para mover • Canto inferior direito para redimensionar
+                  </p>
+                  <div 
+                    className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200 overflow-hidden cursor-crosshair"
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                  >
                     <img 
                       src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/4a49ca2e4_image.png"
                       alt="Diagrama torácico"
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain pointer-events-none select-none"
+                      draggable={false}
                     />
                     <div
-                      className="absolute border-2 border-rose-500 bg-rose-500/20 rounded"
+                      className="absolute border-2 border-rose-500 bg-rose-500/20 rounded cursor-move transition-shadow hover:shadow-lg"
                       style={{
                         left: `${formData.x}%`,
                         top: `${formData.y}%`,
                         width: `${formData.width}%`,
                         height: `${formData.height}%`,
                       }}
+                      onMouseDown={(e) => handleMouseDown(e, 'drag')}
                     >
                       {formData.region_name && (
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-rose-700 whitespace-nowrap bg-white/90 px-1 rounded">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-rose-700 whitespace-nowrap bg-white/90 px-1 rounded pointer-events-none">
                           {formData.region_name}
                         </div>
                       )}
+                      <div 
+                        className="absolute bottom-0 right-0 w-3 h-3 bg-rose-600 rounded-tl cursor-nwse-resize"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          handleMouseDown(e, 'resize');
+                        }}
+                      />
                     </div>
+                  </div>
+                  <div className="mt-2 text-xs text-slate-500 flex justify-between">
+                    <span>Posição: ({formData.x.toFixed(1)}%, {formData.y.toFixed(1)}%)</span>
+                    <span>Tamanho: {formData.width.toFixed(1)}% × {formData.height.toFixed(1)}%</span>
                   </div>
                 </div>
 
