@@ -205,6 +205,33 @@ export default function AdminAbdominal() {
                   />
                 </div>
 
+                {/* Preview */}
+                <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
+                  <p className="text-xs font-medium text-slate-600 mb-2">Preview da Região</p>
+                  <div className="relative w-full aspect-square bg-white rounded border border-slate-200">
+                    <img 
+                      src="https://raw.githubusercontent.com/leomartins1999/anatomical-visualization/master/src/assets/abdomen.png"
+                      alt="Diagrama abdominal"
+                      className="w-full h-full object-contain"
+                    />
+                    <div
+                      className="absolute border-2 border-teal-500 bg-teal-500/20 rounded"
+                      style={{
+                        left: `${formData.x}%`,
+                        top: `${formData.y}%`,
+                        width: `${formData.width}%`,
+                        height: `${formData.height}%`,
+                      }}
+                    >
+                      {formData.region_name && (
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-teal-700 whitespace-nowrap bg-white/90 px-1 rounded">
+                          {formData.region_name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex gap-2">
                   <Button type="submit" className="flex-1 bg-teal-600 hover:bg-teal-700">
                     <Save className="w-4 h-4 mr-2" />
