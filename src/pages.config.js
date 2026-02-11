@@ -47,20 +47,22 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Home from './pages/Home';
 import AbdominalGame from './pages/AbdominalGame';
-import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import AuscultationCardiaca from './pages/AuscultationCardiaca';
+import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import CardiacFociGame from './pages/CardiacFociGame';
+import Home from './pages/Home';
+import AudioUpload from './pages/AudioUpload';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Home": Home,
     "AbdominalGame": AbdominalGame,
-    "AuscultationPulmonar": AuscultationPulmonar,
     "AuscultationCardiaca": AuscultationCardiaca,
+    "AuscultationPulmonar": AuscultationPulmonar,
     "CardiacFociGame": CardiacFociGame,
+    "Home": Home,
+    "AudioUpload": AudioUpload,
 }
 
 export const pagesConfig = {
