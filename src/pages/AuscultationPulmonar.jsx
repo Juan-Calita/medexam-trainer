@@ -10,135 +10,6 @@ import GameSummary from '@/components/games/GameSummary';
 import AudioPlayer from '@/components/games/AudioPlayer';
 import AnswerOption from '@/components/games/AnswerOption';
 
-const QUESTIONS = [
-  {
-    id: 1,
-    difficulty: 'easy',
-    audioDescription: 'Som respiratório suave ouvido nos campos pulmonares',
-    correctAnswer: 'Murmúrio vesicular',
-    options: ['Murmúrio vesicular', 'Broncovesicular', 'Som traqueal'],
-    explanation: 'O murmúrio vesicular é o som respiratório normal ouvido na maioria dos campos pulmonares, suave e de baixa frequência durante toda a inspiração.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-  },
-  {
-    id: 2,
-    difficulty: 'easy',
-    audioDescription: 'Sons musicais agudos durante a expiração',
-    correctAnswer: 'Sibilos',
-    options: ['Sibilos', 'Roncos', 'Estridor'],
-    explanation: 'Sibilos são sons musicais de alta frequência causados pelo estreitamento das vias aéreas, comuns em asma e DPOC.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
-  },
-  {
-    id: 3,
-    difficulty: 'easy',
-    audioDescription: 'Sons descontínuos finos tipo estouro',
-    correctAnswer: 'Estertores finos',
-    options: ['Estertores finos', 'Estertores grossos', 'Roncos'],
-    explanation: 'Estertores finos são sons descontínuos de alta frequência, como crepitações, sugerindo fibrose pulmonar ou edema alveolar.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
-  },
-  {
-    id: 4,
-    difficulty: 'medium',
-    audioDescription: 'Sons descontínuos grossos tipo bolhas',
-    correctAnswer: 'Estertores grossos',
-    options: ['Estertores grossos', 'Estertores finos', 'Roncos'],
-    explanation: 'Estertores grossos são sons mais graves e úmidos, indicando secreções nas vias aéreas maiores, comuns em pneumonia ou insuficiência cardíaca.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'
-  },
-  {
-    id: 5,
-    difficulty: 'medium',
-    audioDescription: 'Sons contínuos graves tipo ronco',
-    correctAnswer: 'Roncos',
-    options: ['Roncos', 'Sibilos', 'Estertores grossos'],
-    explanation: 'Roncos são sons contínuos de baixa frequência por secreções nas vias aéreas. Frequentemente desaparecem com a tosse.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
-  },
-  {
-    id: 6,
-    difficulty: 'medium',
-    audioDescription: 'Som inspiratório agudo em vias aéreas superiores',
-    correctAnswer: 'Estridor',
-    options: ['Estridor', 'Sibilos', 'Grasmido'],
-    explanation: 'Estridor é um som agudo inspiratório indicando obstrução das vias aéreas superiores, uma emergência médica.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'
-  },
-  {
-    id: 7,
-    difficulty: 'medium',
-    audioDescription: 'Som de ranger/fricção durante respiração',
-    correctAnswer: 'Atrito pleural',
-    options: ['Atrito pleural', 'Estertores grossos', 'Roncos'],
-    explanation: 'Atrito pleural é um som áspero tipo ranger, causado pela fricção entre pleuras inflamadas. Ouvido na inspiração e expiração.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'
-  },
-  {
-    id: 8,
-    difficulty: 'hard',
-    audioDescription: 'Som entre traqueal e vesicular, ouvido próximo ao esterno',
-    correctAnswer: 'Broncovesicular',
-    options: ['Broncovesicular', 'Murmúrio vesicular', 'Som traqueal'],
-    explanation: 'Som broncovesicular é ouvido normalmente entre as escápulas e próximo ao esterno, com inspiração e expiração similares.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
-  },
-  {
-    id: 9,
-    difficulty: 'hard',
-    audioDescription: 'Som respiratório alto e áspero sobre a traqueia',
-    correctAnswer: 'Som traqueal',
-    options: ['Som traqueal', 'Broncovesicular', 'Estridor'],
-    explanation: 'Som traqueal é ouvido sobre a traqueia, alto e áspero, com expiração mais longa que inspiração.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'
-  },
-  {
-    id: 10,
-    difficulty: 'hard',
-    audioDescription: 'Voz sussurrada audível claramente através do tórax',
-    correctAnswer: 'Pectoriloquia',
-    options: ['Pectoriloquia', 'Egofonia', 'Som vocal normal'],
-    explanation: 'Pectoriloquia é a transmissão aumentada de sussurros através de tecido pulmonar consolidado, sinal de pneumonia.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'
-  },
-  {
-    id: 11,
-    difficulty: 'hard',
-    audioDescription: 'Voz com qualidade nasal tipo "a" virando "e"',
-    correctAnswer: 'Egofonia',
-    options: ['Egofonia', 'Pectoriloquia', 'Egofonia normal'],
-    explanation: 'Egofonia é quando "a" soa como "e" na ausculta, indicando consolidação ou derrame pleural.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'
-  },
-  {
-    id: 12,
-    difficulty: 'easy',
-    audioDescription: 'Transmissão vocal normal através do tórax',
-    correctAnswer: 'Som vocal normal',
-    options: ['Som vocal normal', 'Pectoriloquia', 'Egofonia'],
-    explanation: 'Som vocal normal é a transmissão diminuída e abafada da voz através do pulmão saudável.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-12.mp3'
-  },
-  {
-    id: 13,
-    difficulty: 'hard',
-    audioDescription: 'Voz sem alteração patológica',
-    correctAnswer: 'Egofonia normal',
-    options: ['Egofonia normal', 'Egofonia', 'Pectoriloquia'],
-    explanation: 'Egofonia normal é a ressonância vocal preservada sem qualidade nasal ou alterações.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3'
-  },
-  {
-    id: 14,
-    difficulty: 'medium',
-    audioDescription: 'Som agudo parecido com miado de gato',
-    correctAnswer: 'Grasmido',
-    options: ['Grasmido', 'Estridor', 'Sibilos'],
-    explanation: 'Grasmido é um som agudo, semelhante ao miado de gato, indicando obstrução laríngea ou de cordas vocais.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-14.mp3'
-  },
-];
-
 const POINTS_PER_CORRECT = 10;
 const BONUS_POINTS = { easy: 0, medium: 5, hard: 10 };
 
@@ -154,20 +25,51 @@ export default function AuscultationPulmonar() {
 
   const queryClient = useQueryClient();
 
+  const { data: dbQuestions = [], isLoading: questionsLoading } = useQuery({
+    queryKey: ['questions', 'auscultation_pulmonar'],
+    queryFn: () => base44.entities.Question.filter({ game_type: 'auscultation_pulmonar', active: true }),
+  });
+
   const { data: audioFiles = [] } = useQuery({
     queryKey: ['audioFiles', 'auscultation_pulmonar'],
     queryFn: () => base44.entities.AudioFile.filter({ game_type: 'auscultation_pulmonar' }),
   });
 
-  const questionsWithAudio = QUESTIONS.map(q => {
-    const audioFile = audioFiles.find(a => a.sound_type === q.correctAnswer);
-    return {
-      ...q,
-      audioUrl: audioFile?.file_url || q.audioUrl
-    };
-  });
+  const QUESTIONS = dbQuestions
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .map((q, index) => {
+      const audioFile = audioFiles.find(a => a.sound_type === q.correct_answer);
+      return {
+        id: q.id || index + 1,
+        difficulty: q.difficulty,
+        audioDescription: q.audio_description || '',
+        correctAnswer: q.correct_answer,
+        options: q.options,
+        explanation: q.explanation,
+        audioUrl: audioFile?.file_url || ''
+      };
+    });
 
-  const currentQuestion = questionsWithAudio[currentIndex];
+  const currentQuestion = QUESTIONS[currentIndex];
+
+  if (questionsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <p className="text-slate-600">Carregando questões...</p>
+      </div>
+    );
+  }
+
+  if (QUESTIONS.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-600 mb-4">Nenhuma questão cadastrada ainda</p>
+          <p className="text-sm text-slate-500">Acesse o painel administrativo para criar questões</p>
+        </div>
+      </div>
+    );
+  }
 
   const saveProgressMutation = useMutation({
     mutationFn: (data) => base44.entities.GameProgress.create(data),

@@ -10,108 +10,6 @@ import GameSummary from '@/components/games/GameSummary';
 import AudioPlayer from '@/components/games/AudioPlayer';
 import AnswerOption from '@/components/games/AnswerOption';
 
-const QUESTIONS = [
-  {
-    id: 1,
-    difficulty: 'easy',
-    audioDescription: 'Padrão regular tum-tá',
-    correctAnswer: 'B1 e B2 normais',
-    options: ['B1 e B2 normais', 'Desdobramento de B2', 'B3'],
-    explanation: 'B1 (tum) é causada pelo fechamento das válvulas mitral e tricúspide no início da sístole. B2 (tá) é causada pelo fechamento das válvulas aórtica e pulmonar no final da sístole.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-  },
-  {
-    id: 2,
-    difficulty: 'medium',
-    audioDescription: 'B1 dividida em dois componentes',
-    correctAnswer: 'Desdobramento de B1',
-    options: ['Desdobramento de B1', 'Desdobramento de B2', 'B1 e B2 normais'],
-    explanation: 'Desdobramento de B1 ocorre quando mitral e tricúspide não fecham simultaneamente. Pode ser ouvido em bloqueio de ramo direito.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
-  },
-  {
-    id: 3,
-    difficulty: 'medium',
-    audioDescription: 'B2 dividida em dois componentes durante inspiração',
-    correctAnswer: 'Desdobramento de B2',
-    options: ['Desdobramento de B2', 'Desdobramento de B1', 'Clique mesossistólico'],
-    explanation: 'Desdobramento de B2 é normal na inspiração quando aórtica e pulmonar fecham em momentos diferentes. Desdobramento fixo sugere CIA.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'
-  },
-  {
-    id: 4,
-    difficulty: 'hard',
-    audioDescription: 'Som extra após B2 no início da diástole',
-    correctAnswer: 'B3',
-    options: ['B3', 'B4', 'Sopro protodiastólico'],
-    explanation: 'B3 é um som de baixa frequência no início da diástole pelo enchimento ventricular rápido. Normal em jovens; em adultos indica insuficiência cardíaca.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3'
-  },
-  {
-    id: 5,
-    difficulty: 'hard',
-    audioDescription: 'Som extra antes de B1 no final da diástole',
-    correctAnswer: 'B4',
-    options: ['B4', 'B3', 'Sopro telessistólico'],
-    explanation: 'B4 é causada pela contração atrial contra ventrículo rígido. Comum em hipertensão e cardiomiopatia hipertrófica.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3'
-  },
-  {
-    id: 6,
-    difficulty: 'medium',
-    audioDescription: 'Clique agudo no meio da sístole',
-    correctAnswer: 'Clique mesossistólico',
-    options: ['Clique mesossistólico', 'B1 e B2 normais', 'Desdobramento de B1'],
-    explanation: 'Clique mesossistólico é típico de prolapso de válvula mitral, podendo ser seguido de sopro telessistólico.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3'
-  },
-  {
-    id: 7,
-    difficulty: 'medium',
-    audioDescription: 'Sopro no início da sístole',
-    correctAnswer: 'Sopro protossistólico',
-    options: ['Sopro protossistólico', 'Sopro mesossistólico', 'Sopro holossistólico'],
-    explanation: 'Sopro protossistólico ocorre logo após B1. Pode indicar regurgitação tricúspide ou defeito septal ventricular.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3'
-  },
-  {
-    id: 8,
-    difficulty: 'medium',
-    audioDescription: 'Sopro crescendo-decrescendo no meio da sístole',
-    correctAnswer: 'Sopro mesossistólico',
-    options: ['Sopro mesossistólico', 'Sopro protossistólico', 'Sopro telessistólico'],
-    explanation: 'Sopro mesossistólico em diamante é clássico de estenose aórtica, com intensidade máxima no meio da sístole.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3'
-  },
-  {
-    id: 9,
-    difficulty: 'hard',
-    audioDescription: 'Sopro no final da sístole após clique',
-    correctAnswer: 'Sopro telessistólico',
-    options: ['Sopro telessistólico', 'Sopro mesossistólico', 'Sopro holossistólico'],
-    explanation: 'Sopro telessistólico é característico de prolapso de válvula mitral, frequentemente precedido por clique mesossistólico.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3'
-  },
-  {
-    id: 10,
-    difficulty: 'medium',
-    audioDescription: 'Sopro que ocupa toda a sístole',
-    correctAnswer: 'Sopro holossistólico',
-    options: ['Sopro holossistólico', 'Sopro mesossistólico', 'Sopro protossistólico'],
-    explanation: 'Sopro holossistólico dura toda a sístole. Causas: regurgitação mitral, regurgitação tricúspide, CIV.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3'
-  },
-  {
-    id: 11,
-    difficulty: 'hard',
-    audioDescription: 'Sopro logo após B2 no início da diástole',
-    correctAnswer: 'Sopro protodiastólico',
-    options: ['Sopro protodiastólico', 'B3', 'Sopro holossistólico'],
-    explanation: 'Sopro protodiastólico decrescendo é típico de regurgitação aórtica, iniciando imediatamente após B2.',
-    audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3'
-  },
-];
-
 const POINTS_PER_CORRECT = 10;
 const BONUS_POINTS = { easy: 0, medium: 5, hard: 10 };
 
@@ -127,20 +25,51 @@ export default function AuscultationCardiaca() {
 
   const queryClient = useQueryClient();
 
+  const { data: dbQuestions = [], isLoading: questionsLoading } = useQuery({
+    queryKey: ['questions', 'auscultation_cardiaca'],
+    queryFn: () => base44.entities.Question.filter({ game_type: 'auscultation_cardiaca', active: true }),
+  });
+
   const { data: audioFiles = [] } = useQuery({
     queryKey: ['audioFiles', 'auscultation_cardiaca'],
     queryFn: () => base44.entities.AudioFile.filter({ game_type: 'auscultation_cardiaca' }),
   });
 
-  const questionsWithAudio = QUESTIONS.map(q => {
-    const audioFile = audioFiles.find(a => a.sound_type === q.correctAnswer);
-    return {
-      ...q,
-      audioUrl: audioFile?.file_url || q.audioUrl
-    };
-  });
+  const QUESTIONS = dbQuestions
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .map((q, index) => {
+      const audioFile = audioFiles.find(a => a.sound_type === q.correct_answer);
+      return {
+        id: q.id || index + 1,
+        difficulty: q.difficulty,
+        audioDescription: q.audio_description || '',
+        correctAnswer: q.correct_answer,
+        options: q.options,
+        explanation: q.explanation,
+        audioUrl: audioFile?.file_url || ''
+      };
+    });
 
-  const currentQuestion = questionsWithAudio[currentIndex];
+  const currentQuestion = QUESTIONS[currentIndex];
+
+  if (questionsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <p className="text-slate-600">Carregando questões...</p>
+      </div>
+    );
+  }
+
+  if (QUESTIONS.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-600 mb-4">Nenhuma questão cadastrada ainda</p>
+          <p className="text-sm text-slate-500">Acesse o painel administrativo para criar questões</p>
+        </div>
+      </div>
+    );
+  }
 
   const saveProgressMutation = useMutation({
     mutationFn: (data) => base44.entities.GameProgress.create(data),
