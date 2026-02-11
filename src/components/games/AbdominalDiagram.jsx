@@ -1,16 +1,6 @@
 import React from 'react';
-
-const REGION_POSITIONS = {
-  'Hipocôndrio direito': { x: 5, y: 8, width: 28, height: 28 },
-  'Epigástrio': { x: 36, y: 8, width: 28, height: 28 },
-  'Hipocôndrio esquerdo': { x: 67, y: 8, width: 28, height: 28 },
-  'Flanco direito': { x: 5, y: 36, width: 28, height: 28 },
-  'Mesogástrico': { x: 36, y: 36, width: 28, height: 28 },
-  'Flanco esquerdo': { x: 67, y: 36, width: 28, height: 28 },
-  'Fossa ilíaca direita': { x: 5, y: 64, width: 28, height: 28 },
-  'Hipogástrio': { x: 36, y: 64, width: 28, height: 28 },
-  'Fossa ilíaca esquerda': { x: 67, y: 64, width: 28, height: 28 },
-};
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function AbdominalDiagram({ 
   placedLabels, 
@@ -18,6 +8,15 @@ export default function AbdominalDiagram({
   highlightedRegion,
   feedbackRegion 
 }) {
+  const { data: regions = [] } = useQuery({
+    queryKey: ['regions', 'abdominal_regions'],
+    queryFn: () => base44.entities.GameRegion.filter({ game_type: 'abdominal_regions', active: true }),
+  });
+
+  const REGION_POSITIONS = regions.reduce((acc, r) => {
+    acc[r.region_name] = { x: r.x, y: r.y, width: r.width, height: r.height };
+    return acc;
+  }, {});
   const handleDragOver = (e) => {
     e.preventDefault();
   };
@@ -79,5 +78,3 @@ export default function AbdominalDiagram({
     </div>
   );
 }
-
-export { REGION_POSITIONS };
