@@ -9,37 +9,40 @@ import { toast } from 'sonner';
 
 export default function AudioUpload() {
   const [uploading, setUploading] = useState(false);
-  const [uploadedUrl, setUploadedUrl] = useState('');
-  const [copied, setCopied] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    // Validate audio file
-    if (!file.type.startsWith('audio/')) {
-      toast.error('Por favor, selecione um arquivo de áudio válido');
+    // Validate audio files
+    const audioFiles = files.filter(file => file.type.startsWith('audio/'));
+    if (audioFiles.length === 0) {
+      toast.error('Nenhum arquivo de áudio válido encontrado');
       return;
     }
 
     setUploading(true);
+    const results = [];
+    
     try {
-      const result = await base44.integrations.Core.UploadFile({ file });
-      setUploadedUrl(result.file_url);
-      toast.success('Arquivo enviado com sucesso!');
+      for (const file of audioFiles) {
+        const result = await base44.integrations.Core.UploadFile({ file });
+        results.push({ name: file.name, url: result.file_url });
+      }
+      setUploadedFiles(prev => [...prev, ...results]);
+      toast.success(`${results.length} arquivo(s) enviado(s) com sucesso!`);
     } catch (error) {
-      toast.error('Erro ao enviar arquivo');
+      toast.error('Erro ao enviar arquivos');
       console.error(error);
     } finally {
       setUploading(false);
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(uploadedUrl);
-    setCopied(true);
+  const copyToClipboard = (url) => {
+    navigator.clipboard.writeText(url);
     toast.success('URL copiada!');
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -69,47 +72,50 @@ export default function AudioUpload() {
                 className="hidden"
                 id="audio-upload"
                 disabled={uploading}
+                multiple
+                webkitdirectory=""
+                directory=""
               />
               <label htmlFor="audio-upload" className="cursor-pointer">
                 <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
                 <p className="text-slate-700 font-medium mb-1">
-                  {uploading ? 'Enviando...' : 'Clique para selecionar um arquivo de áudio'}
+                  {uploading ? 'Enviando...' : 'Clique para selecionar arquivos ou pasta'}
                 </p>
                 <p className="text-sm text-slate-500">
-                  MP3, WAV, OGG, etc.
+                  MP3, WAV, OGG, etc. (múltiplos arquivos suportados)
                 </p>
               </label>
             </div>
 
-            {uploadedUrl && (
+            {uploadedFiles.length > 0 && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">URL do Arquivo:</span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={copyToClipboard}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2 text-emerald-600" />
-                        Copiado
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copiar
-                      </>
-                    )}
-                  </Button>
+                <span className="text-sm font-medium text-slate-700">
+                  Arquivos Enviados ({uploadedFiles.length}):
+                </span>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="p-3 bg-slate-100 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-slate-700 truncate flex-1">
+                          {file.name}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(file.url)}
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="text-xs text-slate-500 break-all mb-2">
+                        {file.url}
+                      </div>
+                      <audio controls className="w-full">
+                        <source src={file.url} />
+                      </audio>
+                    </div>
+                  ))}
                 </div>
-                <div className="p-3 bg-slate-100 rounded-lg break-all text-sm text-slate-700">
-                  {uploadedUrl}
-                </div>
-                <audio controls className="w-full mt-3">
-                  <source src={uploadedUrl} />
-                  Seu navegador não suporta o elemento de áudio.
-                </audio>
               </div>
             )}
           </CardContent>
