@@ -195,7 +195,11 @@ export default function AdminCardiacFoci() {
               <span className="text-sm font-medium">Painel Admin</span>
             </Link>
             <h1 className="text-lg font-semibold text-slate-800">Focos - Cardíacos</h1>
-            <div className="w-24" />
+            <Link to={createPageUrl('CardiacFociGame')}>
+              <Button className="bg-rose-600 hover:bg-rose-700">
+                Testar Jogo
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
