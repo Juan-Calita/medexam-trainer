@@ -1,11 +1,11 @@
 import React from 'react';
 
 const FOCI_REGIONS = {
-  'Foco Aórtico': { x: 54, y: 18, width: 9, height: 7 },
-  'Foco Pulmonar': { x: 37, y: 18, width: 9, height: 7 },
-  'Foco Aórtico acessório': { x: 61, y: 27, width: 9, height: 7 },
-  'Foco Tricúspide': { x: 46, y: 33, width: 9, height: 7 },
-  'Foco Mitral': { x: 53, y: 40, width: 9, height: 7 },
+  'Foco Aórtico': { x: 52.5, y: 17, width: 10, height: 8 },
+  'Foco Pulmonar': { x: 35.5, y: 17, width: 10, height: 8 },
+  'Foco Aórtico acessório': { x: 60, y: 26, width: 10, height: 8 },
+  'Foco Tricúspide': { x: 44.5, y: 32, width: 10, height: 8 },
+  'Foco Mitral': { x: 51.5, y: 39, width: 10, height: 8 },
 };
 
 export default function CardiacFociDiagram({ placedLabels, onDrop, highlightedRegion, feedback }) {
