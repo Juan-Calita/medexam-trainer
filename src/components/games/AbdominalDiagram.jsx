@@ -1,15 +1,15 @@
 import React from 'react';
 
 const REGION_POSITIONS = {
-  'Hipocôndrio direito': { x: 15, y: 12, width: 28, height: 22 },
-  'Epigástrio': { x: 43, y: 12, width: 28, height: 22 },
-  'Hipocôndrio esquerdo': { x: 71, y: 12, width: 28, height: 22 },
-  'Flanco direito': { x: 15, y: 34, width: 28, height: 22 },
-  'Região umbilical': { x: 43, y: 34, width: 28, height: 22 },
-  'Flanco esquerdo': { x: 71, y: 34, width: 28, height: 22 },
-  'Fossa ilíaca direita': { x: 15, y: 56, width: 28, height: 22 },
-  'Hipogástrio': { x: 43, y: 56, width: 28, height: 22 },
-  'Fossa ilíaca esquerda': { x: 71, y: 56, width: 28, height: 22 },
+  'Hipocôndrio direito': { x: 5, y: 8, width: 28, height: 28 },
+  'Epigástrio': { x: 36, y: 8, width: 28, height: 28 },
+  'Hipocôndrio esquerdo': { x: 67, y: 8, width: 28, height: 28 },
+  'Flanco direito': { x: 5, y: 36, width: 28, height: 28 },
+  'Região umbilical': { x: 36, y: 36, width: 28, height: 28 },
+  'Flanco esquerdo': { x: 67, y: 36, width: 28, height: 28 },
+  'Fossa ilíaca direita': { x: 5, y: 64, width: 28, height: 28 },
+  'Hipogástrio': { x: 36, y: 64, width: 28, height: 28 },
+  'Fossa ilíaca esquerda': { x: 67, y: 64, width: 28, height: 28 },
 };
 
 export default function AbdominalDiagram({ 
