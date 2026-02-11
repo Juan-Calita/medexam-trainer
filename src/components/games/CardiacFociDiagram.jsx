@@ -25,7 +25,7 @@ export default function CardiacFociDiagram({ placedLabels, onDrop, highlightedRe
   return (
     <div className="relative w-full max-w-2xl mx-auto">
       <img 
-        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/180901897_1.png"
+        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/8b2272e72_image.png"
         alt="Diagrama do Tórax"
         className="w-full h-auto rounded-lg"
       />
