@@ -1,14 +1,17 @@
 import React from 'react';
-
-const FOCI_REGIONS = {
-  'Foco Aórtico': { x: 53, y: 20, width: 9, height: 7 },
-  'Foco Pulmonar': { x: 35, y: 20, width: 9, height: 7 },
-  'Foco Aórtico acessório': { x: 63, y: 28, width: 9, height: 7 },
-  'Foco Tricúspide': { x: 48, y: 37, width: 9, height: 7 },
-  'Foco Mitral': { x: 61, y: 37, width: 9, height: 7 },
-};
+import { useQuery } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 
 export default function CardiacFociDiagram({ placedLabels, onDrop, highlightedRegion, feedback }) {
+  const { data: regions = [] } = useQuery({
+    queryKey: ['regions', 'cardiac_foci'],
+    queryFn: () => base44.entities.GameRegion.filter({ game_type: 'cardiac_foci', active: true }),
+  });
+
+  const FOCI_REGIONS = regions.reduce((acc, r) => {
+    acc[r.region_name] = { x: r.x, y: r.y, width: r.width, height: r.height };
+    return acc;
+  }, {});
   const handleDrop = (e, region) => {
     e.preventDefault();
     const label = e.dataTransfer.getData('text');
