@@ -249,14 +249,13 @@ export default function AdminCardiacFoci() {
 
                 {/* Preview Interativo */}
                 <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
-                  <p className="text-xs font-medium text-slate-600 mb-2">
-                    Arraste para mover • Canto inferior direito para redimensionar
+                  <p className="text-xs font-medium text-slate-600 mb-3">
+                    Preview do Jogo - Arraste a label para testar
                   </p>
+                  
+                  {/* Diagrama */}
                   <div 
-                    className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200 overflow-hidden cursor-crosshair"
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
+                    className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200 overflow-hidden mb-3"
                   >
                     <img 
                       src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/4a49ca2e4_image.png"
@@ -264,33 +263,70 @@ export default function AdminCardiacFoci() {
                       className="w-full h-full object-contain pointer-events-none select-none"
                       draggable={false}
                     />
-                    <div
-                      className="absolute border-2 border-rose-500 bg-rose-500/20 rounded cursor-move transition-shadow hover:shadow-lg"
-                      style={{
-                        left: `${formData.x}%`,
-                        top: `${formData.y}%`,
-                        width: `${formData.width}%`,
-                        height: `${formData.height}%`,
-                      }}
-                      onMouseDown={(e) => handleMouseDown(e, 'drag')}
-                    >
-                      {formData.region_name && (
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-rose-700 whitespace-nowrap bg-white/90 px-1 rounded pointer-events-none">
+                    
+                    {/* Todas as regiões cadastradas */}
+                    {regions.map(region => (
+                      <div
+                        key={region.id}
+                        className="absolute border-2 border-rose-400 bg-rose-400/10 rounded transition-all"
+                        style={{
+                          left: `${region.x}%`,
+                          top: `${region.y}%`,
+                          width: `${region.width}%`,
+                          height: `${region.height}%`,
+                        }}
+                      >
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[0.6rem] font-bold text-rose-600 whitespace-nowrap bg-white/90 px-1 rounded">
+                          {region.region_name}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Região em edição com destaque */}
+                    {formData.region_name && (
+                      <div
+                        className="absolute border-2 border-rose-600 bg-rose-600/20 rounded cursor-move shadow-lg"
+                        style={{
+                          left: `${formData.x}%`,
+                          top: `${formData.y}%`,
+                          width: `${formData.width}%`,
+                          height: `${formData.height}%`,
+                        }}
+                        onMouseDown={(e) => handleMouseDown(e, 'drag')}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                      >
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-rose-700 whitespace-nowrap bg-white px-1.5 py-0.5 rounded pointer-events-none">
                           {formData.region_name}
                         </div>
-                      )}
-                      <div 
-                        className="absolute bottom-0 right-0 w-3 h-3 bg-rose-600 rounded-tl cursor-nwse-resize"
-                        onMouseDown={(e) => {
-                          e.stopPropagation();
-                          handleMouseDown(e, 'resize');
-                        }}
-                      />
-                    </div>
+                        <div 
+                          className="absolute bottom-0 right-0 w-3 h-3 bg-rose-600 rounded-tl cursor-nwse-resize"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            handleMouseDown(e, 'resize');
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="mt-2 text-xs text-slate-500 flex justify-between">
-                    <span>Posição: ({formData.x.toFixed(1)}%, {formData.y.toFixed(1)}%)</span>
-                    <span>Tamanho: {formData.width.toFixed(1)}% × {formData.height.toFixed(1)}%</span>
+                  
+                  {/* Labels Disponíveis */}
+                  {formData.region_name && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-slate-600">Label de Exemplo:</p>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border-2 border-slate-200 w-fit">
+                        <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                        </svg>
+                        <span className="text-sm font-medium text-slate-700">{formData.region_name}</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="mt-2 text-xs text-slate-500 flex justify-between pt-2 border-t">
+                    <span>Pos: ({formData.x.toFixed(1)}%, {formData.y.toFixed(1)}%)</span>
+                    <span>Tam: {formData.width.toFixed(1)}% × {formData.height.toFixed(1)}%</span>
                   </div>
                 </div>
 
