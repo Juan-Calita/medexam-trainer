@@ -445,6 +445,21 @@ export default function AdminCardiacFoci() {
                     </div>
                   </div>
                 )}
+              </div>
+              
+              {/* Legenda */}
+              <div className="mt-3 flex gap-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-rose-500 bg-rose-500/30 rounded"></div>
+                  <span className="text-slate-600">Em edição</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-slate-400 bg-slate-400/20 rounded"></div>
+                  <span className="text-slate-600">Cadastrado</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>
