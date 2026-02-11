@@ -114,9 +114,9 @@ export default function Home() {
             <GameCard
               title="Focos Cardíacos"
               description="Identifique os pontos de ausculta cardíaca"
-              icon={MapPin}
+              icon={Stethoscope}
               pageName="CardiacFociGame"
-              color="purple"
+              color="rose"
               stats={cardiacFociStats}
             />
             <GameCard
