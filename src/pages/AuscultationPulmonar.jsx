@@ -42,6 +42,14 @@ export default function AuscultationPulmonar() {
     }
   });
 
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+    const timer = setInterval(() => {
+      setTimeElapsed(t => t + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [gameState]);
+
   const QUESTIONS = dbQuestions
     .sort((a, b) => (a.order || 0) - (b.order || 0))
     .map((q, index) => {
@@ -77,14 +85,6 @@ export default function AuscultationPulmonar() {
       </div>
     );
   }
-
-  useEffect(() => {
-    if (gameState !== 'playing') return;
-    const timer = setInterval(() => {
-      setTimeElapsed(t => t + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [gameState]);
 
   const handleSelectAnswer = (answer) => {
     if (showResult) return;
