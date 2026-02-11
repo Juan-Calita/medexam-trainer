@@ -2,7 +2,10 @@ import React from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Stethoscope, Grid3X3, Wind, Heart, GraduationCap, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Stethoscope, Grid3X3, Wind, Heart, GraduationCap, MapPin, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { createPageUrl } from '@/utils';
 import GameCard from '@/components/dashboard/GameCard';
 import StatsOverview from '@/components/dashboard/StatsOverview';
 
@@ -57,14 +60,22 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl">
-              <Stethoscope className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl">
+                <Stethoscope className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-slate-800">MedExam Trainer</h1>
+                <p className="text-xs text-slate-500">Treinamento em Exame Físico</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-800">MedExam Trainer</h1>
-              <p className="text-xs text-slate-500">Treinamento em Exame Físico</p>
-            </div>
+            <Link to={createPageUrl('AudioLibrary')}>
+              <Button variant="outline" size="sm">
+                <Settings className="w-4 h-4 mr-2" />
+                Áudios
+              </Button>
+            </Link>
           </div>
         </div>
       </header>

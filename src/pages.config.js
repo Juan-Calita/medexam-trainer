@@ -53,6 +53,7 @@ import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import CardiacFociGame from './pages/CardiacFociGame';
 import Home from './pages/Home';
 import AudioUpload from './pages/AudioUpload';
+import AudioLibrary from './pages/AudioLibrary';
 import __Layout from './Layout.jsx';
 
 
@@ -63,6 +64,7 @@ export const PAGES = {
     "CardiacFociGame": CardiacFociGame,
     "Home": Home,
     "AudioUpload": AudioUpload,
+    "AudioLibrary": AudioLibrary,
 }
 
 export const pagesConfig = {
