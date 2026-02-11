@@ -48,23 +48,33 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import AbdominalGame from './pages/AbdominalGame';
+import AudioLibrary from './pages/AudioLibrary';
+import AudioUpload from './pages/AudioUpload';
 import AuscultationCardiaca from './pages/AuscultationCardiaca';
 import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import CardiacFociGame from './pages/CardiacFociGame';
 import Home from './pages/Home';
-import AudioUpload from './pages/AudioUpload';
-import AudioLibrary from './pages/AudioLibrary';
+import Admin from './pages/Admin';
+import AdminPulmonar from './pages/AdminPulmonar';
+import AdminCardiaca from './pages/AdminCardiaca';
+import AdminAbdominal from './pages/AdminAbdominal';
+import AdminCardiacFoci from './pages/AdminCardiacFoci';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AbdominalGame": AbdominalGame,
+    "AudioLibrary": AudioLibrary,
+    "AudioUpload": AudioUpload,
     "AuscultationCardiaca": AuscultationCardiaca,
     "AuscultationPulmonar": AuscultationPulmonar,
     "CardiacFociGame": CardiacFociGame,
     "Home": Home,
-    "AudioUpload": AudioUpload,
-    "AudioLibrary": AudioLibrary,
+    "Admin": Admin,
+    "AdminPulmonar": AdminPulmonar,
+    "AdminCardiaca": AdminCardiaca,
+    "AdminAbdominal": AdminAbdominal,
+    "AdminCardiacFoci": AdminCardiacFoci,
 }
 
 export const pagesConfig = {

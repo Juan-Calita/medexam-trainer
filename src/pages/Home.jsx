@@ -70,10 +70,10 @@ export default function Home() {
                 <p className="text-xs text-slate-500">Treinamento em Exame Físico</p>
               </div>
             </div>
-            <Link to={createPageUrl('AudioLibrary')}>
+            <Link to={createPageUrl('Admin')}>
               <Button variant="outline" size="sm">
                 <Settings className="w-4 h-4 mr-2" />
-                Áudios
+                Admin
               </Button>
             </Link>
           </div>
