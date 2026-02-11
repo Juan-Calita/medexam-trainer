@@ -1,11 +1,11 @@
 import React from 'react';
 
 const FOCI_REGIONS = {
-  'Foco Aórtico': { x: 54, y: 24, width: 8, height: 6 },
-  'Foco Pulmonar': { x: 38, y: 24, width: 8, height: 6 },
-  'Foco Aórtico acessório': { x: 40, y: 34, width: 9, height: 6 },
-  'Foco Tricúspide': { x: 52, y: 54, width: 8, height: 6 },
-  'Foco Mitral': { x: 34, y: 60, width: 8, height: 6 },
+  'Foco Aórtico': { x: 54, y: 18, width: 9, height: 7 },
+  'Foco Pulmonar': { x: 37, y: 18, width: 9, height: 7 },
+  'Foco Aórtico acessório': { x: 61, y: 27, width: 9, height: 7 },
+  'Foco Tricúspide': { x: 46, y: 33, width: 9, height: 7 },
+  'Foco Mitral': { x: 53, y: 40, width: 9, height: 7 },
 };
 
 export default function CardiacFociDiagram({ placedLabels, onDrop, highlightedRegion, feedback }) {
@@ -22,7 +22,7 @@ export default function CardiacFociDiagram({ placedLabels, onDrop, highlightedRe
   return (
     <div className="relative w-full max-w-2xl mx-auto">
       <img 
-        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/e6ca32cb5_image.png"
+        src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/0563691bd_Designsemnome.png"
         alt="Diagrama do Tórax"
         className="w-full h-auto rounded-lg"
       />
