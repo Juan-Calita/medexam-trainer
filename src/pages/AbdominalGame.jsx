@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { DragDropContext } from '@hello-pangea/dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lightbulb } from 'lucide-react';
@@ -10,46 +10,13 @@ import AbdominalDiagram from '@/components/games/AbdominalDiagram';
 import DraggableLabel from '@/components/games/DraggableLabel';
 import FeedbackModal from '@/components/games/FeedbackModal';
 
-const REGIONS_DATA = {
-  'Hipocôndrio direito': {
-    explanation: 'Localizado no quadrante superior direito, abaixo das costelas. Contém o fígado e a vesícula biliar. Dor aqui pode indicar hepatite, colecistite ou cólica biliar.'
-  },
-  'Epigástrio': {
-    explanation: 'A região central superior entre as margens costais. Contém o estômago, duodeno e pâncreas. Local comum para dor de úlcera péptica e sintomas de DRGE.'
-  },
-  'Hipocôndrio esquerdo': {
-    explanation: 'Quadrante superior esquerdo abaixo das costelas. Contém o baço e a flexura esplênica do cólon. Dor aqui pode indicar lesão esplênica ou problemas gástricos.'
-  },
-  'Flanco direito': {
-    explanation: 'Também chamado de região lombar direita. Contém o cólon ascendente e o rim direito. Dor no flanco pode indicar cólica renal ou pielonefrite.'
-  },
-  'Mesogástrico': {
-    explanation: 'Região central ao redor do umbigo. Contém partes do intestino delgado e cólon transverso. Apendicite precoce frequentemente apresenta dor periumbilical.'
-  },
-  'Flanco esquerdo': {
-    explanation: 'Também chamado de região lombar esquerda. Contém o cólon descendente e o rim esquerdo. Patologias similares ao flanco direito podem se apresentar aqui.'
-  },
-  'Fossa ilíaca direita': {
-    explanation: 'Quadrante inferior direito. Contém o ceco, apêndice e ovário/trompa direita. Localização clássica para apendicite (ponto de McBurney).'
-  },
-  'Hipogástrio': {
-    explanation: 'Também chamado de região suprapúbica. Contém a bexiga, útero (em mulheres) e cólon sigmoide. Dor aqui pode indicar cistite ou problemas ginecológicos.'
-  },
-  'Fossa ilíaca esquerda': {
-    explanation: 'Quadrante inferior esquerdo. Contém o cólon sigmoide e ovário/trompa esquerda. Diverticulite classicamente apresenta dor aqui.'
-  },
-};
-
-const ALL_LABELS = Object.keys(REGIONS_DATA);
 const POINTS_PER_CORRECT = 10;
 const MAX_RETRIES = 3;
 
 export default function AbdominalGame() {
-  const [gameState, setGameState] = useState('playing'); // 'playing' | 'completed'
+  const [gameState, setGameState] = useState('loading'); // 'loading' | 'playing' | 'completed'
   const [placedLabels, setPlacedLabels] = useState({});
-  const [retries, setRetries] = useState(() => 
-    Object.fromEntries(ALL_LABELS.map(label => [label, MAX_RETRIES]))
-  );
+  const [retries, setRetries] = useState({});
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [totalAttempts, setTotalAttempts] = useState(0);
@@ -61,12 +28,30 @@ export default function AbdominalGame() {
 
   const queryClient = useQueryClient();
 
+  const { data: regions = [], isLoading } = useQuery({
+    queryKey: ['regions', 'abdominal_regions'],
+    queryFn: () => base44.entities.GameRegion.filter({ game_type: 'abdominal_regions', active: true }),
+  });
+
+  const ALL_LABELS = regions.map(r => r.region_name);
+  const REGIONS_DATA = regions.reduce((acc, r) => {
+    acc[r.region_name] = { explanation: r.explanation };
+    return acc;
+  }, {});
+
   const saveProgressMutation = useMutation({
     mutationFn: (data) => base44.entities.GameProgress.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gameProgress'] });
     }
   });
+
+  useEffect(() => {
+    if (!isLoading && regions.length > 0 && gameState === 'loading') {
+      setRetries(Object.fromEntries(ALL_LABELS.map(label => [label, MAX_RETRIES])));
+      setGameState('playing');
+    }
+  }, [isLoading, regions, gameState]);
 
   // Timer
   useEffect(() => {
@@ -156,7 +141,29 @@ export default function AbdominalGame() {
   };
 
   const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 100;
-  const progress = (Object.keys(placedLabels).length / ALL_LABELS.length) * 100;
+  const progress = ALL_LABELS.length > 0 ? (Object.keys(placedLabels).length / ALL_LABELS.length) * 100 : 0;
+
+  if (isLoading || gameState === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Carregando jogo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (regions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+        <div className="text-center bg-white rounded-xl p-8 shadow-lg max-w-md">
+          <p className="text-slate-700 mb-4">Nenhuma região abdominal cadastrada ainda.</p>
+          <p className="text-sm text-slate-500">Configure as regiões no painel administrativo primeiro.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (gameState === 'completed') {
     return (
