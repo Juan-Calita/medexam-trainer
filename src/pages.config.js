@@ -50,6 +50,7 @@
 import AbdominalGame from './pages/AbdominalGame';
 import Admin from './pages/Admin';
 import AdminAbdominal from './pages/AdminAbdominal';
+import AdminCardiacFoci from './pages/AdminCardiacFoci';
 import AdminCardiaca from './pages/AdminCardiaca';
 import AdminPulmonar from './pages/AdminPulmonar';
 import AudioLibrary from './pages/AudioLibrary';
@@ -58,7 +59,6 @@ import AuscultationCardiaca from './pages/AuscultationCardiaca';
 import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import CardiacFociGame from './pages/CardiacFociGame';
 import Home from './pages/Home';
-import AdminCardiacFoci from './pages/AdminCardiacFoci';
 import __Layout from './Layout.jsx';
 
 
@@ -66,6 +66,7 @@ export const PAGES = {
     "AbdominalGame": AbdominalGame,
     "Admin": Admin,
     "AdminAbdominal": AdminAbdominal,
+    "AdminCardiacFoci": AdminCardiacFoci,
     "AdminCardiaca": AdminCardiaca,
     "AdminPulmonar": AdminPulmonar,
     "AudioLibrary": AudioLibrary,
@@ -74,7 +75,6 @@ export const PAGES = {
     "AuscultationPulmonar": AuscultationPulmonar,
     "CardiacFociGame": CardiacFociGame,
     "Home": Home,
-    "AdminCardiacFoci": AdminCardiacFoci,
 }
 
 export const pagesConfig = {

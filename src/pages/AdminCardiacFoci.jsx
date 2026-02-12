@@ -15,6 +15,12 @@ const DEFAULT_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/objec
 
 export default function AdminCardiacFoci() {
   const [editingRegion, setEditingRegion] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [diagramImage, setDiagramImage] = useState(DEFAULT_IMAGE);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [formData, setFormData] = useState({
     game_type: 'cardiac_foci',
     region_name: '',
@@ -74,6 +80,7 @@ export default function AdminCardiacFoci() {
       active: true
     });
     setEditingRegion(null);
+    setIsCreatingNew(false);
   };
 
   const handleEdit = (region) => {
@@ -89,6 +96,75 @@ export default function AdminCardiacFoci() {
       order: region.order || 0,
       active: region.active !== false
     });
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setDiagramImage(file_url);
+      toast.success('Imagem carregada!');
+    } catch (error) {
+      toast.error('Erro ao carregar imagem');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDiagramClick = (e) => {
+    if (!isCreatingNew || editingRegion) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    setFormData({
+      ...formData,
+      x: Math.max(0, Math.min(88, x)),
+      y: Math.max(0, Math.min(90, y))
+    });
+  };
+
+  const handleMouseDown = (e, type) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    if (type === 'drag') {
+      setIsDragging(true);
+      setDragStart({ x: x - formData.x, y: y - formData.y });
+    } else if (type === 'resize') {
+      setIsResizing(true);
+      setDragStart({ x, y });
+    }
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging && !isResizing) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    if (isDragging) {
+      setFormData({
+        ...formData,
+        x: Math.max(0, Math.min(100 - formData.width, x - dragStart.x)),
+        y: Math.max(0, Math.min(100 - formData.height, y - dragStart.y))
+      });
+    } else if (isResizing) {
+      const width = Math.max(5, Math.min(50, x - formData.x));
+      const height = Math.max(5, Math.min(50, y - formData.y));
+      setFormData({ ...formData, width, height });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setIsResizing(false);
   };
 
   const handleSubmit = (e) => {
@@ -140,92 +216,157 @@ export default function AdminCardiacFoci() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">
-                    Nome do Foco *
-                  </label>
-                  <Input
-                    value={formData.region_name}
-                    onChange={(e) => setFormData({ ...formData, region_name: e.target.value })}
-                    placeholder="Ex: Foco Aórtico"
+                {/* Upload de Imagem */}
+                <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">
-                      Posição X (%)
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.x}
-                      onChange={(e) => setFormData({ ...formData, x: parseFloat(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">
-                      Posição Y (%)
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.y}
-                      onChange={(e) => setFormData({ ...formData, y: parseFloat(e.target.value) })}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">
-                      Largura (%)
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.width}
-                      onChange={(e) => setFormData({ ...formData, width: parseFloat(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">
-                      Altura (%)
-                    </label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.height}
-                      onChange={(e) => setFormData({ ...formData, height: parseFloat(e.target.value) })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">
-                    Explicação *
+                  <label 
+                    htmlFor="image-upload" 
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    {uploadingImage ? (
+                      <p className="text-sm text-slate-500">Carregando...</p>
+                    ) : (
+                      <>
+                        <Plus className="w-6 h-6 text-slate-400" />
+                        <p className="text-sm text-slate-600 font-medium">Carregar Imagem do Diagrama</p>
+                        <p className="text-xs text-slate-400">Clique para selecionar</p>
+                      </>
+                    )}
                   </label>
-                  <Textarea
-                    value={formData.explanation}
-                    onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
-                    placeholder="Descrição anatômica do foco cardíaco"
-                    rows={3}
-                  />
                 </div>
 
-
-
-                <div className="flex gap-2">
-                  <Button type="submit" className="flex-1 bg-rose-600 hover:bg-rose-700">
-                    <Save className="w-4 h-4 mr-2" />
-                    {editingRegion ? 'Atualizar' : 'Criar'}
-                  </Button>
-                  {editingRegion && (
-                    <Button type="button" variant="outline" onClick={resetForm}>
-                      Cancelar
-                    </Button>
-                  )}
+                {/* Preview Interativo */}
+                <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-medium text-slate-600">
+                      {isCreatingNew ? 'Clique na imagem para posicionar o foco' : 'Diagrama Interativo'}
+                    </p>
+                    {!isCreatingNew && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setIsCreatingNew(true)}
+                        className="bg-rose-600 hover:bg-rose-700"
+                      >
+                        <Plus className="w-3 h-3 mr-1" />
+                        Novo Foco
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Diagrama */}
+                  <div 
+                    className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200 overflow-hidden mb-3"
+                    onClick={handleDiagramClick}
+                  >
+                    <img 
+                      src={diagramImage}
+                      alt="Diagrama torácico"
+                      className="w-full h-full object-contain pointer-events-none select-none"
+                      draggable={false}
+                    />
+                    
+                    {/* Todos os focos cadastrados */}
+                    {regions.map(region => (
+                      <div
+                        key={region.id}
+                        className="absolute border-2 border-rose-400 bg-rose-400/10 rounded transition-all cursor-pointer hover:bg-rose-400/20"
+                        style={{
+                          left: `${region.x}%`,
+                          top: `${region.y}%`,
+                          width: `${region.width}%`,
+                          height: `${region.height}%`,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(region);
+                        }}
+                      >
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[0.6rem] font-bold text-rose-600 whitespace-nowrap bg-white/90 px-1 rounded">
+                          {region.region_name}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Foco em edição/criação com destaque */}
+                    {(isCreatingNew || editingRegion) && formData.region_name && (
+                      <div
+                        className="absolute border-2 border-rose-600 bg-rose-600/20 rounded cursor-move shadow-lg"
+                        style={{
+                          left: `${formData.x}%`,
+                          top: `${formData.y}%`,
+                          width: `${formData.width}%`,
+                          height: `${formData.height}%`,
+                        }}
+                        onMouseDown={(e) => handleMouseDown(e, 'drag')}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-rose-700 whitespace-nowrap bg-white px-1.5 py-0.5 rounded pointer-events-none">
+                          {formData.region_name}
+                        </div>
+                        <div 
+                          className="absolute bottom-0 right-0 w-3 h-3 bg-rose-600 rounded-tl cursor-nwse-resize"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            handleMouseDown(e, 'resize');
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="text-xs text-slate-500 flex justify-between pt-2 border-t">
+                    <span>Pos: ({formData.x.toFixed(1)}%, {formData.y.toFixed(1)}%)</span>
+                    <span>Tam: {formData.width.toFixed(1)}% × {formData.height.toFixed(1)}%</span>
+                  </div>
                 </div>
+
+                {/* Formulário de Nome e Explicação */}
+                {(isCreatingNew || editingRegion) && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">
+                        Nome do Foco *
+                      </label>
+                      <Input
+                        value={formData.region_name}
+                        onChange={(e) => setFormData({ ...formData, region_name: e.target.value })}
+                        placeholder="Ex: Foco Aórtico"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">
+                        Explicação *
+                      </label>
+                      <Textarea
+                        value={formData.explanation}
+                        onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
+                        placeholder="Descrição anatômica do foco cardíaco"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button type="submit" className="flex-1 bg-rose-600 hover:bg-rose-700">
+                        <Save className="w-4 h-4 mr-2" />
+                        {editingRegion ? 'Atualizar' : 'Criar'}
+                      </Button>
+                      <Button type="button" variant="outline" onClick={resetForm}>
+                        Cancelar
+                      </Button>
+                    </div>
+                  </>
+                )}
               </form>
             </CardContent>
           </Card>
