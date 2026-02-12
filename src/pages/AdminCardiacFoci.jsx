@@ -214,9 +214,10 @@ export default function AdminCardiacFoci() {
                   {/* Diagrama */}
                   <div 
                     className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200 overflow-hidden mb-3"
+                    onClick={handleDiagramClick}
                   >
                     <img 
-                      src={DEFAULT_IMAGE}
+                      src={diagramImage}
                       alt="Diagrama torácico"
                       className="w-full h-full object-contain pointer-events-none select-none"
                       draggable={false}
