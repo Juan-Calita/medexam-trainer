@@ -17,10 +17,7 @@ export default function AdminCardiacFoci() {
   const [editingRegion, setEditingRegion] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const [diagramImage, setDiagramImage] = useState(DEFAULT_IMAGE);
   const [formData, setFormData] = useState({
     game_type: 'cardiac_foci',
     region_name: '',
