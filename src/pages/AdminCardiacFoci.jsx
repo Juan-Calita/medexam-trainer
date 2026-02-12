@@ -216,7 +216,7 @@ export default function AdminCardiacFoci() {
                     className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200 overflow-hidden mb-3"
                   >
                     <img 
-                      src={diagramImage}
+                      src={DEFAULT_IMAGE}
                       alt="Diagrama torácico"
                       className="w-full h-full object-contain pointer-events-none select-none"
                       draggable={false}
