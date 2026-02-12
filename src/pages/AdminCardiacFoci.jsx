@@ -15,9 +15,6 @@ const DEFAULT_IMAGE = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/objec
 
 export default function AdminCardiacFoci() {
   const [editingRegion, setEditingRegion] = useState(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [formData, setFormData] = useState({
     game_type: 'cardiac_foci',
     region_name: '',
@@ -109,45 +106,6 @@ export default function AdminCardiacFoci() {
     }
   };
 
-  const handleMouseDown = (e, type) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    if (type === 'drag') {
-      setIsDragging(true);
-      setDragStart({ x: x - formData.x, y: y - formData.y });
-    } else if (type === 'resize') {
-      setIsResizing(true);
-      setDragStart({ x, y });
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging && !isResizing) return;
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    if (isDragging) {
-      setFormData({
-        ...formData,
-        x: Math.max(0, Math.min(100 - formData.width, x - dragStart.x)),
-        y: Math.max(0, Math.min(100 - formData.height, y - dragStart.y))
-      });
-    } else if (isResizing) {
-      const width = Math.max(5, Math.min(50, x - formData.x));
-      const height = Math.max(5, Math.min(50, y - formData.y));
-      setFormData({ ...formData, width, height });
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    setIsResizing(false);
-  };
-
 
 
   return (
@@ -193,6 +151,56 @@ export default function AdminCardiacFoci() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">
+                      Posição X (%)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={formData.x}
+                      onChange={(e) => setFormData({ ...formData, x: parseFloat(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">
+                      Posição Y (%)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={formData.y}
+                      onChange={(e) => setFormData({ ...formData, y: parseFloat(e.target.value) })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">
+                      Largura (%)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={formData.width}
+                      onChange={(e) => setFormData({ ...formData, width: parseFloat(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">
+                      Altura (%)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={formData.height}
+                      onChange={(e) => setFormData({ ...formData, height: parseFloat(e.target.value) })}
+                    />
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-sm font-medium text-slate-700 mb-1 block">
                     Explicação *
@@ -205,89 +213,7 @@ export default function AdminCardiacFoci() {
                   />
                 </div>
 
-                {/* Preview Interativo */}
-                <div className="border border-slate-200 rounded-lg p-3 bg-slate-50">
-                  <p className="text-xs font-medium text-slate-600 mb-3">
-                    Preview do Jogo - Arraste para posicionar
-                  </p>
-                  
-                  {/* Diagrama */}
-                  <div 
-                    className="relative w-full aspect-[4/3] bg-white rounded border border-slate-200 overflow-hidden mb-3"
-                    onClick={handleDiagramClick}
-                  >
-                    <img 
-                      src={diagramImage}
-                      alt="Diagrama torácico"
-                      className="w-full h-full object-contain pointer-events-none select-none"
-                      draggable={false}
-                    />
-                    
-                    {/* Todas os focos cadastrados */}
-                    {regions.map(region => (
-                      <div
-                        key={region.id}
-                        className="absolute border-2 border-rose-400 bg-rose-400/10 rounded transition-all"
-                        style={{
-                          left: `${region.x}%`,
-                          top: `${region.y}%`,
-                          width: `${region.width}%`,
-                          height: `${region.height}%`,
-                        }}
-                      >
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[0.6rem] font-bold text-rose-600 whitespace-nowrap bg-white/90 px-1 rounded">
-                          {region.region_name}
-                        </div>
-                      </div>
-                    ))}
-                    
-                    {/* Foco em edição com destaque */}
-                    {formData.region_name && (
-                      <div
-                        className="absolute border-2 border-rose-600 bg-rose-600/20 rounded cursor-move shadow-lg"
-                        style={{
-                          left: `${formData.x}%`,
-                          top: `${formData.y}%`,
-                          width: `${formData.width}%`,
-                          height: `${formData.height}%`,
-                        }}
-                        onMouseDown={(e) => handleMouseDown(e, 'drag')}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
-                      >
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs font-bold text-rose-700 whitespace-nowrap bg-white px-1.5 py-0.5 rounded pointer-events-none">
-                          {formData.region_name}
-                        </div>
-                        <div 
-                          className="absolute bottom-0 right-0 w-3 h-3 bg-rose-600 rounded-tl cursor-nwse-resize"
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                            handleMouseDown(e, 'resize');
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Labels Disponíveis */}
-                  {formData.region_name && (
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium text-slate-600">Label de Exemplo:</p>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border-2 border-slate-200 w-fit">
-                        <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                        </svg>
-                        <span className="text-sm font-medium text-slate-700">{formData.region_name}</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div className="mt-2 text-xs text-slate-500 flex justify-between pt-2 border-t">
-                    <span>Pos: ({formData.x.toFixed(1)}%, {formData.y.toFixed(1)}%)</span>
-                    <span>Tam: {formData.width.toFixed(1)}% × {formData.height.toFixed(1)}%</span>
-                  </div>
-                </div>
+
 
                 <div className="flex gap-2">
                   <Button type="submit" className="flex-1 bg-rose-600 hover:bg-rose-700">
