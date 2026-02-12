@@ -148,35 +148,7 @@ export default function AdminCardiacFoci() {
     setIsResizing(false);
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    setUploadingImage(true);
-    try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setDiagramImage(file_url);
-      toast.success('Imagem carregada!');
-    } catch (error) {
-      toast.error('Erro ao carregar imagem');
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const handleDiagramClick = (e) => {
-    if (!isCreatingNew || editingRegion) return;
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    
-    setFormData({
-      ...formData,
-      x: Math.max(0, Math.min(88, x)),
-      y: Math.max(0, Math.min(90, y))
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
