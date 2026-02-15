@@ -51,13 +51,11 @@ export default function AbdominalDiagram({
               className={`absolute flex items-center justify-center p-1 rounded-lg border-2 border-dashed transition-all duration-300 ${
                 isPlaced 
                   ? 'bg-emerald-100/80 border-emerald-400' 
-                  : isHighlighted 
-                    ? 'bg-teal-100/60 border-teal-400 scale-105' 
-                    : feedback === 'correct'
-                      ? 'bg-emerald-200 border-emerald-500'
-                      : feedback === 'incorrect'
-                        ? 'bg-rose-200 border-rose-500'
-                        : 'bg-white/40 border-slate-300 hover:bg-slate-100/60 hover:border-slate-400'
+                  : feedback === 'correct'
+                    ? 'bg-emerald-200 border-emerald-500'
+                    : feedback === 'incorrect'
+                      ? 'bg-rose-200 border-rose-500'
+                      : 'bg-white/40 border-slate-300'
               }`}
               style={{
                 left: `${pos.x}%`,
