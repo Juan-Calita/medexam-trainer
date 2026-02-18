@@ -62,9 +62,11 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-xl">
-                <Stethoscope className="w-6 h-6 text-white" />
-              </div>
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/221993392_GradientIconMapNavigationAppLogo2.png"
+                alt="Asclepius"
+                className="w-10 h-10"
+              />
               <div>
                 <h1 className="text-xl font-bold text-white">Anamnes.ia</h1>
                 <p className="text-xs text-purple-200">Exame Físico</p>
