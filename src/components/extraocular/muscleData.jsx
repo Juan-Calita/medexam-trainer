@@ -31,9 +31,9 @@ export const MUSCLES = [
   },
   {
     id: 'inferior_rectus',
-    name: 'Inferior Rectus',
-    nerve: 'CN III (Oculomotor)',
-    action: 'Depression (mainly in abduction)',
+    name: 'Reto Inferior',
+    nerve: 'NC III (Oculomotor)',
+    action: 'Depressão (principalmente em abdução)',
     failedDirection: 'depression',
     explanation:
       'O reto inferior é inervado pelo NC III. Ele deprime o olho, especialmente em abdução. Uma lesão compromete o olhar para baixo.',
