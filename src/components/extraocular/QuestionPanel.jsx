@@ -57,17 +57,17 @@ export default function QuestionPanel({
         {feedback && (
           <div className={`mt-5 rounded-lg p-4 text-sm leading-relaxed ${feedback.correct ? 'bg-green-50 border border-green-200 text-green-900' : 'bg-red-50 border border-red-200 text-red-900'}`}>
             <p className="font-semibold mb-1">
-              {feedback.correct ? '✓ Correct!' : '✗ Incorrect'}
+              {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
               {!feedback.correct && (
                 <span className="ml-2 text-red-700">
-                  Correct answer: <strong>{impairedMuscle.name}</strong>
+                  Resposta correta: <strong>{impairedMuscle.name}</strong>
                 </span>
               )}
             </p>
             <p>{impairedMuscle.explanation}</p>
             {showCranialNerve && (
               <p className="mt-2 font-medium text-slate-700">
-                Cranial nerve: <span className="text-blue-700">{impairedMuscle.nerve}</span>
+                Nervo craniano: <span className="text-blue-700">{impairedMuscle.nerve}</span>
               </p>
             )}
           </div>
