@@ -3,9 +3,9 @@ import { LEVEL_CONFIG } from './caseDatabase';
 
 export default function NeuroMenuScreen({ onSelectLevel }) {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f0eeff' }}>
       {/* Hero */}
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white px-6 py-12 text-center">
+      <div className="text-white px-6 py-12 text-center" style={{ background: 'linear-gradient(to right bottom, #7c3aed, #6d28d9)' }}>
         <div className="max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest mb-6 text-slate-300 border border-white/20">
             🧠 Módulo de Treinamento Médico
@@ -81,7 +81,7 @@ export default function NeuroMenuScreen({ onSelectLevel }) {
               ['🏥', 'Preparação para residência médica'],
               ['🧠', 'Diagnóstico integrado no Nível 4'],
             ].map(([icon, text]) => (
-              <div key={text} className="flex items-start gap-2">
+              <div key={text} className="flex items-start gap-2" style={{ color: '#4b5563' }}>
                 <span className="flex-shrink-0">{icon}</span>
                 <span>{text}</span>
               </div>
