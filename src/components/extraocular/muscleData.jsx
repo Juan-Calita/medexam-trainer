@@ -41,9 +41,9 @@ export const MUSCLES = [
   },
   {
     id: 'superior_oblique',
-    name: 'Superior Oblique',
-    nerve: 'CN IV (Trochlear)',
-    action: 'Intorsion + Depression in adduction',
+    name: 'Oblíquo Superior',
+    nerve: 'NC IV (Troclear)',
+    action: 'Intorção + Depressão em adução',
     failedDirection: 'depression_adduction',
     explanation:
       'O oblíquo superior é inervado pelo NC IV (nervo troclear). Sua principal ação clínica é a depressão quando o olho está em adução. A lesão causa diplopia vertical que piora ao olhar para baixo e para dentro — o olho não consegue deprimir em adução.',
