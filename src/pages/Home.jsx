@@ -66,8 +66,8 @@ export default function Home() {
                 <Stethoscope className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">MedExam Trainer</h1>
-                <p className="text-xs text-purple-200">Treinamento em Exame Físico</p>
+                <h1 className="text-xl font-bold text-white">Anamnes.ia</h1>
+                <p className="text-xs text-purple-200">Exame Físico</p>
               </div>
             </div>
             </div>
