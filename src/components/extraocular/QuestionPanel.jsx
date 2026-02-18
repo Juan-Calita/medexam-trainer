@@ -79,7 +79,7 @@ export default function QuestionPanel({
             onClick={onNext}
             className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-sm"
           >
-            Next Case →
+            Próximo Caso →
           </button>
         )}
       </div>
