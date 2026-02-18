@@ -108,11 +108,14 @@ export default function ExtraocularGame() {
             muscles={availableMuscles}
             difficulty={difficulty}
             impairedMuscle={impairedMuscle}
+            impairedEye={impairedEye}
             selectedAnswer={selectedAnswer}
             onAnswer={handleAnswer}
             gameState={gameState}
             onNext={handleNext}
             feedback={feedback}
+            correctStreak={correctStreak}
+            streakToAdvance={STREAK_TO_ADVANCE}
           />
         )}
       </div>
