@@ -6,7 +6,7 @@ export const MUSCLES = [
     action: 'Adduction (moves eye nasally)',
     failedDirection: 'adduction', // cannot move inward
     explanation:
-      'The medial rectus is innervated by CN III. A lesion causes failure of adduction — the eye deviates laterally at rest and cannot cross the midline toward the nose.',
+      'O reto medial é inervado pelo NC III. Uma lesão causa falha na adução — o olho desvia lateralmente em repouso e não consegue cruzar a linha média em direção ao nariz.',
     difficulty: ['basic', 'intermediate', 'advanced'],
   },
   {
