@@ -11,10 +11,15 @@ export default function ExtraocularGame() {
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
   const [impairedMuscle, setImpairedMuscle] = useState(null);
+  const [impairedEye, setImpairedEye] = useState('right');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [feedback, setFeedback] = useState(null); // { correct, muscle, explanation }
+  const [feedback, setFeedback] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [correctStreak, setCorrectStreak] = useState(0);
   const containerRef = useRef(null);
+
+  const DIFFICULTY_LEVELS = ['basic', 'intermediate', 'advanced'];
+  const STREAK_TO_ADVANCE = 3;
 
   const handleMouseMove = useCallback((e) => {
     if (containerRef.current) {
