@@ -80,6 +80,21 @@ export default function QuestionPanel({
           </div>
         )}
 
+        {/* Streak / difficulty progress */}
+        {nextDifficulty[difficulty] && (
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-xs text-slate-500">Progresso para {nextDifficulty[difficulty]}:</span>
+            <div className="flex gap-1">
+              {Array.from({ length: streakToAdvance }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-4 h-4 rounded-full border-2 transition-all ${i < correctStreak ? 'bg-green-500 border-green-500' : 'bg-white border-slate-300'}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Next button */}
         {gameState === 'feedback' && (
           <button
