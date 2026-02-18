@@ -1,5 +1,5 @@
 import React from 'react';
-import { MUSCLES } from './muscleData';
+import { MUSCLES } from '@/components/extraocular/muscleData';
 
 export default function QuestionPanel({
   muscles,
