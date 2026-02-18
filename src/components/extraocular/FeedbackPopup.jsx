@@ -23,7 +23,7 @@ export default function FeedbackPopup({ feedback, onNext }) {
       style={{ minWidth: 220 }}
     >
       <span className="text-xl">{feedback.correct ? '✓' : '✗'}</span>
-      <span>{feedback.correct ? 'Correct! Well done.' : 'Incorrect — review the explanation below.'}</span>
+      <span>{feedback.correct ? 'Correto! Muito bem.' : 'Incorreto — revise a explicação abaixo.'}</span>
     </div>
   );
 }
