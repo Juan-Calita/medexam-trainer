@@ -61,7 +61,14 @@ export default function Home() {
       <header className="sticky top-0 z-40" style={{ backgroundColor: '#7c3aed' }}>
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+                <a 
+                  href="https://anamnes-ia-hkxi.onrender.com/mainpage"
+                  className="px-4 py-2 rounded-lg text-white font-semibold hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+                >
+                  ← Voltar
+                </a>
+                <div className="flex items-center gap-3">
               <div className="p-3 rounded-lg shadow-lg" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/698beb7c76ba1376ff50d67a/221993392_GradientIconMapNavigationAppLogo2.png"
