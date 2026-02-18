@@ -16,22 +16,28 @@ export default function GameCard({
 }) {
   const colorClasses = {
     teal: {
-      bg: 'bg-gradient-to-br from-teal-500 to-emerald-600',
+      bg: 'bg-gradient-to-br from-teal-400 to-emerald-500',
       light: 'bg-teal-50',
       text: 'text-teal-600',
       border: 'border-teal-200'
     },
     indigo: {
-      bg: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+      bg: 'bg-gradient-to-br from-indigo-400 to-purple-500',
       light: 'bg-indigo-50',
       text: 'text-indigo-600',
       border: 'border-indigo-200'
     },
     rose: {
-      bg: 'bg-gradient-to-br from-rose-500 to-pink-600',
+      bg: 'bg-gradient-to-br from-pink-500 to-rose-500',
       light: 'bg-rose-50',
       text: 'text-rose-600',
       border: 'border-rose-200'
+    },
+    purple: {
+      bg: 'bg-gradient-to-br from-purple-500 to-violet-600',
+      light: 'bg-purple-50',
+      text: 'text-purple-600',
+      border: 'border-purple-200'
     }
   };
 
