@@ -17,10 +17,10 @@ export default function QuestionPanel({
     <div className="mt-8 w-full max-w-xl">
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
         <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">
-          Clinical Question
+          Questão Clínica
         </p>
         <h2 className="text-lg font-bold text-slate-800 mb-5">
-          Which extraocular muscle is impaired in the right eye?
+          Qual músculo extraocular está comprometido no olho direito?
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
