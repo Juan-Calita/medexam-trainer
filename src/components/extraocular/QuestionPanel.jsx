@@ -1,5 +1,7 @@
 import React from 'react';
-import { MUSCLES } from '@/components/extraocular/muscleData';
+import { MUSCLES, CN_PALSIES } from '@/components/extraocular/muscleData';
+
+const ALL_OPTIONS = [...MUSCLES, ...CN_PALSIES];
 
 export default function QuestionPanel({
   muscles,
