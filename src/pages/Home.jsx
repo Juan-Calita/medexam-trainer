@@ -56,22 +56,22 @@ export default function Home() {
   }, [progressData]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen" style={{ backgroundColor: '#f0eeff' }}>
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-40">
+      <header className="sticky top-0 z-40" style={{ backgroundColor: '#7c3aed' }}>
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl">
+              <div className="p-2 bg-white/20 rounded-xl">
                 <Stethoscope className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-800">MedExam Trainer</h1>
-                <p className="text-xs text-slate-500">Treinamento em Exame Físico</p>
+                <h1 className="text-xl font-bold text-white">MedExam Trainer</h1>
+                <p className="text-xs text-purple-200">Treinamento em Exame Físico</p>
               </div>
             </div>
             <Link to={createPageUrl('Admin')}>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
                 <Settings className="w-4 h-4 mr-2" />
                 Admin
               </Button>
@@ -88,10 +88,10 @@ export default function Home() {
           className="mb-8"
         >
           <div className="flex items-center gap-2 mb-2">
-            <GraduationCap className="w-5 h-5 text-teal-600" />
-            <span className="text-sm font-medium text-teal-600">Central de Aprendizado</span>
+            <GraduationCap className="w-5 h-5" style={{ color: '#7c3aed' }} />
+            <span className="text-sm font-medium" style={{ color: '#7c3aed' }}>Central de Aprendizado</span>
           </div>
-          <h2 className="text-3xl font-bold text-slate-800 mb-2">
+          <h2 className="text-3xl font-bold mb-2" style={{ color: '#3b0764' }}>
             Domine Habilidades Clínicas
           </h2>
           <p className="text-slate-600 max-w-2xl">
@@ -102,7 +102,7 @@ export default function Home() {
 
         {/* Stats Overview */}
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: '#7c3aed' }}>
             Seu Progresso
           </h3>
           <StatsOverview progressData={progressData} />
@@ -110,7 +110,7 @@ export default function Home() {
 
         {/* Games Grid */}
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: '#7c3aed' }}>
             Módulos de Treinamento
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -151,7 +151,7 @@ export default function Home() {
               description="Identifique músculos extraoculares e nervos cranianos afetados"
               icon={Eye}
               pageName="ExtraocularGame"
-              color="indigo"
+              color="purple"
               stats={null}
             />
             <GameCard
@@ -170,10 +170,11 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white"
+          className="rounded-2xl p-6 text-white"
+          style={{ background: 'linear-gradient(to right, #5b21b6, #7c3aed)' }}
         >
           <h3 className="text-lg font-semibold mb-2">Por Que a Prática Importa</h3>
-          <p className="text-slate-300 text-sm leading-relaxed">
+          <p className="text-purple-200 text-sm leading-relaxed">
             A prática repetitiva com feedback imediato é comprovadamente eficaz para melhorar o reconhecimento 
             de padrões e o raciocínio clínico. Estes jogos são projetados para reforçar seu conhecimento de 
             anatomia e habilidades diagnósticas essenciais para o exame físico.

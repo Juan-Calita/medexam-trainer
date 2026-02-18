@@ -59,8 +59,8 @@ import AuscultationCardiaca from './pages/AuscultationCardiaca';
 import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import CardiacFociGame from './pages/CardiacFociGame';
 import ExtraocularGame from './pages/ExtraocularGame';
-import Home from './pages/Home';
 import NeuroPeripheralGame from './pages/NeuroPeripheralGame';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -77,8 +77,8 @@ export const PAGES = {
     "AuscultationPulmonar": AuscultationPulmonar,
     "CardiacFociGame": CardiacFociGame,
     "ExtraocularGame": ExtraocularGame,
-    "Home": Home,
     "NeuroPeripheralGame": NeuroPeripheralGame,
+    "Home": Home,
 }
 
 export const pagesConfig = {
