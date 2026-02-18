@@ -21,9 +21,9 @@ export default function ExtraocularHeader({ score, round, difficulty, setDifficu
           </Link>
           <div>
             <h1 className="text-base font-bold text-slate-800 leading-tight">
-              Extraocular Muscle Simulator
+              Simulador de Músculos Extraoculares
             </h1>
-            <p className="text-xs text-slate-400">Semiology Training — Eye Movement Assessment</p>
+            <p className="text-xs text-slate-400">Treinamento em Semiologia — Avaliação do Movimento Ocular</p>
           </div>
         </div>
 
