@@ -14,29 +14,6 @@ export default function GameCard({
   color, 
   stats 
 }) {
-  const colorClasses = {
-    teal: {
-      bg: 'bg-gradient-to-br from-teal-500 to-emerald-600',
-      light: 'bg-teal-50',
-      text: 'text-teal-600',
-      border: 'border-teal-200'
-    },
-    indigo: {
-      bg: 'bg-gradient-to-br from-indigo-500 to-purple-600',
-      light: 'bg-indigo-50',
-      text: 'text-indigo-600',
-      border: 'border-indigo-200'
-    },
-    rose: {
-      bg: 'bg-gradient-to-br from-rose-500 to-pink-600',
-      light: 'bg-rose-50',
-      text: 'text-rose-600',
-      border: 'border-rose-200'
-    }
-  };
-
-  const colors = colorClasses[color] || colorClasses.teal;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -45,37 +22,37 @@ export default function GameCard({
       transition={{ duration: 0.3 }}
     >
       <Link to={createPageUrl(pageName)}>
-        <Card className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <div className={`${colors.bg} p-6 text-white`}>
+        <Card className="overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300" style={{ border: '1px solid #ddd6fe', backgroundColor: '#ffffff' }}>
+          <div className="p-6 text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #4c1d95)' }}>
             <div className="flex items-start justify-between">
-              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+              <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
                 <Icon className="w-8 h-8" />
               </div>
               <ArrowRight className="w-5 h-5 opacity-70" />
             </div>
             <h3 className="text-xl font-bold mt-4">{title}</h3>
-            <p className="text-white/80 text-sm mt-1">{description}</p>
+            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.8)' }}>{description}</p>
           </div>
           
-          <CardContent className="p-4">
+          <CardContent className="p-4" style={{ backgroundColor: '#faf5ff' }}>
             {stats ? (
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <Trophy className="w-4 h-4 text-amber-500" />
+                  <div className="flex items-center gap-2" style={{ color: '#6b7280' }}>
+                    <Trophy className="w-4 h-4" style={{ color: '#f59e0b' }} />
                     <span>Melhor Pontuação</span>
                   </div>
-                  <span className="font-semibold text-slate-800">{stats.bestScore || 0}</span>
+                  <span className="font-semibold" style={{ color: '#3b0764' }}>{stats.bestScore || 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-slate-600">
-                    <Target className="w-4 h-4 text-teal-500" />
+                  <div className="flex items-center gap-2" style={{ color: '#6b7280' }}>
+                    <Target className="w-4 h-4" style={{ color: '#7c3aed' }} />
                     <span>Melhor Precisão</span>
                   </div>
-                  <span className="font-semibold text-slate-800">{stats.bestAccuracy || 0}%</span>
+                  <span className="font-semibold" style={{ color: '#3b0764' }}>{stats.bestAccuracy || 0}%</span>
                 </div>
                 <div>
-                  <div className="flex justify-between text-xs text-slate-500 mb-1">
+                  <div className="flex justify-between text-xs mb-1" style={{ color: '#9ca3af' }}>
                     <span>Jogos Jogados</span>
                     <span>{stats.gamesPlayed || 0}</span>
                   </div>
@@ -83,7 +60,7 @@ export default function GameCard({
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-slate-500 text-center py-2">
+              <p className="text-sm text-center py-2" style={{ color: '#7c3aed' }}>
                 Comece a jogar para acompanhar seu progresso
               </p>
             )}
