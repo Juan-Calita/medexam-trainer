@@ -155,6 +155,21 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
       ctx.fillStyle = 'rgba(255,255,255,0.7)';
       ctx.fill();
 
+      // Ptose overlay (CN III)
+      if (hasPtose) {
+        ctx.beginPath();
+        ctx.rect(eyeCX - scleraR, eyeCY - scleraR, scleraR * 2, scleraR * 1.1);
+        ctx.fillStyle = 'rgba(180,140,100,0.82)';
+        ctx.fill();
+        // eyelid bottom border
+        ctx.beginPath();
+        ctx.moveTo(eyeCX - scleraR, eyeCY - scleraR + scleraR * 1.1);
+        ctx.lineTo(eyeCX + scleraR, eyeCY - scleraR + scleraR * 1.1);
+        ctx.strokeStyle = '#8B6347';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
       // Impairment indicator (subtle red arc if showing hint)
       if (showImpairmentHint && failedDirection) {
         ctx.beginPath();
