@@ -78,12 +78,21 @@ export default function NeuroGameEngine({ level, onBackToMenu }) {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <button
-            onClick={onBackToMenu}
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors"
-          >
-            ← Voltar
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onBackToMenu}
+              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 text-sm font-medium transition-colors"
+            >
+              ← Níveis
+            </button>
+            <span className="text-slate-200">|</span>
+            <Link
+              to={createPageUrl('Home')}
+              className="flex items-center gap-1.5 text-slate-500 hover:text-teal-600 text-sm font-medium transition-colors"
+            >
+              🏠 Home
+            </Link>
+          </div>
           <div className="flex items-center gap-1">
             <span className="text-base">{config.icon}</span>
             <span className="text-sm font-semibold text-slate-700 hidden sm:inline">{config.title.split('—')[1]?.trim()}</span>
