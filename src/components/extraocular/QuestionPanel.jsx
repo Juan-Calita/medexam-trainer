@@ -28,8 +28,13 @@ export default function QuestionPanel({
         <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">
           Questão Clínica
         </p>
+        {impairedMuscle.scenario && (
+          <p className="text-sm text-slate-600 italic bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 mb-3">
+            {impairedMuscle.scenario}
+          </p>
+        )}
         <h2 className="text-lg font-bold text-slate-800 mb-5">
-          Qual músculo extraocular está comprometido no olho {eyeLabel}?
+          Qual é o diagnóstico para o olho {eyeLabel}?
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
