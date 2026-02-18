@@ -3,64 +3,75 @@ import { LEVEL_CONFIG } from './caseDatabase';
 
 export default function NeuroMenuScreen({ onSelectLevel }) {
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f0eeff' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f8f7ff' }}>
       {/* Hero */}
-      <div className="text-white px-6 py-12 text-center" style={{ background: 'linear-gradient(to right bottom, #7c3aed, #6d28d9)' }}>
-        <div className="max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-widest mb-6 text-slate-300 border border-white/20">
-            🧠 Módulo de Treinamento Médico
+      <div className="text-white px-6 py-16 text-center" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)' }}>
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 bg-white/15 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-widest mb-6 text-white/90 border border-white/25 backdrop-blur-sm">
+            🧠 Módulo Avançado de Neurologia
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3 leading-tight">
+          <h1 className="text-5xl sm:text-5xl font-black mb-4 leading-tight tracking-tight">
             NeuroPeripheral Master
           </h1>
-          <p className="text-slate-300 text-base leading-relaxed max-w-xl mx-auto">
-            Nervos Periféricos · Dermátomos · Plexo Braquial · Lombossacral · Radiculopatias · Síndromes de Compressão
+          <p className="text-white/80 text-lg leading-relaxed max-w-2xl mx-auto font-light">
+            Nervos Periféricos · Dermátomos · Plexo Braquial · Radiculopatias · Síndromes de Compressão
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-slate-400">
-            <span className="bg-white/10 rounded-full px-3 py-1">4 Níveis Progressivos</span>
-            <span className="bg-white/10 rounded-full px-3 py-1">Casos Aleatorizados</span>
-            <span className="bg-white/10 rounded-full px-3 py-1">Feedback Imediato</span>
-            <span className="bg-white/10 rounded-full px-3 py-1">Combo Multiplier</span>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            {['4 Níveis', 'Casos Aleatórios', 'Feedback Imediato', 'Combo x4'].map((tag) => (
+              <div key={tag} className="px-4 py-2 rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <span className="text-sm font-semibold text-white/90">{tag}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Level cards */}
-      <div className="flex-1 max-w-3xl mx-auto w-full px-4 py-10">
-        <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-5 text-center">
-          Selecione o Nível
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Main Content */}
+      <div className="flex-1 max-w-5xl mx-auto w-full px-4 py-12">
+        {/* Section Title */}
+        <div className="mb-8">
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#7c3aed' }}>Escolha seu Desafio</span>
+          <h2 className="text-3xl font-bold mt-2 mb-1" style={{ color: '#2e1065' }}>Selecione o Nível</h2>
+          <p className="text-slate-600 text-sm">Comece no nível iniciante ou desafie-se com casos avançados</p>
+        </div>
+
+        {/* Level cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
           {[1, 2, 3, 4].map((level) => {
             const cfg = LEVEL_CONFIG[level];
             return (
               <button
                 key={level}
                 onClick={() => onSelectLevel(level)}
-                className="group text-left rounded-2xl border p-5 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
-                style={{ borderColor: cfg.borderColor, backgroundColor: cfg.bgColor }}
+                className="group text-left overflow-hidden rounded-2xl border-2 p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 active:scale-[0.98]"
+                style={{ 
+                  borderColor: cfg.color,
+                  background: `linear-gradient(135deg, ${cfg.bgColor} 0%, ${cfg.bgColor}dd 100%)`,
+                  boxShadow: '0 4px 20px rgba(124, 58, 237, 0.1)'
+                }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-2xl">{cfg.icon}</span>
-                  <span
-                    className="text-xs font-bold rounded-full px-2.5 py-1 border"
-                    style={{ color: cfg.color, borderColor: cfg.borderColor, backgroundColor: 'white' }}
-                  >
-                    Nível {level}
-                  </span>
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-4xl">{cfg.icon}</span>
+                  <div className="px-3 py-1 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.9)', color: cfg.color }}>
+                    <span className="text-xs font-bold">Nível {level}</span>
+                  </div>
                 </div>
-                <h3 className="font-bold text-slate-800 text-base leading-snug mb-1">
+                <h3 className="font-bold text-lg mb-2" style={{ color: '#1f2937' }}>
                   {cfg.title.split('—')[1]?.trim() || cfg.title}
                 </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">{cfg.subtitle}</p>
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">{cfg.subtitle}</p>
 
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="flex gap-1.5">
+                <div className="flex items-center justify-between pt-4 border-t" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+                  <div className="flex gap-2">
                     {Array.from({ length: level }).map((_, i) => (
-                      <div key={i} className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: cfg.color, opacity: 0.7 + i * 0.1 }}/>
+                      <div 
+                        key={i} 
+                        className="w-2.5 h-2.5 rounded-full" 
+                        style={{ backgroundColor: cfg.color, opacity: 0.6 + i * 0.1 }}
+                      />
                     ))}
                   </div>
-                  <span className="text-xs font-semibold group-hover:translate-x-1 transition-transform" style={{ color: cfg.color }}>
+                  <span className="text-sm font-bold group-hover:translate-x-1 transition-transform" style={{ color: cfg.color }}>
                     Iniciar →
                   </span>
                 </div>
@@ -69,21 +80,19 @@ export default function NeuroMenuScreen({ onSelectLevel }) {
           })}
         </div>
 
-        {/* Info */}
-        <div className="mt-8 rounded-xl border p-5" style={{ backgroundColor: '#faf5ff', borderColor: '#ddd6fe' }}>
-          <h3 className="text-sm font-bold mb-3" style={{ color: '#6d28d9' }}>📋 Como funciona</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs" style={{ color: '#6b7280' }}>
+        {/* Features */}
+        <div className="rounded-2xl p-8 border-2" style={{ backgroundColor: '#faf5ff', borderColor: '#e9d5ff' }}>
+          <h3 className="text-lg font-bold mb-6" style={{ color: '#6d28d9' }}>⚡ Recursos</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
-              ['🎯', 'Casos aleatorizados a cada sessão'],
-              ['⚡', 'Déficit motor + padrão sensitivo + reflexos'],
-              ['🔥', 'Combo multiplier para acertos consecutivos'],
-              ['📚', 'Explicação clínica detalhada após cada caso'],
-              ['🏥', 'Preparação para residência médica'],
-              ['🧠', 'Diagnóstico integrado no Nível 4'],
-            ].map(([icon, text]) => (
-              <div key={text} className="flex items-start gap-2" style={{ color: '#4b5563' }}>
-                <span className="flex-shrink-0">{icon}</span>
-                <span>{text}</span>
+              { icon: '🎯', title: 'Casos Aleatórios', desc: 'Nova experiência a cada sessão' },
+              { icon: '🔥', title: 'Combo Multiplier', desc: 'Ganhe mais pontos com acertos consecutivos' },
+              { icon: '📊', title: 'Analytics Detalhado', desc: 'Acompanhe seu progresso em tempo real' },
+            ].map(({ icon, title, desc }) => (
+              <div key={title} className="text-center">
+                <span className="text-3xl block mb-2">{icon}</span>
+                <h4 className="font-bold text-sm mb-1" style={{ color: '#1f2937' }}>{title}</h4>
+                <p className="text-xs text-slate-600">{desc}</p>
               </div>
             ))}
           </div>
