@@ -45,6 +45,15 @@ function applyImpairment(px, py, failedDirection, eyeSide) {
       if (eyeSide === 'left' && x > 0 && y < 0) y = Math.max(y, -3);
       if (eyeSide === 'right' && x < 0 && y < 0) y = Math.max(y, -3);
       break;
+    case 'cn3_complete':
+      // Olho "down and out": só LR e SO funcionam
+      // Sem adução, elevação, depressão → olho fica lateralizado e levemente deprimido
+      // Bloqueia movimento medial e para cima
+      if (eyeSide === 'left' && x < 0) x = Math.max(x, -2); // sem adução (para a direita)
+      if (eyeSide === 'right' && x > 0) x = Math.min(x, 2); // sem adução (para a esquerda)
+      if (y < 0) y = Math.max(y, -2); // sem elevação
+      if (y > 0) y = Math.min(y, 4); // depressão moderada (SO funcional)
+      break;
     default:
       break;
   }
