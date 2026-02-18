@@ -36,7 +36,7 @@ export const MUSCLES = [
     action: 'Depression (mainly in abduction)',
     failedDirection: 'depression',
     explanation:
-      'The inferior rectus is innervated by CN III. It depresses the eye, especially in abduction. A lesion impairs downward gaze.',
+      'O reto inferior é inervado pelo NC III. Ele deprime o olho, especialmente em abdução. Uma lesão compromete o olhar para baixo.',
     difficulty: ['intermediate', 'advanced'],
   },
   {
