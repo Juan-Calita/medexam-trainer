@@ -56,7 +56,7 @@ export const MUSCLES = [
     action: 'Extorsion + Elevation in adduction',
     failedDirection: 'elevation_adduction',
     explanation:
-      'The inferior oblique is innervated by CN III. Its main clinical action is elevation when the eye is adducted. Lesion impairs upward gaze when the eye is looking inward.',
+      'O oblíquo inferior é inervado pelo NC III. Sua principal ação clínica é a elevação quando o olho está em adução. A lesão compromete o olhar para cima quando o olho está voltado para dentro.',
     difficulty: ['advanced'],
   },
 ];
