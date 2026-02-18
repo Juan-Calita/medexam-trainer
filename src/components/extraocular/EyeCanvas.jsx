@@ -162,7 +162,7 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
   );
 }
 
-export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, gameState }) {
+export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impairedEye = 'right', gameState }) {
   const faceRef = useRef(null);
   const [containerRect, setContainerRect] = React.useState(null);
   const [faceSize, setFaceSize] = React.useState({ w: 320, h: 220 });
