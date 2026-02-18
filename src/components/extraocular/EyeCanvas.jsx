@@ -218,27 +218,27 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
         {/* Eyes */}
         {containerRect !== null && (
           <>
-            {/* Left eye — normal */}
+            {/* Left eye */}
             <Eye
               cx={leftEyeX}
               cy={eyeY}
               size={eyeSize}
               mousePos={relMouse}
               containerRect={containerRect}
-              failedDirection={null}
+              failedDirection={leftImpaired ? failedDir : null}
               eyeSide="left"
-              showImpairmentHint={false}
+              showImpairmentHint={leftImpaired ? showHint : false}
             />
-            {/* Right eye — impaired */}
+            {/* Right eye */}
             <Eye
               cx={rightEyeX}
               cy={eyeY}
               size={eyeSize}
               mousePos={relMouse}
               containerRect={containerRect}
-              failedDirection={failedDir}
+              failedDirection={!leftImpaired ? failedDir : null}
               eyeSide="right"
-              showImpairmentHint={showHint}
+              showImpairmentHint={!leftImpaired ? showHint : false}
             />
           </>
         )}
