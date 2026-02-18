@@ -187,9 +187,10 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
   const rightEyeX = W * 0.65;
   const eyeSize = Math.min(W * 0.13, 42);
 
-  // Determine which eye is impaired (for this game, right eye only for simplicity)
   const failedDir = impairedMuscle ? impairedMuscle.failedDirection : null;
   const showHint = gameState === 'feedback';
+  const leftImpaired = impairedEye === 'left';
+  const eyeLabel = impairedEye === 'left' ? 'Olho esquerdo' : 'Olho direito';
 
   // Adjust mouse relative to face container
   const relMouse = {
