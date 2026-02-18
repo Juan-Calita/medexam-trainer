@@ -102,7 +102,11 @@ export const MUSCLES = [
 ];
 
 export function getMusclesForDifficulty(difficulty) {
-  return MUSCLES.filter(m => m.difficulty.includes(difficulty));
+  const muscles = MUSCLES.filter(m => m.difficulty.includes(difficulty));
+  if (difficulty === 'advanced') {
+    return [...muscles, ...CN_PALSIES];
+  }
+  return muscles;
 }
 
 export function getImpairedMovement(muscle) {
