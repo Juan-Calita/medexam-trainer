@@ -51,9 +51,9 @@ export const MUSCLES = [
   },
   {
     id: 'inferior_oblique',
-    name: 'Inferior Oblique',
-    nerve: 'CN III (Oculomotor)',
-    action: 'Extorsion + Elevation in adduction',
+    name: 'Oblíquo Inferior',
+    nerve: 'NC III (Oculomotor)',
+    action: 'Extorção + Elevação em adução',
     failedDirection: 'elevation_adduction',
     explanation:
       'O oblíquo inferior é inervado pelo NC III. Sua principal ação clínica é a elevação quando o olho está em adução. A lesão compromete o olhar para cima quando o olho está voltado para dentro.',
