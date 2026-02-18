@@ -1,9 +1,9 @@
 export const MUSCLES = [
   {
     id: 'medial_rectus',
-    name: 'Medial Rectus',
-    nerve: 'CN III (Oculomotor)',
-    action: 'Adduction (moves eye nasally)',
+    name: 'Reto Medial',
+    nerve: 'NC III (Oculomotor)',
+    action: 'Adução (move o olho nasalmente)',
     failedDirection: 'adduction', // cannot move inward
     explanation:
       'O reto medial é inervado pelo NC III. Uma lesão causa falha na adução — o olho desvia lateralmente em repouso e não consegue cruzar a linha média em direção ao nariz.',
