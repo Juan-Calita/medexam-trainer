@@ -46,7 +46,7 @@ export const MUSCLES = [
     action: 'Intorsion + Depression in adduction',
     failedDirection: 'depression_adduction',
     explanation:
-      'The superior oblique is innervated by CN IV (Trochlear nerve). Its main clinical action is depression when the eye is adducted. Lesion causes vertical diplopia worsening on looking down and inward — the eye cannot depress in adduction.',
+      'O oblíquo superior é inervado pelo NC IV (nervo troclear). Sua principal ação clínica é a depressão quando o olho está em adução. A lesão causa diplopia vertical que piora ao olhar para baixo e para dentro — o olho não consegue deprimir em adução.',
     difficulty: ['advanced'],
   },
   {
