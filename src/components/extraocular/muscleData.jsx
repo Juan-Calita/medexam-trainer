@@ -1,0 +1,73 @@
+export const MUSCLES = [
+  {
+    id: 'medial_rectus',
+    name: 'Medial Rectus',
+    nerve: 'CN III (Oculomotor)',
+    action: 'Adduction (moves eye nasally)',
+    failedDirection: 'adduction', // cannot move inward
+    explanation:
+      'The medial rectus is innervated by CN III. A lesion causes failure of adduction — the eye deviates laterally at rest and cannot cross the midline toward the nose.',
+    difficulty: ['basic', 'intermediate', 'advanced'],
+  },
+  {
+    id: 'lateral_rectus',
+    name: 'Lateral Rectus',
+    nerve: 'CN VI (Abducens)',
+    action: 'Abduction (moves eye temporally)',
+    failedDirection: 'abduction',
+    explanation:
+      'The lateral rectus is innervated by CN VI (Abducens nerve). A lesion results in failure of abduction — the eye cannot move outward and deviates medially at rest.',
+    difficulty: ['basic', 'intermediate', 'advanced'],
+  },
+  {
+    id: 'superior_rectus',
+    name: 'Superior Rectus',
+    nerve: 'CN III (Oculomotor)',
+    action: 'Elevation (mainly in abduction)',
+    failedDirection: 'elevation',
+    explanation:
+      'The superior rectus is innervated by CN III. Its primary action is elevation, especially when the eye is abducted. A lesion impairs upward gaze.',
+    difficulty: ['intermediate', 'advanced'],
+  },
+  {
+    id: 'inferior_rectus',
+    name: 'Inferior Rectus',
+    nerve: 'CN III (Oculomotor)',
+    action: 'Depression (mainly in abduction)',
+    failedDirection: 'depression',
+    explanation:
+      'The inferior rectus is innervated by CN III. It depresses the eye, especially in abduction. A lesion impairs downward gaze.',
+    difficulty: ['intermediate', 'advanced'],
+  },
+  {
+    id: 'superior_oblique',
+    name: 'Superior Oblique',
+    nerve: 'CN IV (Trochlear)',
+    action: 'Intorsion + Depression in adduction',
+    failedDirection: 'depression_adduction',
+    explanation:
+      'The superior oblique is innervated by CN IV (Trochlear nerve). Its main clinical action is depression when the eye is adducted. Lesion causes vertical diplopia worsening on looking down and inward — the eye cannot depress in adduction.',
+    difficulty: ['advanced'],
+  },
+  {
+    id: 'inferior_oblique',
+    name: 'Inferior Oblique',
+    nerve: 'CN III (Oculomotor)',
+    action: 'Extorsion + Elevation in adduction',
+    failedDirection: 'elevation_adduction',
+    explanation:
+      'The inferior oblique is innervated by CN III. Its main clinical action is elevation when the eye is adducted. Lesion impairs upward gaze when the eye is looking inward.',
+    difficulty: ['advanced'],
+  },
+];
+
+export function getMusclesForDifficulty(difficulty) {
+  return MUSCLES.filter(m => m.difficulty.includes(difficulty));
+}
+
+// Returns movement constraint for the impaired eye
+// Returns an object with blocked directions
+export function getImpairedMovement(muscle) {
+  if (!muscle) return null;
+  return muscle.failedDirection;
+}
