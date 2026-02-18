@@ -49,13 +49,9 @@ export default function ExtraocularHeader({ score, round, difficulty, setDifficu
 
           {/* Score */}
           <div className="text-right">
-            <div className="text-xs text-slate-400 font-medium">Score</div>
-            <div className="text-lg font-bold text-blue-700 leading-tight">{score}</div>
-          </div>
-
-          {round > 0 && (
-            <div className="text-right">
-              <div className="text-xs text-slate-400 font-medium">Round</div>
+            <div className="text-xs text-slate-400 font-medium">Pontuação</div>
+...
+              <div className="text-xs text-slate-400 font-medium">Rodada</div>
               <div className="text-lg font-bold text-slate-600 leading-tight">{round}</div>
             </div>
           )}
