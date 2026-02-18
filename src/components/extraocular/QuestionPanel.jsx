@@ -5,13 +5,20 @@ export default function QuestionPanel({
   muscles,
   difficulty,
   impairedMuscle,
+  impairedEye,
   selectedAnswer,
   onAnswer,
   gameState,
   onNext,
   feedback,
+  correctStreak,
+  streakToAdvance,
 }) {
   const showCranialNerve = difficulty === 'advanced';
+  const eyeLabel = impairedEye === 'left' ? 'esquerdo' : 'direito';
+
+  const difficultyLabels = { basic: 'Básico', intermediate: 'Intermediário', advanced: 'Avançado' };
+  const nextDifficulty = { basic: 'Intermediário', intermediate: 'Avançado', advanced: null };
 
   return (
     <div className="mt-8 w-full max-w-xl">
@@ -20,7 +27,7 @@ export default function QuestionPanel({
           Questão Clínica
         </p>
         <h2 className="text-lg font-bold text-slate-800 mb-5">
-          Qual músculo extraocular está comprometido no olho direito?
+          Qual músculo extraocular está comprometido no olho {eyeLabel}?
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
