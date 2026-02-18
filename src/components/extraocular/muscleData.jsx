@@ -21,9 +21,9 @@ export const MUSCLES = [
   },
   {
     id: 'superior_rectus',
-    name: 'Superior Rectus',
-    nerve: 'CN III (Oculomotor)',
-    action: 'Elevation (mainly in abduction)',
+    name: 'Reto Superior',
+    nerve: 'NC III (Oculomotor)',
+    action: 'Elevação (principalmente em abdução)',
     failedDirection: 'elevation',
     explanation:
       'O reto superior é inervado pelo NC III. Sua ação primária é a elevação, especialmente quando o olho está em abdução. Uma lesão compromete o olhar para cima.',
