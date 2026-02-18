@@ -187,10 +187,24 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
   }, [mousePos, failedDirection, eyeSide, cx, cy, size, containerRect, showImpairmentHint]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ position: 'absolute', left: cx - size, top: cy - size }}
-    />
+    <div style={{ position: 'absolute', left: cx - size, top: cy - size, width: size * 2, height: size * 2 }}>
+      <canvas ref={canvasRef} />
+      {hasPtose && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '54%',
+            background: 'rgba(180,140,100,0.85)',
+            borderRadius: '50% 50% 0 0 / 60% 60% 0 0',
+            borderBottom: '2px solid #8B6347',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+    </div>
   );
 }
 
