@@ -70,9 +70,9 @@ export default function NeuroMenuScreen({ onSelectLevel }) {
         </div>
 
         {/* Info */}
-        <div className="mt-8 bg-slate-50 rounded-xl border border-slate-100 p-5">
-          <h3 className="text-sm font-bold text-slate-700 mb-3">📋 Como funciona</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
+        <div className="mt-8 rounded-xl border p-5" style={{ backgroundColor: '#faf5ff', borderColor: '#ddd6fe' }}>
+          <h3 className="text-sm font-bold mb-3" style={{ color: '#6d28d9' }}>📋 Como funciona</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs" style={{ color: '#6b7280' }}>
             {[
               ['🎯', 'Casos aleatorizados a cada sessão'],
               ['⚡', 'Déficit motor + padrão sensitivo + reflexos'],
