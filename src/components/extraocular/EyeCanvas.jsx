@@ -237,6 +237,9 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
   const showHint = gameState === 'feedback';
   const leftImpaired = impairedEye === 'left';
   const eyeLabel = impairedEye === 'left' ? 'Olho esquerdo' : 'Olho direito';
+  const isCN3 = failedDir === 'cn3_complete';
+  // Ptose only shows during playing/feedback
+  const showPtose = isCN3 && (gameState === 'playing' || gameState === 'feedback');
 
   // Adjust mouse relative to face container
   const relMouse = {
