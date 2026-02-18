@@ -146,6 +146,14 @@ export default function Home() {
               color="rose"
               stats={cardiacaStats}
             />
+            <GameCard
+              title="Musculatura Extraocular"
+              description="Identifique músculos extraoculares e nervos cranianos afetados"
+              icon={Eye}
+              pageName="ExtraocularGame"
+              color="indigo"
+              stats={null}
+            />
           </div>
         </div>
 
