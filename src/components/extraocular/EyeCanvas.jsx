@@ -261,9 +261,9 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
 
       {/* Orientation label */}
       <div className="flex justify-between w-full max-w-xs mt-2 px-2">
-        <span className="text-[10px] text-slate-400">← Temporal (L)</span>
-        <span className="text-[10px] text-slate-400">Normal eye</span>
-        <span className="text-[10px] text-slate-400">Temporal (R) →</span>
+        <span className="text-[10px] text-slate-400">← Temporal (E)</span>
+        <span className="text-[10px] text-slate-400">{impairedMuscle ? (leftImpaired ? 'OD normal' : 'OE normal') : ''}</span>
+        <span className="text-[10px] text-slate-400">Temporal (D) →</span>
       </div>
     </div>
   );
