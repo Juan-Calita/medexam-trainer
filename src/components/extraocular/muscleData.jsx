@@ -11,9 +11,9 @@ export const MUSCLES = [
   },
   {
     id: 'lateral_rectus',
-    name: 'Lateral Rectus',
-    nerve: 'CN VI (Abducens)',
-    action: 'Abduction (moves eye temporally)',
+    name: 'Reto Lateral',
+    nerve: 'NC VI (Abducente)',
+    action: 'Abdução (move o olho temporalmente)',
     failedDirection: 'abduction',
     explanation:
       'O reto lateral é inervado pelo NC VI (nervo abducente). Uma lesão resulta em falha na abdução — o olho não consegue se mover para fora e desvia medialmente em repouso.',
