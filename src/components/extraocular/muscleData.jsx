@@ -16,7 +16,7 @@ export const MUSCLES = [
     action: 'Abduction (moves eye temporally)',
     failedDirection: 'abduction',
     explanation:
-      'The lateral rectus is innervated by CN VI (Abducens nerve). A lesion results in failure of abduction — the eye cannot move outward and deviates medially at rest.',
+      'O reto lateral é inervado pelo NC VI (nervo abducente). Uma lesão resulta em falha na abdução — o olho não consegue se mover para fora e desvia medialmente em repouso.',
     difficulty: ['basic', 'intermediate', 'advanced'],
   },
   {
