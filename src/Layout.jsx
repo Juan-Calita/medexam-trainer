@@ -2,20 +2,15 @@ import React from 'react';
 
 export default function Layout({ children }) {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f0eeff' }}>
+    <div className="min-h-screen bg-slate-50">
       <style>{`
         :root {
-          --primary: 262 80% 50%;
+          --primary: 203 89% 53%;
           --primary-foreground: 0 0% 100%;
-          --secondary: 230 60% 35%;
+          --secondary: 217 91% 60%;
           --secondary-foreground: 0 0% 100%;
-          --accent: 262 80% 50%;
+          --accent: 166 84% 39%;
           --accent-foreground: 0 0% 100%;
-          --background: 250 60% 95%;
-        }
-
-        body {
-          background-color: #f0eeff;
         }
         
         @keyframes pulse {

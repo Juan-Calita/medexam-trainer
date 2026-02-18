@@ -12,46 +12,46 @@ import StatsOverview from '@/components/dashboard/StatsOverview';
 export default function Home() {
   const { data: progressData = [] } = useQuery({
     queryKey: ['gameProgress'],
-    queryFn: () => base44.entities.GameProgress.list('-created_date', 100)
+    queryFn: () => base44.entities.GameProgress.list('-created_date', 100),
   });
 
   const abdominalStats = React.useMemo(() => {
-    const games = progressData.filter((p) => p.game_type === 'abdominal_regions');
+    const games = progressData.filter(p => p.game_type === 'abdominal_regions');
     if (games.length === 0) return null;
     return {
       gamesPlayed: games.length,
-      bestScore: Math.max(...games.map((g) => g.score || 0)),
-      bestAccuracy: Math.max(...games.map((g) => g.accuracy || 0))
+      bestScore: Math.max(...games.map(g => g.score || 0)),
+      bestAccuracy: Math.max(...games.map(g => g.accuracy || 0)),
     };
   }, [progressData]);
 
   const pulmonarStats = React.useMemo(() => {
-    const games = progressData.filter((p) => p.game_type === 'auscultation_pulmonar');
+    const games = progressData.filter(p => p.game_type === 'auscultation_pulmonar');
     if (games.length === 0) return null;
     return {
       gamesPlayed: games.length,
-      bestScore: Math.max(...games.map((g) => g.score || 0)),
-      bestAccuracy: Math.max(...games.map((g) => g.accuracy || 0))
+      bestScore: Math.max(...games.map(g => g.score || 0)),
+      bestAccuracy: Math.max(...games.map(g => g.accuracy || 0)),
     };
   }, [progressData]);
 
   const cardiacaStats = React.useMemo(() => {
-    const games = progressData.filter((p) => p.game_type === 'auscultation_cardiaca');
+    const games = progressData.filter(p => p.game_type === 'auscultation_cardiaca');
     if (games.length === 0) return null;
     return {
       gamesPlayed: games.length,
-      bestScore: Math.max(...games.map((g) => g.score || 0)),
-      bestAccuracy: Math.max(...games.map((g) => g.accuracy || 0))
+      bestScore: Math.max(...games.map(g => g.score || 0)),
+      bestAccuracy: Math.max(...games.map(g => g.accuracy || 0)),
     };
   }, [progressData]);
 
   const cardiacFociStats = React.useMemo(() => {
-    const games = progressData.filter((p) => p.game_type === 'cardiac_foci');
+    const games = progressData.filter(p => p.game_type === 'cardiac_foci');
     if (games.length === 0) return null;
     return {
       gamesPlayed: games.length,
-      bestScore: Math.max(...games.map((g) => g.score || 0)),
-      bestAccuracy: Math.max(...games.map((g) => g.accuracy || 0))
+      bestScore: Math.max(...games.map(g => g.score || 0)),
+      bestAccuracy: Math.max(...games.map(g => g.accuracy || 0)),
     };
   }, [progressData]);
 
@@ -66,8 +66,8 @@ export default function Home() {
                 <Stethoscope className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold">Anamnes.ia </h1>
-                <p className="text-xs"> Exame Físico</p>
+                <h1 className="text-xl font-bold text-slate-800">MedExam Trainer</h1>
+                <p className="text-xs text-slate-500">Treinamento em Exame Físico</p>
               </div>
             </div>
             <Link to={createPageUrl('Admin')}>
@@ -85,8 +85,8 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8">
-
+          className="mb-8"
+        >
           <div className="flex items-center gap-2 mb-2">
             <GraduationCap className="w-5 h-5 text-teal-600" />
             <span className="text-sm font-medium text-teal-600">Central de Aprendizado</span>
@@ -120,48 +120,48 @@ export default function Home() {
               icon={Grid3X3}
               pageName="AbdominalGame"
               color="teal"
-              stats={abdominalStats} />
-
+              stats={abdominalStats}
+            />
             <GameCard
               title="Focos Cardíacos"
               description="Identifique os pontos de ausculta cardíaca"
               icon={Stethoscope}
               pageName="CardiacFociGame"
               color="rose"
-              stats={cardiacFociStats} />
-
+              stats={cardiacFociStats}
+            />
             <GameCard
               title="Ausculta Pulmonar"
               description="Identifique sons respiratórios e suas patologias"
               icon={Wind}
               pageName="AuscultationPulmonar"
               color="indigo"
-              stats={pulmonarStats} />
-
+              stats={pulmonarStats}
+            />
             <GameCard
               title="Ausculta Cardíaca"
               description="Reconheça bulhas, sopros e ritmos cardíacos"
               icon={Heart}
               pageName="AuscultationCardiaca"
               color="rose"
-              stats={cardiacaStats} />
-
+              stats={cardiacaStats}
+            />
             <GameCard
               title="Musculatura Extraocular"
               description="Identifique músculos extraoculares e nervos cranianos afetados"
               icon={Eye}
               pageName="ExtraocularGame"
               color="indigo"
-              stats={null} />
-
+              stats={null}
+            />
             <GameCard
               title="Nervos Periféricos"
               description="Nervos periféricos, dermátomos, plexos e síndromes de compressão"
               icon={Brain}
               pageName="NeuroPeripheralGame"
               color="teal"
-              stats={null} />
-
+              stats={null}
+            />
           </div>
         </div>
 
@@ -170,8 +170,8 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white">
-
+          className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white"
+        >
           <h3 className="text-lg font-semibold mb-2">Por Que a Prática Importa</h3>
           <p className="text-slate-300 text-sm leading-relaxed">
             A prática repetitiva com feedback imediato é comprovadamente eficaz para melhorar o reconhecimento 
@@ -180,6 +180,6 @@ export default function Home() {
           </p>
         </motion.div>
       </main>
-    </div>);
-
+    </div>
+  );
 }
