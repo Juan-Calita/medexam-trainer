@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import EyeCanvas from '../components/extraocular/EyeCanvas';
-import QuestionPanel from '../components/extraocular/QuestionPanel';
-import GameHeader from '../components/extraocular/ExtraocularHeader';
-import FeedbackPopup from '../components/extraocular/FeedbackPopup';
-import { MUSCLES, getMusclesForDifficulty, getImpairedMovement } from '../components/extraocular/muscleData';
+import EyeCanvas from '@/components/extraocular/EyeCanvas';
+import QuestionPanel from '@/components/extraocular/QuestionPanel';
+import GameHeader from '@/components/extraocular/ExtraocularHeader';
+import FeedbackPopup from '@/components/extraocular/FeedbackPopup';
+import { MUSCLES, getMusclesForDifficulty, getImpairedMovement } from '@/components/extraocular/muscleData';
 
 export default function ExtraocularGame() {
   const [difficulty, setDifficulty] = useState('basic');
