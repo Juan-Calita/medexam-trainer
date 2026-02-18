@@ -60,7 +60,7 @@ function applyImpairment(px, py, failedDirection, eyeSide) {
   return { x, y };
 }
 
-function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, showImpairmentHint }) {
+function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, showImpairmentHint, hasPtose }) {
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const pupilRef = useRef({ x: 0, y: 0 });
