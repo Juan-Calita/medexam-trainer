@@ -70,13 +70,7 @@ export default function Home() {
                 <p className="text-xs text-purple-200">Treinamento em Exame Físico</p>
               </div>
             </div>
-            <Link to={createPageUrl('Admin')}>
-              <Button variant="outline" size="sm" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
-                <Settings className="w-4 h-4 mr-2" />
-                Admin
-              </Button>
-            </Link>
-          </div>
+            </div>
         </div>
       </header>
 
