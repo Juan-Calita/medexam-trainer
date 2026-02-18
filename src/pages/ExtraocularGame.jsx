@@ -88,6 +88,7 @@ export default function ExtraocularGame() {
           mousePos={mousePos}
           containerRef={containerRef}
           impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
+          impairedEye={impairedEye}
           gameState={gameState}
         />
 
