@@ -52,18 +52,16 @@ export default function QuestionPanel({
             }
 
             return (
-              <button
-                key={muscle.id}
-                onClick={() => onAnswer(muscle.id)}
-                disabled={gameState === 'feedback'}
-                className={`rounded-lg px-4 py-3 text-sm text-left transition-all duration-150 ${btnClass} disabled:cursor-default`}
-              >
-                <span className="font-medium">{muscle.name}</span>
-                {showCranialNerve && (
-                  <span className="block text-xs mt-0.5 opacity-60">{muscle.nerve}</span>
-                )}
-              </button>
-            );
+                  <button
+                    key={muscle.id}
+                    onClick={() => onAnswer(muscle.id)}
+                    disabled={gameState === 'feedback'}
+                    className={`rounded-lg px-4 py-3 text-sm text-left transition-all duration-150 ${btnClass} disabled:cursor-default`}
+                  >
+                    <span className="font-medium">{muscle.name}</span>
+                    <span className="block text-xs mt-0.5 opacity-60">{muscle.nerve}</span>
+                  </button>
+                );
           })}
         </div>
 
