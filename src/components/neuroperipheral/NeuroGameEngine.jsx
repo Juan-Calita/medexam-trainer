@@ -1,4 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { CASES, LEVEL_CONFIG } from './caseDatabase';
 import NeuroDiagram from './NeuroDiagram';
 import DermatomeMap from './DermatomeMap';
