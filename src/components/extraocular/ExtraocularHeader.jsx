@@ -4,9 +4,9 @@ import { createPageUrl } from '@/utils';
 import { ArrowLeft } from 'lucide-react';
 
 const DIFFICULTIES = [
-  { id: 'basic', label: 'Basic', desc: 'H & V Recti only' },
-  { id: 'intermediate', label: 'Intermediate', desc: '+ Vertical muscles' },
-  { id: 'advanced', label: 'Advanced', desc: '+ Obliques & CN' },
+  { id: 'basic', label: 'Básico', desc: 'Apenas retos horizontais' },
+  { id: 'intermediate', label: 'Intermediário', desc: '+ Músculos verticais' },
+  { id: 'advanced', label: 'Avançado', desc: '+ Oblíquos e Nervos Cranianos' },
 ];
 
 export default function ExtraocularHeader({ score, round, difficulty, setDifficulty, gameState }) {
