@@ -1,3 +1,43 @@
+// Cranial nerve palsy scenarios (advanced only)
+export const CN_PALSIES = [
+  {
+    id: 'cn6_palsy',
+    name: 'Paralisia do NC VI (Abducente)',
+    nerve: 'NC VI (Abducente)',
+    action: 'Não abduz o olho afetado',
+    failedDirection: 'abduction',
+    visualHints: ['esotropia', 'diplopia_horizontal'],
+    explanation:
+      'A paralisia do NC VI causa incapacidade de abdução do olho afetado. O olho desvia medialmente em repouso (esotropia). A diplopia é horizontal e piora ao olhar para o lado do olho afetado. O paciente pode virar a cabeça para o lado afetado para compensar. Causas comuns: hipertensão intracraniana, trauma, diabetes.',
+    difficulty: ['advanced'],
+    scenario: 'Paciente refere visão dupla horizontal, pior ao olhar para o lado afetado. Olho em posição medial em repouso.',
+  },
+  {
+    id: 'cn4_palsy',
+    name: 'Paralisia do NC IV (Troclear)',
+    nerve: 'NC IV (Troclear)',
+    action: 'Falha na depressão em adução e intorção',
+    failedDirection: 'depression_adduction',
+    visualHints: ['hipertropia', 'head_tilt'],
+    explanation:
+      'A paralisia do NC IV causa hipertropia do olho afetado com componente torsional. A queixa clássica é dificuldade ao descer escadas ou ler (olhar para baixo e para dentro). O paciente inclina a cabeça para o lado oposto ao olho afetado (head tilt compensatório). Teste de Bielschowsky positivo: a hipertropia piora ao inclinar a cabeça para o lado do olho afetado.',
+    difficulty: ['advanced'],
+    scenario: 'Paciente refere piora da visão dupla ao descer escadas e ao ler. Inclina a cabeça para compensar.',
+  },
+  {
+    id: 'cn3_palsy',
+    name: 'Paralisia do NC III (Oculomotor)',
+    nerve: 'NC III (Oculomotor)',
+    action: 'Perda de adução, elevação, depressão + ptose ± midríase',
+    failedDirection: 'cn3_complete',
+    visualHints: ['down_and_out', 'ptose', 'midriase'],
+    explanation:
+      'A paralisia completa do NC III resulta no olho em posição "down and out" (deprimido e abduzido), pois apenas o reto lateral (NC VI) e oblíquo superior (NC IV) permanecem funcionais. Acompanha ptose completa (elevador da pálpebra = NC III) e midríase (perda do esfíncter pupilar parassimpático). Causas críticas: aneurisma da artéria comunicante posterior (emergência), herniação uncal. A midríase sugere compressão extrínseca (aneurisma) vs. isquemia (pupila poupada).',
+    difficulty: ['advanced'],
+    scenario: 'Paciente com ptose, olho desviado para baixo e lateral, pupila dilatada. Incapaz de aduir, elevar ou deprimir o olho.',
+  },
+];
+
 export const MUSCLES = [
   {
     id: 'medial_rectus',
