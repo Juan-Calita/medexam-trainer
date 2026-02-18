@@ -26,7 +26,7 @@ export const MUSCLES = [
     action: 'Elevation (mainly in abduction)',
     failedDirection: 'elevation',
     explanation:
-      'The superior rectus is innervated by CN III. Its primary action is elevation, especially when the eye is abducted. A lesion impairs upward gaze.',
+      'O reto superior é inervado pelo NC III. Sua ação primária é a elevação, especialmente quando o olho está em abdução. Uma lesão compromete o olhar para cima.',
     difficulty: ['intermediate', 'advanced'],
   },
   {
