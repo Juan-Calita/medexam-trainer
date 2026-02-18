@@ -155,7 +155,7 @@ export default function Home() {
               stats={null}
             />
             <GameCard
-              title="NeuroPeripheral Master"
+              title="Nervos Periféricos"
               description="Nervos periféricos, dermátomos, plexos e síndromes de compressão"
               icon={Brain}
               pageName="NeuroPeripheralGame"

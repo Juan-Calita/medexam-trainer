@@ -58,8 +58,8 @@ import AudioUpload from './pages/AudioUpload';
 import AuscultationCardiaca from './pages/AuscultationCardiaca';
 import AuscultationPulmonar from './pages/AuscultationPulmonar';
 import CardiacFociGame from './pages/CardiacFociGame';
-import Home from './pages/Home';
 import ExtraocularGame from './pages/ExtraocularGame';
+import Home from './pages/Home';
 import NeuroPeripheralGame from './pages/NeuroPeripheralGame';
 import __Layout from './Layout.jsx';
 
@@ -76,8 +76,8 @@ export const PAGES = {
     "AuscultationCardiaca": AuscultationCardiaca,
     "AuscultationPulmonar": AuscultationPulmonar,
     "CardiacFociGame": CardiacFociGame,
-    "Home": Home,
     "ExtraocularGame": ExtraocularGame,
+    "Home": Home,
     "NeuroPeripheralGame": NeuroPeripheralGame,
 }
 
