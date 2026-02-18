@@ -79,7 +79,7 @@ export default function ExtraocularGame() {
             onClick={startNewRound}
             className="mt-8 px-8 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold tracking-wide hover:bg-blue-700 transition-colors shadow-md"
           >
-            Start Case
+            Iniciar Caso
           </button>
         )}
 
