@@ -277,6 +277,7 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
               failedDirection={leftImpaired ? failedDir : null}
               eyeSide="left"
               showImpairmentHint={leftImpaired ? showHint : false}
+              hasPtose={leftImpaired && showPtose}
             />
             {/* Right eye */}
             <Eye
@@ -288,6 +289,7 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
               failedDirection={!leftImpaired ? failedDir : null}
               eyeSide="right"
               showImpairmentHint={!leftImpaired ? showHint : false}
+              hasPtose={!leftImpaired && showPtose}
             />
           </>
         )}
