@@ -34,7 +34,9 @@ export default function ExtraocularGame() {
   const startNewRound = useCallback(() => {
     const available = getMusclesForDifficulty(difficulty);
     const muscle = available[Math.floor(Math.random() * available.length)];
+    const eye = Math.random() > 0.5 ? 'left' : 'right';
     setImpairedMuscle(muscle);
+    setImpairedEye(eye);
     setGameState('playing');
     setFeedback(null);
     setSelectedAnswer(null);
@@ -45,14 +47,25 @@ export default function ExtraocularGame() {
     if (gameState !== 'playing') return;
     const correct = muscleId === impairedMuscle.id;
     setSelectedAnswer(muscleId);
-    setFeedback({
-      correct,
-      muscle: impairedMuscle,
-      chosenId: muscleId,
-    });
-    if (correct) setScore(s => s + 1);
+    setFeedback({ correct, muscle: impairedMuscle, chosenId: muscleId });
+    if (correct) {
+      setScore(s => s + 1);
+      setCorrectStreak(prev => {
+        const newStreak = prev + 1;
+        if (newStreak >= STREAK_TO_ADVANCE) {
+          const currentIndex = DIFFICULTY_LEVELS.indexOf(difficulty);
+          if (currentIndex < DIFFICULTY_LEVELS.length - 1) {
+            setDifficulty(DIFFICULTY_LEVELS[currentIndex + 1]);
+          }
+          return 0;
+        }
+        return newStreak;
+      });
+    } else {
+      setCorrectStreak(0);
+    }
     setGameState('feedback');
-  }, [gameState, impairedMuscle]);
+  }, [gameState, impairedMuscle, difficulty, correctStreak]);
 
   const handleNext = useCallback(() => {
     startNewRound();
