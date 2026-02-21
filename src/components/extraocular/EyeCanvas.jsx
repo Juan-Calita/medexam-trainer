@@ -319,6 +319,11 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
         <span className="text-[10px] text-slate-400">{impairedMuscle ? (leftImpaired ? 'OD normal' : 'OE normal') : ''}</span>
         <span className="text-[10px] text-slate-400">Temporal (E) →</span>
       </div>
+      {/* Legenda dos olhos */}
+      <div className="flex justify-between w-full max-w-xs px-2">
+        <span className="text-[10px] text-slate-400 font-medium">OD</span>
+        <span className="text-[10px] text-slate-400 font-medium">OE</span>
+      </div>
     </div>
   );
 }
