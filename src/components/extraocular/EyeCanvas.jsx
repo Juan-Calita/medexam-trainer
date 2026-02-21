@@ -303,7 +303,7 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
         {/* Mouth */}
         <div style={{ position: 'absolute', top: '76%', left: '50%', transform: 'translateX(-50%)', width: '40px', height: '12px', borderBottom: '2px solid #C2856A', borderRadius: '0 0 50% 50%' }} />
 
-        {/* Impaired eye label — perspectiva do examinador: olho esquerdo do paciente fica à direita da tela */}
+        {/* Impaired eye label — OE fica à direita da tela, OD fica à esquerda */}
         {gameState === 'playing' && (
           <div style={{ position: 'absolute', top: 4, ...(leftImpaired ? { right: 8 } : { left: 8 }) }}>
             <span className="text-[10px] text-rose-400 font-medium bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
