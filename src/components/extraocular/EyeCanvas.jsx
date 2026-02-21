@@ -264,24 +264,15 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
         <div style={{ position: 'absolute', top: '22%', left: '24%', width: '20%', height: '4px', background: '#6B7280', borderRadius: '4px', transform: 'rotate(-5deg)' }} />
         <div style={{ position: 'absolute', top: '22%', right: '24%', width: '20%', height: '4px', background: '#6B7280', borderRadius: '4px', transform: 'rotate(5deg)' }} />
 
-        {/* Eyes */}
+        {/* Eyes — perspectiva do examinador:
+            lado esquerdo da tela = OD (olho direito do paciente) = eyeSide "right"
+            lado direito da tela  = OE (olho esquerdo do paciente) = eyeSide "left"
+        */}
         {containerRect !== null && (
           <>
-            {/* Left eye */}
+            {/* OD — aparece à esquerda da tela */}
             <Eye
               cx={leftEyeX}
-              cy={eyeY}
-              size={eyeSize}
-              mousePos={relMouse}
-              containerRect={containerRect}
-              failedDirection={leftImpaired ? failedDir : null}
-              eyeSide="left"
-              showImpairmentHint={leftImpaired ? showHint : false}
-              hasPtose={leftImpaired && showPtose}
-            />
-            {/* Right eye */}
-            <Eye
-              cx={rightEyeX}
               cy={eyeY}
               size={eyeSize}
               mousePos={relMouse}
@@ -290,6 +281,18 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
               eyeSide="right"
               showImpairmentHint={!leftImpaired ? showHint : false}
               hasPtose={!leftImpaired && showPtose}
+            />
+            {/* OE — aparece à direita da tela */}
+            <Eye
+              cx={rightEyeX}
+              cy={eyeY}
+              size={eyeSize}
+              mousePos={relMouse}
+              containerRect={containerRect}
+              failedDirection={leftImpaired ? failedDir : null}
+              eyeSide="left"
+              showImpairmentHint={leftImpaired ? showHint : false}
+              hasPtose={leftImpaired && showPtose}
             />
           </>
         )}
