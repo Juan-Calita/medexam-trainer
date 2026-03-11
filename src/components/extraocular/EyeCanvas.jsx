@@ -117,9 +117,9 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
       let targetY = Math.sin(angle) * clamped;
 
       // For CN III palsy: eye rests "down and out" (temporal = fora)
-      // OD: temporal = x positivo (direita); OE: temporal = x negativo (esquerda)
+      // OD: temporal = x < 0 (esquerda da tela); OE: temporal = x > 0 (direita da tela)
       if (failedDirection === 'cn3_complete') {
-        const restX = eyeSide === 'right' ? maxPupilTravel * 0.6 : -maxPupilTravel * 0.6;
+        const restX = eyeSide === 'right' ? -maxPupilTravel * 0.6 : maxPupilTravel * 0.6;
         const restY = maxPupilTravel * 0.35;
         targetX = restX + (targetX - restX) * 0.15;
         targetY = restY + (targetY - restY) * 0.15;
