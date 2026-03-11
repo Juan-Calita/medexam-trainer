@@ -34,7 +34,19 @@ export default function ExtraocularGame() {
 
   const startNewRound = useCallback(() => {
     const available = getMusclesForDifficulty(difficulty);
-    const muscle = available[Math.floor(Math.random() * available.length)];
+    const historyForLevel = muscleHistory[difficulty] || {};
+    const filtered = available.filter(m => (historyForLevel[m.id] || 0) < 2);
+    const pool = filtered.length > 0 ? filtered : available;
+    const muscle = pool[Math.floor(Math.random() * pool.length)];
+    setMuscleHistory(prev => {
+      const levelHistory = { ...(prev[difficulty] || {}) };
+      if (filtered.length === 0) {
+        // reset counts when all hit the limit
+        return { ...prev, [difficulty]: { [muscle.id]: 1 } };
+      }
+      levelHistory[muscle.id] = (levelHistory[muscle.id] || 0) + 1;
+      return { ...prev, [difficulty]: levelHistory };
+    });
     const eye = Math.random() > 0.5 ? 'left' : 'right';
     setImpairedMuscle(muscle);
     setImpairedEye(eye);
