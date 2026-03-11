@@ -54,7 +54,7 @@ export default function ExtraocularGame() {
     setFeedback(null);
     setSelectedAnswer(null);
     setRound(r => r + 1);
-  }, [difficulty]);
+  }, [difficulty, muscleHistory]);
 
   const handleAnswer = useCallback((muscleId) => {
     if (gameState !== 'playing') return;
