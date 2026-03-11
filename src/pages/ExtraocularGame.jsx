@@ -16,6 +16,7 @@ export default function ExtraocularGame() {
   const [feedback, setFeedback] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [correctStreak, setCorrectStreak] = useState(0);
+  const [muscleHistory, setMuscleHistory] = useState({});
   const containerRef = useRef(null);
 
   const DIFFICULTY_LEVELS = ['basic', 'intermediate', 'advanced'];
