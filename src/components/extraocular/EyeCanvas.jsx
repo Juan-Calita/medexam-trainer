@@ -22,16 +22,24 @@ function applyImpairment(px, py, failedDirection, eyeSide) {
   // Para OE (eyeSide='left'):  temporal = esquerda da tela (x < 0), nasal = direita (x > 0)
   // y < 0 = para cima, y > 0 = para baixo
 
+  // Coordenadas relativas ao centro de cada olho no canvas:
+  // OD (eyeSide='right', à ESQUERDA da tela, cx=0.35W):
+  //   mouse vai p/ direita → rawDx = mouseX - 0.35W > 0 → x > 0 = NASAL
+  //   mouse vai p/ esquerda → x < 0 = TEMPORAL
+  // OE (eyeSide='left', à DIREITA da tela, cx=0.65W):
+  //   mouse vai p/ esquerda → rawDx = mouseX - 0.65W < 0 → x < 0 = NASAL
+  //   mouse vai p/ direita → x > 0 = TEMPORAL
+
   switch (failedDirection) {
     case 'abduction':
       // Não consegue mover temporalmente (para fora)
-      if (eyeSide === 'right' && x > 0) x = Math.min(x, 4);  // OD: temporal = x > 0
-      if (eyeSide === 'left'  && x < 0) x = Math.max(x, -4); // OE: temporal = x < 0
+      if (eyeSide === 'right' && x < 0) x = Math.max(x, -4);  // OD: temporal = x < 0
+      if (eyeSide === 'left'  && x > 0) x = Math.min(x, 4);   // OE: temporal = x > 0
       break;
     case 'adduction':
       // Não consegue mover nasalmente (para dentro)
-      if (eyeSide === 'right' && x < 0) x = Math.max(x, -4); // OD: nasal = x < 0
-      if (eyeSide === 'left'  && x > 0) x = Math.min(x, 4);  // OE: nasal = x > 0
+      if (eyeSide === 'right' && x > 0) x = Math.min(x, 4);   // OD: nasal = x > 0
+      if (eyeSide === 'left'  && x < 0) x = Math.max(x, -4);  // OE: nasal = x < 0
       break;
     case 'elevation':
       // Cannot move up
@@ -43,18 +51,18 @@ function applyImpairment(px, py, failedDirection, eyeSide) {
       break;
     case 'depression_adduction':
       // Não consegue deprimir em adução
-      if (eyeSide === 'right' && x < 0 && y > 0) y = Math.min(y, 3); // OD: nasal = x < 0
-      if (eyeSide === 'left'  && x > 0 && y > 0) y = Math.min(y, 3); // OE: nasal = x > 0
+      if (eyeSide === 'right' && x > 0 && y > 0) y = Math.min(y, 3); // OD: nasal = x > 0
+      if (eyeSide === 'left'  && x < 0 && y > 0) y = Math.min(y, 3); // OE: nasal = x < 0
       break;
     case 'elevation_adduction':
       // Não consegue elevar em adução
-      if (eyeSide === 'right' && x < 0 && y < 0) y = Math.max(y, -3); // OD: nasal = x < 0
-      if (eyeSide === 'left'  && x > 0 && y < 0) y = Math.max(y, -3); // OE: nasal = x > 0
+      if (eyeSide === 'right' && x > 0 && y < 0) y = Math.max(y, -3); // OD: nasal = x > 0
+      if (eyeSide === 'left'  && x < 0 && y < 0) y = Math.max(y, -3); // OE: nasal = x < 0
       break;
     case 'cn3_complete':
-      // Olho "down and out": sem adução, sem elevação
-      if (eyeSide === 'right' && x < 0) x = Math.max(x, -2); // OD: bloqueia nasal
-      if (eyeSide === 'left'  && x > 0) x = Math.min(x, 2);  // OE: bloqueia nasal
+      // Olho "down and out": sem adução (bloqueia nasal), sem elevação
+      if (eyeSide === 'right' && x > 0) x = Math.min(x, 2);  // OD: bloqueia nasal = x > 0
+      if (eyeSide === 'left'  && x < 0) x = Math.max(x, -2); // OE: bloqueia nasal = x < 0
       if (y < 0) y = Math.max(y, -2); // sem elevação
       if (y > 0) y = Math.min(y, 4);  // depressão moderada (SO funcional)
       break;
