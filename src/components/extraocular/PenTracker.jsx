@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Camera, CameraOff, Circle } from 'lucide-react';
 
 // Draws red mask on debug canvas so user can see what's detected
-function drawDebugMask(debugCanvas, sourceCanvas) {
+function drawDebugMask(debugCanvas, sourceCanvas, dotX, dotY) {
   const ctx = debugCanvas.getContext('2d');
   debugCanvas.width = sourceCanvas.width;
   debugCanvas.height = sourceCanvas.height;
@@ -10,34 +10,79 @@ function drawDebugMask(debugCanvas, sourceCanvas) {
   const out = ctx.createImageData(sourceCanvas.width, sourceCanvas.height);
   for (let i = 0; i < src.data.length; i += 4) {
     const r = src.data[i], g = src.data[i + 1], b = src.data[i + 2];
-    const isRed = r > 100 && r > g * 1.4 && r > b * 1.4 && (r - g) > 40 && (r - b) > 40;
-    out.data[i]     = isRed ? 255 : r / 3;
-    out.data[i + 1] = isRed ? 0   : g / 3;
-    out.data[i + 2] = isRed ? 0   : b / 3;
+    const red = isRedPixel(r, g, b);
+    out.data[i]     = red ? 255 : r / 4;
+    out.data[i + 1] = red ? 0   : g / 4;
+    out.data[i + 2] = red ? 0   : b / 4;
     out.data[i + 3] = 255;
   }
   ctx.putImageData(out, 0, 0);
+  // Draw crosshair on detected centroid
+  if (dotX !== null) {
+    ctx.strokeStyle = '#00ff00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(dotX - 8, dotY); ctx.lineTo(dotX + 8, dotY);
+    ctx.moveTo(dotX, dotY - 8); ctx.lineTo(dotX, dotY + 8);
+    ctx.stroke();
+  }
+}
+
+function isRedPixel(r, g, b) {
+  // Strict HSV-based red: high saturation, high value, hue near 0/360
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const saturation = max === 0 ? 0 : (max - min) / max;
+  // Red must be clearly dominant channel with high saturation
+  return (
+    r === max &&          // red is brightest channel
+    saturation > 0.45 &&  // highly saturated (not gray/white)
+    max > 80 &&           // not too dark
+    r - g > 50 &&         // red much more than green
+    r - b > 50            // red much more than blue
+  );
 }
 
 function detectRedObject(canvas, ctx, video) {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  let sumX = 0, sumY = 0, count = 0;
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // Build list of red pixels
+  const redPixels = [];
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i], g = data[i + 1], b = data[i + 2];
-    // More lenient HSV-style red detection
-    // Hue close to red: r is dominant, significantly greater than g and b
-    const isRed = r > 100 && r > g * 1.4 && r > b * 1.4 && (r - g) > 40 && (r - b) > 40;
-    if (isRed) {
+    if (isRedPixel(data[i], data[i + 1], data[i + 2])) {
       const idx = i / 4;
-      sumX += idx % canvas.width;
-      sumY += Math.floor(idx / canvas.width);
-      count++;
+      redPixels.push({ x: idx % W, y: Math.floor(idx / W) });
     }
   }
-  if (count > 20) return { x: sumX / count, y: sumY / count, found: true };
-  return { x: 0, y: 0, found: false };
+
+  if (redPixels.length < 15) return { x: 0, y: 0, found: false };
+
+  // Find the densest cluster using a simple grid-cell approach (8x8 cells)
+  const cellW = Math.ceil(W / 8);
+  const cellH = Math.ceil(H / 8);
+  const cells = {};
+  for (const p of redPixels) {
+    const key = `${Math.floor(p.x / cellW)}_${Math.floor(p.y / cellH)}`;
+    if (!cells[key]) cells[key] = { sumX: 0, sumY: 0, count: 0 };
+    cells[key].sumX += p.x;
+    cells[key].sumY += p.y;
+    cells[key].count++;
+  }
+
+  // Pick the cell with the most red pixels
+  let best = null;
+  for (const cell of Object.values(cells)) {
+    if (!best || cell.count > best.count) best = cell;
+  }
+
+  // Require at least 10 pixels in the winning cell to avoid noise
+  if (!best || best.count < 10) return { x: 0, y: 0, found: false };
+
+  return { x: best.sumX / best.count, y: best.sumY / best.count, found: true };
 }
 
 export default function PenTracker({ onPositionChange, containerRef, isActive }) {
@@ -117,7 +162,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         // Draw debug mask every 3 frames to save CPU
         frameCount++;
         if (frameCount % 3 === 0 && debugCanvasRef.current) {
-          drawDebugMask(debugCanvasRef.current, canvas);
+          drawDebugMask(debugCanvasRef.current, canvas, result.found ? result.x : null, result.found ? result.y : null);
         }
         if (result.found) {
           const rect = containerRef.current.getBoundingClientRect();
