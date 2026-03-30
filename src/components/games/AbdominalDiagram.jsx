@@ -59,14 +59,14 @@ export default function AbdominalDiagram({
               onDragOver={!isTouch ? handleDragOver : undefined}
               onDrop={!isTouch ? (e) => handleDrop(e, name) : undefined}
               onClick={() => handleTouchZone(name)}
-              className={`absolute flex items-center justify-center p-1 rounded-lg border-2 border-dashed transition-all duration-300 ${
+              className={`absolute flex items-center justify-center p-1 rounded-lg border-2 transition-all duration-300 ${
                 isPlaced 
-                  ? 'bg-emerald-100/85 border-emerald-400' 
+                  ? 'bg-emerald-200 border-emerald-500 border-solid' 
                   : feedback === 'correct'
-                    ? 'bg-emerald-200/90 border-emerald-500'
+                    ? 'bg-emerald-300 border-emerald-600 border-solid'
                     : feedback === 'incorrect'
-                      ? 'bg-rose-200/90 border-rose-500'
-                      : 'bg-slate-200/70 border-slate-400'
+                      ? 'bg-rose-300 border-rose-600 border-solid'
+                      : 'bg-slate-300 border-slate-500 border-solid'
               }`}
               style={{
                 left: `${pos.x}%`,
