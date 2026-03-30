@@ -116,7 +116,7 @@ export default function ExtraocularGame() {
           }`}
         >
           <Camera className="w-4 h-4" />
-          Câmera (caneta vermelha)
+          Câmera (caneta azul)
         </button>
       </div>
 
