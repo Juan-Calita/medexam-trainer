@@ -134,7 +134,8 @@ export default function ExtraocularGame() {
           containerRef={containerRef}
           impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
           impairedEye={impairedEye}
-          gameState={gameState} />
+          gameState={gameState}
+          inputMode={inputMode} />
         
 
         {/* Camera tracker — always mounted when camera mode, visibility toggled via CSS */}

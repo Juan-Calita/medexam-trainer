@@ -221,7 +221,7 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
   );
 }
 
-export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impairedEye = 'right', gameState }) {
+export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impairedEye = 'right', gameState, inputMode = 'mouse' }) {
   const faceRef = useRef(null);
   const [containerRect, setContainerRect] = React.useState(null);
   const [faceSize, setFaceSize] = React.useState({ w: 320, h: 220 });
@@ -267,7 +267,7 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
     <div className="flex flex-col items-center">
       {/* Instruction label */}
       <p className="text-xs text-slate-400 mb-3 tracking-wide uppercase font-medium">
-        Mova o mouse sobre o rosto — observe o movimento ocular
+        {inputMode === 'camera' ? 'Mova a caneta sobre o rosto — observe o movimento ocular' : 'Mova o mouse sobre o rosto — observe o movimento ocular'}
       </p>
 
       {/* Face */}
