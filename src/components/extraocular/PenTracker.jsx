@@ -29,7 +29,7 @@ function matchesPen(r, g, b, profile) {
 // ─── Grid detector ─────────────────────────────────────────────────────────────
 function detectByGrid(imageData, W, H, profile) {
   const data = imageData.data;
-  const LINES = 1000;
+  const LINES = 100000;
   const hBest = new Float32Array(LINES);
   const hCx = new Float32Array(LINES);
 
