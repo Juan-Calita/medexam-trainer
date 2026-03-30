@@ -248,28 +248,25 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
   return (
     <div className="flex flex-col items-center">
       {/* Instruction */}
-      <p className="text-[11px] text-slate-500 mb-3 tracking-widest uppercase font-medium">
+      <p className="text-xs text-slate-600 mb-4 tracking-wide uppercase font-semibold">
         {inputMode === 'camera'
-          ? 'Mova a caneta sobre o rosto — observe o movimento ocular'
-          : 'Mova o mouse sobre o rosto — observe o movimento ocular'}
+          ? 'Mova a caneta sobre o rosto'
+          : 'Mova o mouse sobre o rosto'}
       </p>
 
       {/* Face */}
       <div
         ref={faceRef}
-        className="relative rounded-[60%] border shadow-2xl"
+        className="relative rounded-[60%] border border-slate-200 shadow-md bg-white"
         style={{
           width: '340px',
           height: '230px',
           maxWidth: '90vw',
-          background: 'linear-gradient(135deg, #2a1f18 0%, #1c1510 100%)',
-          borderColor: 'rgba(100,80,60,0.4)',
-          boxShadow: '0 0 40px rgba(6,182,212,0.08), 0 20px 60px rgba(0,0,0,0.6)',
         }}
       >
         {/* Eyebrows */}
-        <div style={{ position: 'absolute', top: '22%', left: '24%', width: '20%', height: '3px', background: 'rgba(180,140,100,0.7)', borderRadius: '4px', transform: 'rotate(-5deg)' }} />
-        <div style={{ position: 'absolute', top: '22%', right: '24%', width: '20%', height: '3px', background: 'rgba(180,140,100,0.7)', borderRadius: '4px', transform: 'rotate(5deg)' }} />
+        <div style={{ position: 'absolute', top: '22%', left: '24%', width: '20%', height: '2.5px', background: '#4b5563', borderRadius: '4px', transform: 'rotate(-5deg)' }} />
+        <div style={{ position: 'absolute', top: '22%', right: '24%', width: '20%', height: '2.5px', background: '#4b5563', borderRadius: '4px', transform: 'rotate(5deg)' }} />
 
         {/* Eyes */}
         {containerRect !== null && (
@@ -294,15 +291,15 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
         )}
 
         {/* Nose */}
-        <div style={{ position: 'absolute', top: '58%', left: '50%', transform: 'translateX(-50%)', width: '10px', height: '14px', borderLeft: '1.5px solid rgba(180,140,100,0.4)', borderRight: '1.5px solid rgba(180,140,100,0.4)', borderBottom: '1.5px solid rgba(180,140,100,0.4)', borderRadius: '0 0 50% 50%' }} />
+        <div style={{ position: 'absolute', top: '58%', left: '50%', transform: 'translateX(-50%)', width: '8px', height: '12px', borderLeft: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', borderRadius: '0 0 50% 50%' }} />
 
         {/* Mouth */}
-        <div style={{ position: 'absolute', top: '76%', left: '50%', transform: 'translateX(-50%)', width: '36px', height: '10px', borderBottom: '1.5px solid rgba(180,100,80,0.5)', borderRadius: '0 0 50% 50%' }} />
+        <div style={{ position: 'absolute', top: '76%', left: '50%', transform: 'translateX(-50%)', width: '32px', height: '8px', borderBottom: '1px solid #cbd5e1', borderRadius: '0 0 50% 50%' }} />
 
         {/* Impaired label */}
         {gameState === 'playing' && (
           <div style={{ position: 'absolute', top: 6, ...(leftImpaired ? { right: 8 } : { left: 8 }) }}>
-            <span className="text-[10px] text-rose-300 font-semibold bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
+            <span className="text-[9px] text-rose-700 font-bold bg-rose-100 px-2 py-1 rounded-full border border-rose-200">
               {eyeLabel} comprometido
             </span>
           </div>
@@ -310,14 +307,10 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
       </div>
 
       {/* Orientation labels */}
-      <div className="flex justify-between w-full max-w-xs mt-2 px-2">
-        <span className="text-[10px] text-slate-600">← Temporal (E)</span>
-        <span className="text-[10px] text-slate-600">{impairedMuscle ? (leftImpaired ? 'OD normal' : 'OE normal') : ''}</span>
-        <span className="text-[10px] text-slate-600">Temporal (D) →</span>
-      </div>
-      <div className="flex justify-between w-full max-w-xs px-2">
-        <span className="text-[10px] text-slate-500 font-semibold">OD</span>
-        <span className="text-[10px] text-slate-500 font-semibold">OE</span>
+      <div className="flex justify-between w-full max-w-xs mt-2 px-2 text-[10px] text-slate-500">
+        <span>← Temporal</span>
+        <span></span>
+        <span>Temporal →</span>
       </div>
     </div>
   );

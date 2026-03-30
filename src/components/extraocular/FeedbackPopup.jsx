@@ -7,7 +7,7 @@ export default function FeedbackPopup({ feedback }) {
   useEffect(() => {
     setVisible(true);
     if (feedback.correct) {
-      const t = setTimeout(() => setVisible(false), 1600);
+      const t = setTimeout(() => setVisible(false), 1400);
       return () => clearTimeout(t);
     }
   }, [feedback]);
@@ -20,15 +20,14 @@ export default function FeedbackPopup({ feedback }) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-          className={`fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border text-sm font-semibold backdrop-blur-md ${
+          className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3 rounded-xl shadow-lg border text-sm font-semibold ${
             feedback.correct
-              ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-emerald-500/10'
-              : 'bg-rose-500/20 border-rose-500/40 text-rose-300 shadow-rose-500/10'
+              ? 'bg-emerald-100 border-emerald-300 text-emerald-800'
+              : 'bg-rose-100 border-rose-300 text-rose-800'
           }`}
-          style={{ minWidth: 200 }}
         >
-          <span className="text-xl">{feedback.correct ? '✓' : '✗'}</span>
-          <span>{feedback.correct ? 'Correto! Muito bem.' : 'Incorreto — revise abaixo.'}</span>
+          <span className="text-lg">{feedback.correct ? '✓' : '✗'}</span>
+          <span>{feedback.correct ? 'Correto! Excelente.' : 'Incorreto — revise abaixo.'}</span>
         </motion.div>
       )}
     </AnimatePresence>
