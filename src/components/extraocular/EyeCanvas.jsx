@@ -254,10 +254,13 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
   // Ptose only shows during playing/feedback
   const showPtose = isCN3 && (gameState === 'playing' || gameState === 'feedback');
 
-  // Adjust mouse relative to face container
+  // mousePos is relative to containerRef (top-left = 0,0).
+  // Eyes expect coordinates relative to the face div.
+  const faceClientRect = faceRef.current ? faceRef.current.getBoundingClientRect() : null;
+  const containerClientRect = containerRef.current ? containerRef.current.getBoundingClientRect() : null;
   const relMouse = {
-    x: mousePos.x - (containerRef.current ? containerRef.current.getBoundingClientRect().left : 0) + (containerRef.current ? containerRef.current.getBoundingClientRect().left : 0) - (faceRef.current ? faceRef.current.getBoundingClientRect().left : 0),
-    y: mousePos.y - (faceRef.current ? faceRef.current.getBoundingClientRect().top : 0),
+    x: faceClientRect && containerClientRect ? mousePos.x - (faceClientRect.left - containerClientRect.left) : mousePos.x,
+    y: faceClientRect && containerClientRect ? mousePos.y - (faceClientRect.top - containerClientRect.top) : mousePos.y,
   };
 
   return (
