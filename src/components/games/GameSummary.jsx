@@ -35,7 +35,7 @@ export default function GameSummary({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50 p-4 md:p-8"
     >
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
@@ -122,7 +122,7 @@ export default function GameSummary({
         <div className="flex gap-3">
           <Button 
             onClick={onPlayAgain}
-            className="flex-1 bg-teal-600 hover:bg-teal-700"
+            className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Jogar Novamente

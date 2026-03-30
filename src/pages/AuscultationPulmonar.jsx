@@ -284,14 +284,14 @@ export default function AuscultationPulmonar() {
                 <Button
                   onClick={handleSubmit}
                   disabled={!selectedAnswer}
-                  className="bg-teal-600 hover:bg-teal-700 px-8"
+                  className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-8"
                 >
                   Enviar Resposta
                 </Button>
               ) : (
                 <Button
                   onClick={handleNext}
-                  className="bg-teal-600 hover:bg-teal-700 px-8"
+                  className="bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white px-8"
                 >
                   {currentIndex >= QUESTIONS.length - 1 ? 'Ver Resultados' : 'Próxima Questão'}
                   <ChevronRight className="w-4 h-4 ml-1" />

@@ -284,14 +284,14 @@ export default function AuscultationCardiaca() {
                 <Button
                   onClick={handleSubmit}
                   disabled={!selectedAnswer}
-                  className="bg-rose-600 hover:bg-rose-700 px-8"
+                  className="bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white px-8"
                 >
                   Enviar Resposta
                 </Button>
               ) : (
                 <Button
                   onClick={handleNext}
-                  className="bg-rose-600 hover:bg-rose-700 px-8"
+                  className="bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white px-8"
                 >
                   {currentIndex >= QUESTIONS.length - 1 ? 'Ver Resultados' : 'Próxima Questão'}
                   <ChevronRight className="w-4 h-4 ml-1" />
