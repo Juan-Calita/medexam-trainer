@@ -20,6 +20,7 @@ export default function ExtraocularGame() {
   const [correctStreak, setCorrectStreak] = useState(0);
   const [muscleHistory, setMuscleHistory] = useState({});
   const [inputMode, setInputMode] = useState('mouse'); // 'mouse' | 'camera'
+  const [showCameraPanel, setShowCameraPanel] = useState(false);
   const containerRef = useRef(null);
 
   const DIFFICULTY_LEVELS = ['basic', 'intermediate', 'advanced'];
@@ -110,11 +111,8 @@ export default function ExtraocularGame() {
           Mouse
         </button>
         <button
-          onClick={() => setInputMode('camera')} className="bg-white text-cyan-500 px-4 py-1.5 text-sm font-medium rounded-full flex items-center gap-2 transition-all shadow-sm">
-
-
-
-          
+          onClick={() => { setInputMode('camera'); setShowCameraPanel(true); }}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${inputMode === 'camera' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
           <Camera className="w-4 h-4" />
           Câmera (caneta azul)
         </button>
@@ -131,15 +129,30 @@ export default function ExtraocularGame() {
         
 
         {/* Camera tracker */}
-        {inputMode === 'camera' &&
-        <div className="mt-4">
-            <PenTracker
-            onPositionChange={setMousePos}
-            containerRef={containerRef}
-            isActive={inputMode === 'camera'} />
-          
+        {inputMode === 'camera' && (
+          <div className="mt-4 w-full flex flex-col items-center">
+            {!showCameraPanel ? (
+              <button
+                onClick={() => setShowCameraPanel(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-600 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 transition-colors">
+                <Camera className="w-3.5 h-3.5" />
+                Mostrar câmera / recalibrar
+              </button>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <PenTracker
+                  onPositionChange={setMousePos}
+                  containerRef={containerRef}
+                  isActive={true} />
+                <button
+                  onClick={() => setShowCameraPanel(false)}
+                  className="text-xs text-slate-400 hover:text-slate-600 underline">
+                  Ocultar câmera
+                </button>
+              </div>
+            )}
           </div>
-        }
+        )}
 
         {/* Start button */}
         {gameState === 'idle' &&
