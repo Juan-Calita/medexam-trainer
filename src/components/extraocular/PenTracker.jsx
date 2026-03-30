@@ -318,7 +318,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
             });
           }
         } else {
-          smoothRef.current.active = false;
+          // Keep last known position — do NOT reset smoothRef so the eye stays put
           if (penFoundLocal) { setPenFound(false); penFoundLocal = false; }
         }
 
