@@ -11,9 +11,9 @@ function drawDebugMask(debugCanvas, sourceCanvas, dotX, dotY) {
   for (let i = 0; i < src.data.length; i += 4) {
     const r = src.data[i], g = src.data[i + 1], b = src.data[i + 2];
     const red = isRedPixel(r, g, b);
-    out.data[i]     = red ? 255 : r / 4;
-    out.data[i + 1] = red ? 0   : g / 4;
-    out.data[i + 2] = red ? 0   : b / 4;
+    out.data[i]     = red ? 0   : r / 4;
+    out.data[i + 1] = red ? 100 : g / 4;
+    out.data[i + 2] = red ? 255 : b / 4;
     out.data[i + 3] = 255;
   }
   ctx.putImageData(out, 0, 0);
@@ -28,43 +28,53 @@ function drawDebugMask(debugCanvas, sourceCanvas, dotX, dotY) {
   }
 }
 
-function isRedPixel(r, g, b) {
-  // Blue detection: blue is clearly the dominant channel
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const saturation = max === 0 ? 0 : (max - min) / max;
-  return (
-    b === max &&          // blue is brightest channel
-    saturation > 0.45 &&  // highly saturated (not gray/white)
-    max > 80 &&           // not too dark
-    b - r > 50 &&         // blue much more than red
-    b - g > 30            // blue more than green
-  );
+// Convert RGB to HSV and check if it's a vivid blue
+function isBluePixel(r, g, b) {
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const delta = max - min;
+
+  if (delta < 0.15 || max < 0.2) return false; // too dark or unsaturated
+
+  const s = delta / max;   // saturation
+  const v = max;           // value (brightness)
+
+  if (s < 0.35 || v < 0.2) return false;
+
+  // Hue calculation
+  let h;
+  if (max === rn) h = 60 * (((gn - bn) / delta) % 6);
+  else if (max === gn) h = 60 * ((bn - rn) / delta + 2);
+  else h = 60 * ((rn - gn) / delta + 4);
+  if (h < 0) h += 360;
+
+  // Blue hue range: 200–260 degrees
+  return h >= 200 && h <= 260;
 }
 
-function detectRedObject(canvas, ctx, video) {
+function detectBlueObject(canvas, ctx, video) {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
   const W = canvas.width;
   const H = canvas.height;
 
-  // Build list of red pixels
-  const redPixels = [];
+  const bluePixels = [];
   for (let i = 0; i < data.length; i += 4) {
-    if (isRedPixel(data[i], data[i + 1], data[i + 2])) {
+    if (isBluePixel(data[i], data[i + 1], data[i + 2])) {
       const idx = i / 4;
-      redPixels.push({ x: idx % W, y: Math.floor(idx / W) });
+      bluePixels.push({ x: idx % W, y: Math.floor(idx / W) });
     }
   }
 
-  if (redPixels.length < 15) return { x: 0, y: 0, found: false };
+  if (bluePixels.length < 10) return { x: 0, y: 0, found: false };
 
-  // Find the densest cluster using a simple grid-cell approach (8x8 cells)
-  const cellW = Math.ceil(W / 8);
-  const cellH = Math.ceil(H / 8);
+  // Find densest cluster in a 12x9 grid
+  const cellW = Math.ceil(W / 12);
+  const cellH = Math.ceil(H / 9);
   const cells = {};
-  for (const p of redPixels) {
+  for (const p of bluePixels) {
     const key = `${Math.floor(p.x / cellW)}_${Math.floor(p.y / cellH)}`;
     if (!cells[key]) cells[key] = { sumX: 0, sumY: 0, count: 0 };
     cells[key].sumX += p.x;
@@ -72,17 +82,18 @@ function detectRedObject(canvas, ctx, video) {
     cells[key].count++;
   }
 
-  // Pick the cell with the most red pixels
   let best = null;
   for (const cell of Object.values(cells)) {
     if (!best || cell.count > best.count) best = cell;
   }
 
-  // Require at least 10 pixels in the winning cell to avoid noise
-  if (!best || best.count < 10) return { x: 0, y: 0, found: false };
+  if (!best || best.count < 5) return { x: 0, y: 0, found: false };
 
   return { x: best.sumX / best.count, y: best.sumY / best.count, found: true };
 }
+
+// Alias used by drawDebugMask
+const isRedPixel = isBluePixel;
 
 export default function PenTracker({ onPositionChange, containerRef, isActive }) {
   const videoRef = useRef(null);
@@ -156,7 +167,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     let frameCount = 0;
     const loop = () => {
       if (containerRef.current && video.readyState >= 2) {
-        const result = detectRedObject(canvas, ctx, video);
+        const result = detectBlueObject(canvas, ctx, video);
         setPenFound(result.found);
         // Draw debug mask every 3 frames to save CPU
         frameCount++;
