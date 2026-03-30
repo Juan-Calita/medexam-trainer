@@ -13,7 +13,6 @@ function detectRedObject(canvas, ctx, video) {
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
-    // Red detection: red channel high, green and blue low
     if (r > 150 && g < 80 && b < 80 && r > g * 2 && r > b * 2) {
       const pixelIndex = i / 4;
       sumX += pixelIndex % canvas.width;
@@ -29,7 +28,8 @@ function detectRedObject(canvas, ctx, video) {
 }
 
 export default function PenTracker({ onPositionChange, containerRef, isActive }) {
-  const videoRef = useRef(null);
+  const hiddenVideoRef = useRef(null);   // used for processing
+  const previewVideoRef = useRef(null);  // used for display
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const streamRef = useRef(null);
@@ -45,11 +45,18 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         video: { facingMode: 'user', width: 320, height: 240 } 
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setCameraState('active');
+
+      // Attach stream to both video elements
+      if (hiddenVideoRef.current) {
+        hiddenVideoRef.current.srcObject = stream;
+        await hiddenVideoRef.current.play();
       }
+      if (previewVideoRef.current) {
+        previewVideoRef.current.srcObject = stream;
+        await previewVideoRef.current.play();
+      }
+
+      setCameraState('active');
     } catch (err) {
       setCameraState('error');
       setErrorMsg('Não foi possível acessar a câmera. Verifique as permissões.');
@@ -62,6 +69,8 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
+    if (hiddenVideoRef.current) hiddenVideoRef.current.srcObject = null;
+    if (previewVideoRef.current) previewVideoRef.current.srcObject = null;
     setCameraState('idle');
     setPenFound(false);
   }, []);
@@ -70,7 +79,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
   useEffect(() => {
     if (cameraState !== 'active') return;
     const canvas = canvasRef.current;
-    const video = videoRef.current;
+    const video = hiddenVideoRef.current;
     if (!canvas || !video) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     canvas.width = 320;
@@ -83,9 +92,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       setPenFound(result.found);
 
       if (result.found) {
-        // Map from camera coords (320x240) to container coords
         const rect = containerRef.current.getBoundingClientRect();
-        // Mirror X because camera is front-facing (mirrored)
         const mappedX = (1 - result.x / 320) * rect.width;
         const mappedY = (result.y / 240) * rect.height;
         onPositionChange({ x: mappedX, y: mappedY });
@@ -111,21 +118,20 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Hidden video element */}
-      <video ref={videoRef} className="hidden" playsInline muted />
+      {/* Hidden video element for processing only */}
+      <video ref={hiddenVideoRef} className="hidden" playsInline muted />
 
       {/* Camera preview (small) */}
       {cameraState === 'active' && (
         <div className="relative rounded-lg overflow-hidden border-2 border-slate-200 shadow-sm" style={{ width: 160, height: 120 }}>
           <video
-            ref={videoRef}
+            ref={previewVideoRef}
             className="w-full h-full object-cover"
             style={{ transform: 'scaleX(-1)' }}
             playsInline
             muted
             autoPlay
           />
-          {/* Indicator */}
           <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-black/50 rounded-full px-1.5 py-0.5">
             <Circle className={`w-2 h-2 fill-current ${penFound ? 'text-emerald-400' : 'text-slate-400'}`} />
             <span className="text-[9px] text-white">{penFound ? 'Detectado' : 'Procurando...'}</span>
