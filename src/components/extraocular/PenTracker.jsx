@@ -20,12 +20,11 @@ function detectRedObject(canvas, ctx, video) {
 }
 
 export default function PenTracker({ onPositionChange, containerRef, isActive }) {
-  const hiddenVideoRef = useRef(null);  // for pixel processing
-  const previewVideoRef = useRef(null); // for display
+  const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const animRef = useRef(null);
   const streamRef = useRef(null);
-  const [cameraState, setCameraState] = useState('idle');
+  const [cameraState, setCameraState] = useState('idle'); // idle | loading | active | error
   const [penFound, setPenFound] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -35,8 +34,9 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
-    if (hiddenVideoRef.current) hiddenVideoRef.current.srcObject = null;
-    if (previewVideoRef.current) previewVideoRef.current.srcObject = null;
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setCameraState('idle');
     setPenFound(false);
   }, []);
@@ -44,34 +44,44 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
   const startCamera = useCallback(async () => {
     setCameraState('loading');
     setErrorMsg('');
+
+    let stream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 320, height: 240 }
-      });
-      streamRef.current = stream;
-
-      // Assign stream to both video elements independently
-      if (hiddenVideoRef.current) {
-        hiddenVideoRef.current.srcObject = stream;
-        hiddenVideoRef.current.play().catch(() => {});
-      }
-      if (previewVideoRef.current) {
-        previewVideoRef.current.srcObject = stream;
-        previewVideoRef.current.play().catch(() => {});
-      }
-
-      setCameraState('active');
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
     } catch (err) {
       setCameraState('error');
-      setErrorMsg('Não foi possível acessar a câmera. Verifique as permissões.');
+      setErrorMsg('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
+      return;
     }
-  }, []);
 
-  // Tracking loop
+    streamRef.current = stream;
+    const video = videoRef.current;
+    if (!video) { stopCamera(); return; }
+
+    video.srcObject = stream;
+
+    // Wait for metadata then play
+    await new Promise((resolve) => {
+      video.onloadedmetadata = resolve;
+    });
+
+    try {
+      await video.play();
+    } catch (err) {
+      setCameraState('error');
+      setErrorMsg('Erro ao iniciar o vídeo da câmera: ' + err.message);
+      stopCamera();
+      return;
+    }
+
+    setCameraState('active');
+  }, [stopCamera]);
+
+  // Tracking loop — starts only when camera is active
   useEffect(() => {
     if (cameraState !== 'active') return;
     const canvas = canvasRef.current;
-    const video = hiddenVideoRef.current;
+    const video = videoRef.current;
     if (!canvas || !video) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     canvas.width = 320;
@@ -106,24 +116,19 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Hidden video for pixel processing only */}
-      <video ref={hiddenVideoRef} className="hidden" playsInline muted />
+      {/* Single video element — shown when active */}
+      <video
+        ref={videoRef}
+        className={cameraState === 'active' ? 'rounded-lg border-2 border-slate-200 shadow-sm' : 'hidden'}
+        style={{ width: 160, height: 120, objectFit: 'cover', transform: 'scaleX(-1)' }}
+        playsInline
+        muted
+      />
 
-      {/* Visible camera preview */}
       {cameraState === 'active' && (
-        <div className="relative rounded-lg overflow-hidden border-2 border-slate-200 shadow-sm" style={{ width: 160, height: 120 }}>
-          <video
-            ref={previewVideoRef}
-            className="w-full h-full object-cover"
-            style={{ transform: 'scaleX(-1)' }}
-            playsInline
-            muted
-            autoPlay
-          />
-          <div className="absolute top-1.5 right-1.5 flex items-center gap-1 bg-black/50 rounded-full px-1.5 py-0.5">
-            <Circle className={`w-2 h-2 fill-current ${penFound ? 'text-emerald-400' : 'text-slate-400'}`} />
-            <span className="text-[9px] text-white">{penFound ? 'Detectado' : 'Procurando...'}</span>
-          </div>
+        <div className="flex items-center gap-1.5 -mt-1">
+          <Circle className={`w-2.5 h-2.5 fill-current ${penFound ? 'text-emerald-500' : 'text-slate-400'}`} />
+          <span className="text-xs text-slate-500">{penFound ? 'Caneta detectada!' : 'Procurando...'}</span>
         </div>
       )}
 
@@ -156,12 +161,13 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       </div>
 
       {errorMsg && (
-        <p className="text-xs text-rose-600 text-center max-w-xs">{errorMsg}</p>
+        <p className="text-xs text-rose-600 text-center max-w-xs">{errorMsg}
+        </p>
       )}
 
       {cameraState === 'active' && (
         <p className="text-xs text-slate-500 text-center max-w-xs">
-          Segure uma <span className="font-semibold text-rose-600">caneta vermelha</span> ou objeto vermelho em frente à câmera para mover os olhos.
+          Segure uma <span className="font-semibold text-rose-600">caneta vermelha</span> em frente à câmera para mover os olhos.
         </p>
       )}
     </div>
