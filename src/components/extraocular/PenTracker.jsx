@@ -190,6 +190,16 @@ function drawDebug(debugCanvas, sourceCanvas, hit, profile) {
   }
 }
 
+// ─── Default blue pen profile ─────────────────────────────────────────────────
+// Covers light blue, sky blue, cyan-blue, royal blue and common ballpoint blues
+// Hue range: ~185–250 (cyan-blue to blue), generous tolerance
+const DEFAULT_BLUE_PROFILE = {
+  h: 210,    // centre: sky/light blue
+  hTol: 40,  // covers 170–250 (cyan → deep blue)
+  sMin: 0.25, // allow lighter/washed-out blues
+  vMin: 0.20, // allow slightly dark blues
+};
+
 // ─── AI calibration call ───────────────────────────────────────────────────────
 async function calibrateWithAI(canvas) {
   const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
@@ -204,9 +214,9 @@ Return a JSON object describing the colour in HSV terms so we can track it:
 {
   "found": true,
   "penDescription": "blue ballpoint pen",
-  "h": 220,       // hue 0-360 (red=0, yellow=60, green=120, cyan=180, blue=240, magenta=300)
-  "hTol": 30,     // acceptable hue tolerance (degrees)
-  "sMin": 0.35,   // minimum saturation (0-1)
+  "h": 210,       // hue 0-360 (red=0, yellow=60, green=120, cyan=180, blue=240, magenta=300)
+  "hTol": 40,     // acceptable hue tolerance (degrees)
+  "sMin": 0.25,   // minimum saturation (0-1)
   "vMin": 0.2     // minimum value/brightness (0-1)
 }
 If no pen is visible return: { "found": false }`,
@@ -273,6 +283,10 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       setCameraState('error'); setErrorMsg('Erro ao iniciar o vídeo: ' + err.message); stopCamera(); return;
     }
     setCameraState('active');
+    // Apply default blue profile immediately — user can override with AI calibration
+    profileRef.current = DEFAULT_BLUE_PROFILE;
+    setPenDesc('azul claro (padrão)');
+    setCalibState('done');
   }, [stopCamera]);
 
   // One-shot AI calibration
@@ -422,7 +436,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
             Conectando...
           </div>
         )}
-        {cameraState === 'active' && (calibState === 'none' || calibState === 'failed') && (
+        {cameraState === 'active' && calibState === 'failed' && (
           <button
             onClick={runCalibration}
             className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors shadow-sm"
@@ -431,13 +445,13 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
             Calibrar com IA
           </button>
         )}
-        {cameraState === 'active' && calibState === 'done' && (
+        {cameraState === 'active' && (calibState === 'done' || calibState === 'none') && (
           <button
-            onClick={() => { profileRef.current = null; setCalibState('none'); setPenFound(false); }}
-            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors"
+            onClick={runCalibration}
+            className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-medium hover:bg-amber-200 transition-colors"
           >
             <Scan className="w-3.5 h-3.5" />
-            Recalibrar
+            Recalibrar com IA
           </button>
         )}
         {cameraState === 'active' && (
@@ -460,7 +474,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       )}
       {cameraState === 'active' && calibState === 'done' && (
         <p className="text-xs text-slate-500 text-center max-w-xs">
-          5 linhas de varredura horizontal rastreiam a caneta em tempo real.
+          Rastreando azul claro e variações. Use <span className="font-semibold text-amber-600">Recalibrar com IA</span> para outra cor.
         </p>
       )}
     </div>
