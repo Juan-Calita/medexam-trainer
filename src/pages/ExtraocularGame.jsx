@@ -101,6 +101,14 @@ export default function ExtraocularGame() {
       <GameHeader score={score} round={round} difficulty={difficulty} setDifficulty={setDifficulty} gameState={gameState} />
 
       {/* Mode selector */}
+      {/* Beta warning badge */}
+      {inputMode === 'camera' && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium px-3 py-2 rounded-lg shadow-sm max-w-[220px]">
+          <span className="text-base">🧪</span>
+          <span><strong>Modo teste:</strong> pode haver irregularidades, ainda em desenvolvimento.</span>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mt-4 bg-slate-100 rounded-full p-1">
         <button
           onClick={() => setInputMode('mouse')}
