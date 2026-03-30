@@ -1,6 +1,7 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, XCircle, ChevronRight, Brain } from 'lucide-react';
+import { MUSCLES, CN_PALSIES } from '@/components/extraocular/muscleData';
+
+const ALL_OPTIONS = [...MUSCLES, ...CN_PALSIES];
 
 export default function QuestionPanel({
   muscles,
@@ -17,140 +18,98 @@ export default function QuestionPanel({
 }) {
   const showCranialNerve = difficulty === 'advanced';
   const eyeLabel = impairedEye === 'left' ? 'esquerdo' : 'direito';
+
+  const difficultyLabels = { basic: 'Básico', intermediate: 'Intermediário', advanced: 'Avançado' };
   const nextDifficulty = { basic: 'Intermediário', intermediate: 'Avançado', advanced: null };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100 h-fit sticky top-24"
-    >
-      {/* Header */}
-      <div className="border-b border-blue-100 pb-4 mb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Brain className="w-4 h-4 text-purple-600" />
-          <p className="text-xs font-bold text-purple-600 uppercase tracking-widest">
-            Questão Clínica
-          </p>
-        </div>
+    <div className="mt-8 w-full max-w-xl">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+        <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">
+          Questão Clínica
+        </p>
         {impairedMuscle.scenario && (
-          <p className="text-xs text-slate-600 italic bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-2">
+          <p className="text-sm text-slate-600 italic bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 mb-3">
             {impairedMuscle.scenario}
           </p>
         )}
-        <h2 className="text-base font-bold text-slate-900">
-          Qual é o diagnóstico para o olho{' '}
-          <span className="text-purple-600">{eyeLabel}</span>?
+        <h2 className="text-lg font-bold text-slate-800 mb-5">
+          Qual é o diagnóstico para o olho {eyeLabel}?
         </h2>
-      </div>
 
-      {/* Answer options */}
-      <div className="space-y-2 mb-4">
-        {muscles.map((muscle) => {
-          let state = 'idle';
-          if (selectedAnswer) {
-            if (muscle.id === impairedMuscle.id) state = 'correct';
-            else if (muscle.id === selectedAnswer) state = 'wrong';
-            else state = 'dim';
-          }
+        <div className="grid grid-cols-2 gap-3">
+          {muscles.map((muscle) => {
+            let btnClass = 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300';
 
-          const styles = {
-            idle: 'border-slate-200 bg-white text-slate-900 hover:border-purple-300 hover:bg-purple-50',
-            correct: 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-sm',
-            wrong: 'border-rose-500 bg-rose-50 text-rose-900 shadow-sm',
-            dim: 'border-slate-100 bg-slate-50 text-slate-400',
-          }[state];
+            if (selectedAnswer) {
+              if (muscle.id === impairedMuscle.id) {
+                btnClass = 'border-2 border-green-500 bg-green-50 text-green-800 font-semibold';
+              } else if (muscle.id === selectedAnswer && muscle.id !== impairedMuscle.id) {
+                btnClass = 'border-2 border-red-400 bg-red-50 text-red-700';
+              } else {
+                btnClass = 'border border-slate-100 bg-slate-50 text-slate-400';
+              }
+            }
 
-          return (
-            <motion.button
-              key={muscle.id}
-              whileHover={state === 'idle' ? { scale: 1.02 } : {}}
-              whileTap={state === 'idle' ? { scale: 0.98 } : {}}
-              onClick={() => onAnswer(muscle.id)}
-              disabled={gameState === 'feedback'}
-              className={`relative w-full rounded-lg border-2 px-4 py-3 text-left transition-all duration-200 disabled:cursor-default text-sm ${styles}`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <span className="font-semibold block">{muscle.name}</span>
-                  <span className="text-xs opacity-70 block mt-0.5">{muscle.nerve}</span>
-                </div>
-                {state === 'correct' && <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />}
-                {state === 'wrong' && <XCircle className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />}
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Feedback explanation */}
-      <AnimatePresence>
-        {feedback && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden mb-4"
-          >
-            <div className={`rounded-lg p-3 text-xs leading-relaxed border ${
-              feedback.correct
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                : 'bg-rose-50 border-rose-200 text-rose-900'
-            }`}>
-              <p className="font-bold mb-1">
-                {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
-                {!feedback.correct && (
-                  <span className="ml-2 font-normal">
-                    Correto: <strong>{impairedMuscle.name}</strong>
-                  </span>
-                )}
-              </p>
-              <p className="opacity-90">{impairedMuscle.explanation}</p>
-              {showCranialNerve && (
-                <p className="mt-2">
-                  Nervo: <span className="font-semibold text-purple-700">{impairedMuscle.nerve}</span>
-                </p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Streak progress */}
-      {nextDifficulty[difficulty] ? (
-        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-100 rounded-lg mb-4">
-          <span className="text-[10px] text-blue-700 font-semibold">→ {nextDifficulty[difficulty]}:</span>
-          <div className="flex gap-1">
-            {Array.from({ length: streakToAdvance }).map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{ scale: i < correctStreak ? [1, 1.3, 1] : 1 }}
-                transition={{ duration: 0.3 }}
-                className={`w-2.5 h-2.5 rounded-full border-2 transition-all ${
-                  i < correctStreak
-                    ? 'bg-emerald-500 border-emerald-500'
-                    : 'bg-transparent border-blue-200'
-                }`}
-              />
-            ))}
-          </div>
+            return (
+                  <button
+                    key={muscle.id}
+                    onClick={() => onAnswer(muscle.id)}
+                    disabled={gameState === 'feedback'}
+                    className={`rounded-lg px-4 py-3 text-sm text-left transition-all duration-150 ${btnClass} disabled:cursor-default`}
+                  >
+                    <span className="font-medium">{muscle.name}</span>
+                    <span className="block text-xs mt-0.5 opacity-60">{muscle.nerve}</span>
+                  </button>
+                );
+          })}
         </div>
-      ) : null}
 
-      {/* Next button */}
-      {gameState === 'feedback' && (
-        <motion.button
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={onNext}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-semibold text-sm transition-all shadow-md"
-        >
-          Próximo Caso <ChevronRight className="w-4 h-4" />
-        </motion.button>
-      )}
-    </motion.div>
+        {/* Explanation */}
+        {feedback && (
+          <div className={`mt-5 rounded-lg p-4 text-sm leading-relaxed ${feedback.correct ? 'bg-green-50 border border-green-200 text-green-900' : 'bg-red-50 border border-red-200 text-red-900'}`}>
+            <p className="font-semibold mb-1">
+              {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
+              {!feedback.correct && (
+                <span className="ml-2 text-red-700">
+                  Resposta correta: <strong>{impairedMuscle.name}</strong>
+                </span>
+              )}
+            </p>
+            <p>{impairedMuscle.explanation}</p>
+            {showCranialNerve && (
+              <p className="mt-2 font-medium text-slate-700">
+                Nervo craniano: <span className="text-blue-700">{impairedMuscle.nerve}</span>
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Streak / difficulty progress */}
+        {nextDifficulty[difficulty] && (
+          <div className="mt-4 flex items-center gap-2">
+            <span className="text-xs text-slate-500">Progresso para {nextDifficulty[difficulty]}:</span>
+            <div className="flex gap-1">
+              {Array.from({ length: streakToAdvance }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-4 h-4 rounded-full border-2 transition-all ${i < correctStreak ? 'bg-green-500 border-green-500' : 'bg-white border-slate-300'}`}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Next button */}
+        {gameState === 'feedback' && (
+          <button
+            onClick={onNext}
+            className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-sm"
+          >
+            Próximo Caso →
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

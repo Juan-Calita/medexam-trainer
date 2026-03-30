@@ -1,17 +1,15 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mouse, Camera, Play, Eye, X } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import EyeCanvas from '@/components/extraocular/EyeCanvas';
 import QuestionPanel from '@/components/extraocular/QuestionPanel';
+import GameHeader from '@/components/extraocular/ExtraocularHeader';
 import FeedbackPopup from '@/components/extraocular/FeedbackPopup';
 import PenTracker from '@/components/extraocular/PenTracker';
-import { getMusclesForDifficulty } from '@/components/extraocular/muscleData';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { MUSCLES, getMusclesForDifficulty, getImpairedMovement } from '@/components/extraocular/muscleData';
+import { Mouse, Camera } from 'lucide-react';
 
 export default function ExtraocularGame() {
   const [difficulty, setDifficulty] = useState('basic');
-  const [gameState, setGameState] = useState('idle');
+  const [gameState, setGameState] = useState('idle'); // idle | playing | feedback
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
   const [impairedMuscle, setImpairedMuscle] = useState(null);
@@ -21,7 +19,7 @@ export default function ExtraocularGame() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [correctStreak, setCorrectStreak] = useState(0);
   const [muscleHistory, setMuscleHistory] = useState({});
-  const [inputMode, setInputMode] = useState('mouse');
+  const [inputMode, setInputMode] = useState('mouse'); // 'mouse' | 'camera'
   const [showCameraPanel, setShowCameraPanel] = useState(false);
   const containerRef = useRef(null);
 
@@ -31,7 +29,10 @@ export default function ExtraocularGame() {
   const handleMouseMove = useCallback((e) => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
-      setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+      setMousePos({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
     }
   }, []);
 
@@ -43,7 +44,10 @@ export default function ExtraocularGame() {
     const muscle = pool[Math.floor(Math.random() * pool.length)];
     setMuscleHistory((prev) => {
       const levelHistory = { ...(prev[difficulty] || {}) };
-      if (filtered.length === 0) return { ...prev, [difficulty]: { [muscle.id]: 1 } };
+      if (filtered.length === 0) {
+        // reset counts when all hit the limit
+        return { ...prev, [difficulty]: { [muscle.id]: 1 } };
+      }
       levelHistory[muscle.id] = (levelHistory[muscle.id] || 0) + 1;
       return { ...prev, [difficulty]: levelHistory };
     });
@@ -79,207 +83,118 @@ export default function ExtraocularGame() {
       setCorrectStreak(0);
     }
     setGameState('feedback');
-  }, [gameState, impairedMuscle, difficulty]);
+  }, [gameState, impairedMuscle, difficulty, correctStreak]);
 
-  const handleNext = useCallback(() => startNewRound(), [startNewRound]);
+  const handleNext = useCallback(() => {
+    startNewRound();
+  }, [startNewRound]);
+
   const availableMuscles = getMusclesForDifficulty(difficulty);
 
-  const difficultyNames = { basic: 'Básico', intermediate: 'Intermediário', advanced: 'Avançado' };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-blue-50">
+    <div
+      className="min-h-screen bg-white flex flex-col items-center"
+      onMouseMove={inputMode === 'mouse' ? handleMouseMove : undefined}
+      ref={containerRef}>
+      
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 text-white sticky top-0 z-40 shadow-lg">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link to={createPageUrl('Home')} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <button className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-          </Link>
-          <div className="flex items-center gap-3">
-            <Eye className="w-6 h-6 text-cyan-300" />
-            <div>
-              <h1 className="text-xl font-bold">Músculos Extraoculares</h1>
-              <p className="text-xs text-blue-200">Simulador Clínico Interativo</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-blue-200">Pontuação</div>
-            <motion.div
-              key={score}
-              initial={{ scale: 1.3, color: '#06b6d4' }}
-              animate={{ scale: 1, color: '#fff' }}
-              transition={{ duration: 0.4 }}
-              className="text-2xl font-bold"
-            >
-              {score}
-            </motion.div>
-          </div>
+      <GameHeader score={score} round={round} difficulty={difficulty} setDifficulty={setDifficulty} gameState={gameState} />
+
+      {/* Mode selector */}
+      {/* Beta warning badge */}
+      {inputMode === 'camera' && (
+        <div className="fixed top-24 right-4 z-50 flex items-start gap-2 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium px-3 py-2 rounded-lg shadow-sm max-w-[220px]">
+          <span className="text-base mt-0.5">🧪</span>
+          <span><strong>Modo teste:</strong> ainda em desenvolvimento, pode haver irregularidades. Recalibragens durante o uso podem ser necessárias.</span>
         </div>
-      </header>
+      )}
 
-      {/* Main content */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        {gameState === 'idle' && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            {/* Welcome card */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-blue-100">
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">
-                Bem-vindo ao Simulador! 👁️
-              </h2>
-              <p className="text-slate-600 mb-6">
-                Teste seus conhecimentos de anatomia dos músculos extraoculares. Escolha seu nível e comece a treinar.
-              </p>
+      <div className="flex items-center gap-2 mt-4 bg-slate-100 rounded-full p-1">
+        <button
+          onClick={() => setInputMode('mouse')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+          inputMode === 'mouse' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
+          }>
+          
+          <Mouse className="w-4 h-4" />
+          Mouse
+        </button>
+        <button
+          onClick={() => { setInputMode('camera'); setShowCameraPanel(true); }}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${inputMode === 'camera' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          <Camera className="w-4 h-4" />
+          Câmera (caneta azul)
+        </button>
+      </div>
 
-              {/* Difficulty selector */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {['basic', 'intermediate', 'advanced'].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => setDifficulty(level)}
-                    className={`p-4 rounded-xl border-2 transition-all font-semibold ${
-                      difficulty === level
-                        ? 'border-purple-600 bg-purple-50 text-purple-700'
-                        : 'border-slate-200 bg-white text-slate-600 hover:border-purple-300'
-                    }`}
-                  >
-                    {difficultyNames[level]}
-                  </button>
-                ))}
-              </div>
+      {/* Face + Eyes */}
+      <div className="flex flex-col items-center mt-4 w-full max-w-2xl px-4">
+        <EyeCanvas
+          mousePos={mousePos}
+          containerRef={containerRef}
+          impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
+          impairedEye={impairedEye}
+          gameState={gameState}
+          inputMode={inputMode} />
+        
 
-              {/* Input mode selector */}
-              <div className="flex gap-3 mb-6">
-                <button
-                  onClick={() => setInputMode('mouse')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                    inputMode === 'mouse'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  <Mouse className="w-4 h-4" /> Mouse
-                </button>
-                <button
-                  onClick={() => { setInputMode('camera'); setShowCameraPanel(true); }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
-                    inputMode === 'camera'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  <Camera className="w-4 h-4" /> Câmera
-                </button>
-              </div>
-
-              {/* Start button */}
-              <motion.button
-                onClick={startNewRound}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.97 }}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-shadow"
-              >
-                <Play className="w-5 h-5 fill-white" />
-                Iniciar Simulação
-              </motion.button>
+        {/* Camera tracker — always mounted when camera mode, visibility toggled via CSS */}
+        {inputMode === 'camera' && (
+          <div className="mt-4 w-full flex flex-col items-center">
+            <div className={showCameraPanel ? '' : 'hidden'}>
+              <PenTracker
+                onPositionChange={setMousePos}
+                containerRef={containerRef}
+                isActive={true} />
+              <button
+                onClick={() => setShowCameraPanel(false)}
+                className="mt-2 text-xs text-slate-400 hover:text-slate-600 underline block mx-auto">
+                Ocultar câmera
+              </button>
             </div>
-          </motion.div>
+            {!showCameraPanel && (
+              <button
+                onClick={() => setShowCameraPanel(true)}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-600 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 transition-colors">
+                <Camera className="w-3.5 h-3.5" />
+                Mostrar câmera / recalibrar
+              </button>
+            )}
+          </div>
         )}
 
-        {(gameState === 'playing' || gameState === 'feedback') && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid lg:grid-cols-3 gap-6"
-          >
-            {/* Canvas section */}
-            <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-blue-100">
-              <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mb-6">
-                {inputMode === 'camera'
-                  ? 'Mova a caneta sobre o rosto'
-                  : 'Mova o mouse sobre o rosto'}
-              </p>
-              <div className="flex justify-center">
-                <EyeCanvas
-                  mousePos={mousePos}
-                  containerRef={containerRef}
-                  impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
-                  impairedEye={impairedEye}
-                  gameState={gameState}
-                  inputMode={inputMode}
-                />
-              </div>
+        {/* Start button */}
+        {gameState === 'idle' &&
+        <button
+          onClick={startNewRound}
+          className="mt-8 px-8 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold tracking-wide hover:bg-blue-700 transition-colors shadow-md">
+          
+            Iniciar Caso
+          </button>
+        }
 
-              {/* Camera panel */}
-              {inputMode === 'camera' && (
-                <div className="mt-6">
-                  <AnimatePresence>
-                    {showCameraPanel && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                          <PenTracker
-                            onPositionChange={setMousePos}
-                            containerRef={containerRef}
-                            isActive={true}
-                          />
-                          <button
-                            onClick={() => setShowCameraPanel(false)}
-                            className="mt-3 mx-auto block text-xs text-blue-600 hover:text-blue-700 underline"
-                          >
-                            Ocultar câmera
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  {!showCameraPanel && (
-                    <motion.button
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      onClick={() => setShowCameraPanel(true)}
-                      className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-semibold"
-                    >
-                      <Camera className="w-4 h-4" />
-                      Mostrar câmera / recalibrar
-                    </motion.button>
-                  )}
-                </div>
-              )}
-            </div>
+        {/* Question */}
+        {(gameState === 'playing' || gameState === 'feedback') &&
+        <QuestionPanel
+          muscles={availableMuscles}
+          difficulty={difficulty}
+          impairedMuscle={impairedMuscle}
+          impairedEye={impairedEye}
+          selectedAnswer={selectedAnswer}
+          onAnswer={handleAnswer}
+          gameState={gameState}
+          onNext={handleNext}
+          feedback={feedback}
+          correctStreak={correctStreak}
+          streakToAdvance={STREAK_TO_ADVANCE} />
 
-            {/* Question panel */}
-            <QuestionPanel
-              key={round}
-              muscles={availableMuscles}
-              difficulty={difficulty}
-              impairedMuscle={impairedMuscle}
-              impairedEye={impairedEye}
-              selectedAnswer={selectedAnswer}
-              onAnswer={handleAnswer}
-              gameState={gameState}
-              onNext={handleNext}
-              feedback={feedback}
-              correctStreak={correctStreak}
-              streakToAdvance={STREAK_TO_ADVANCE}
-            />
-          </motion.div>
-        )}
-      </main>
+        }
+      </div>
 
       {/* Feedback popup */}
-      {feedback && <FeedbackPopup feedback={feedback} onNext={handleNext} />}
+      {feedback &&
+      <FeedbackPopup feedback={feedback} onNext={handleNext} />
+      }
+    </div>);
 
-      {/* Mouse listener */}
-      <div
-        ref={containerRef}
-        onMouseMove={inputMode === 'mouse' ? handleMouseMove : undefined}
-        className="fixed inset-0 pointer-events-none"
-      />
-    </div>
-  );
 }
