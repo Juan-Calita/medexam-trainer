@@ -2,8 +2,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Camera, CameraOff, Circle, Scan } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
-// ─── Colour matching ───────────────────────────────────────────────────────────
-// Convert RGB → HSV (h:0-360, s:0-1, v:0-1)
+// ─── RGB → HSV ────────────────────────────────────────────────────────────────
 function rgbToHsv(r, g, b) {
   const rn = r / 255, gn = g / 255, bn = b / 255;
   const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
@@ -18,189 +17,93 @@ function rgbToHsv(r, g, b) {
   return { h, s: max === 0 ? 0 : d / max, v: max };
 }
 
-// Check if a pixel matches the calibrated pen colour profile
 function matchesPen(r, g, b, profile) {
   if (!profile) return false;
   const { h, s, v } = rgbToHsv(r, g, b);
-  if (s < 0.25 || v < 0.15) return false;
-  // Hue tolerance (wraps around 0/360)
+  if (s < profile.sMin || v < profile.vMin) return false;
   const diff = Math.abs(h - profile.h);
-  const hueDiff = Math.min(diff, 360 - diff);
-  return hueDiff <= profile.hTol && s >= profile.sMin && v >= profile.vMin;
+  return Math.min(diff, 360 - diff) <= profile.hTol;
 }
 
-// ─── 1000×1000 grid detector ──────────────────────────────────────────────────
-// Scans 1000 horizontal lines + 1000 vertical lines across the full frame.
-// For each line, finds the longest run of matching pixels.
-// The winning intersection (H-line row + V-line col with most hits) gives position.
-function detectByGrid(imageData, W, H, profile) {
+// ─── Centroid detector ────────────────────────────────────────────────────────
+// Finds ALL matching pixels and computes their weighted centroid.
+// Much more stable than the "best scanline" approach — no sudden jumps
+// when one scanline briefly wins over another.
+function detectCentroid(imageData, W, H, profile) {
   const data = imageData.data;
+  let sumX = 0, sumY = 0, count = 0;
 
-  // Sample 1000 evenly-spaced rows
-  const LINES = 1000;
-  const hBest = new Float32Array(LINES); // best run length per H-line (normalised 0-1 x centre)
-  const hCx   = new Float32Array(LINES); // centre x of best run per H-line
-
-  for (let li = 0; li < LINES; li++) {
-    const sy = Math.floor((li / (LINES - 1)) * (H - 1));
-    let runStart = -1, bestLen = 0, bestCx = 0;
-    for (let x = 0; x < W; x++) {
-      const i = (sy * W + x) * 4;
+  // Sample every 2nd pixel for speed (still dense enough)
+  for (let y = 0; y < H; y += 2) {
+    for (let x = 0; x < W; x += 2) {
+      const i = (y * W + x) * 4;
       if (matchesPen(data[i], data[i + 1], data[i + 2], profile)) {
-        if (runStart === -1) runStart = x;
-      } else {
-        if (runStart !== -1) {
-          const len = x - runStart;
-          if (len > bestLen) { bestLen = len; bestCx = (runStart + x) / 2; }
-          runStart = -1;
-        }
+        sumX += x;
+        sumY += y;
+        count++;
       }
     }
-    if (runStart !== -1) {
-      const len = W - runStart;
-      if (len > bestLen) { bestLen = len; bestCx = (runStart + W) / 2; }
-    }
-    hBest[li] = bestLen;
-    hCx[li]   = bestCx / W;
   }
 
-  // Sample 1000 evenly-spaced columns
-  const vBest = new Float32Array(LINES);
-  const vCy   = new Float32Array(LINES);
+  // Require a meaningful blob (≥ 8 matched pixels at 2px stride = ~32 real px²)
+  if (count < 8) return { found: false };
 
-  for (let li = 0; li < LINES; li++) {
-    const sx = Math.floor((li / (LINES - 1)) * (W - 1));
-    let runStart = -1, bestLen = 0, bestCy = 0;
-    for (let y = 0; y < H; y++) {
-      const i = (y * W + sx) * 4;
-      if (matchesPen(data[i], data[i + 1], data[i + 2], profile)) {
-        if (runStart === -1) runStart = y;
-      } else {
-        if (runStart !== -1) {
-          const len = y - runStart;
-          if (len > bestLen) { bestLen = len; bestCy = (runStart + y) / 2; }
-          runStart = -1;
-        }
-      }
-    }
-    if (runStart !== -1) {
-      const len = H - runStart;
-      if (len > bestLen) { bestLen = len; bestCy = (runStart + H) / 2; }
-    }
-    vBest[li] = bestLen;
-    vCy[li]   = bestCy / H;
-  }
-
-  // Find best H-line and best V-line
-  let bestHIdx = 0, bestVIdx = 0;
-  for (let i = 1; i < LINES; i++) {
-    if (hBest[i] > hBest[bestHIdx]) bestHIdx = i;
-    if (vBest[i] > vBest[bestVIdx]) bestVIdx = i;
-  }
-
-  if (hBest[bestHIdx] < 3 && vBest[bestVIdx] < 3) return { found: false };
-
-  // Intersection point: x from H-line centroid, y from V-line centroid
-  const x = hBest[bestHIdx] >= 3 ? hCx[bestHIdx] : bestVIdx / (LINES - 1);
-  const y = vBest[bestVIdx] >= 3 ? vCy[bestVIdx] : bestHIdx / (LINES - 1);
-
-  return { x, y, found: true, bestHIdx, bestVIdx, hBest, vBest };
+  return {
+    found: true,
+    x: sumX / count / W,   // normalised 0-1
+    y: sumY / count / H,
+    count,
+  };
 }
 
-// ─── Debug overlay ─────────────────────────────────────────────────────────────
-// Renders the 1000×1000 heatmap (H lines as horizontal bars, V lines as vertical bars)
-// The intensity of each bar encodes the run-length found on that line.
-// The detected point crosshair is drawn in screen space, directly mapping:
-//   x=0 → left edge, x=1 → right edge (mirrored for selfie view externally)
-//   y=0 → top edge,  y=1 → bottom edge
+// ─── Debug overlay ────────────────────────────────────────────────────────────
 function drawDebug(debugCanvas, sourceCanvas, hit, profile) {
   const ctx = debugCanvas.getContext('2d');
   const W = sourceCanvas.width, H = sourceCanvas.height;
   debugCanvas.width = W;
   debugCanvas.height = H;
 
-  // Base frame (dimmed)
   ctx.drawImage(sourceCanvas, 0, 0);
-  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.fillRect(0, 0, W, H);
 
-  if (hit && hit.hBest && hit.vBest) {
-    const LINES = hit.hBest.length;
-
-    // Find max run for normalisation
-    let maxH = 1, maxV = 1;
-    for (let i = 0; i < LINES; i++) {
-      if (hit.hBest[i] > maxH) maxH = hit.hBest[i];
-      if (hit.vBest[i] > maxV) maxV = hit.vBest[i];
-    }
-
-    // Draw H-line heatmap: each of the 1000 rows gets a 1px horizontal bar
-    // colour intensity proportional to the run length found
-    for (let li = 0; li < LINES; li++) {
-      if (hit.hBest[li] < 1) continue;
-      const py = Math.floor((li / (LINES - 1)) * (H - 1));
-      const alpha = (hit.hBest[li] / maxH) * 0.8;
-      ctx.fillStyle = `rgba(255,200,0,${alpha})`;
-      ctx.fillRect(0, py, W, 1);
-    }
-
-    // Draw V-line heatmap: each of the 1000 columns gets a 1px vertical bar
-    for (let li = 0; li < LINES; li++) {
-      if (hit.vBest[li] < 1) continue;
-      const px = Math.floor((li / (LINES - 1)) * (W - 1));
-      const alpha = (hit.vBest[li] / maxV) * 0.8;
-      ctx.fillStyle = `rgba(0,180,255,${alpha})`;
-      ctx.fillRect(px, 0, 1, H);
-    }
-  }
-
-  // Crosshair at detected point
   if (hit && hit.found) {
     const px = hit.x * W, py = hit.y * H;
-
-    // Full-width/height crosshair lines
-    ctx.strokeStyle = 'rgba(0,255,136,0.6)';
+    ctx.strokeStyle = 'rgba(0,255,136,0.7)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(0, py); ctx.lineTo(W, py);
     ctx.moveTo(px, 0); ctx.lineTo(px, H);
     ctx.stroke();
-
-    // Circle at intersection
     ctx.beginPath();
-    ctx.arc(px, py, 8, 0, Math.PI * 2);
+    ctx.arc(px, py, 7, 0, Math.PI * 2);
     ctx.strokeStyle = '#00ff88';
     ctx.lineWidth = 2;
     ctx.stroke();
-
-    // Small filled dot
     ctx.beginPath();
     ctx.arc(px, py, 3, 0, Math.PI * 2);
     ctx.fillStyle = '#00ff88';
     ctx.fill();
   }
 
-  // Profile colour swatch
   if (profile) {
     ctx.fillStyle = `hsl(${profile.h}, 80%, 50%)`;
-    ctx.fillRect(4, 4, 16, 16);
+    ctx.fillRect(4, 4, 14, 14);
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
-    ctx.strokeRect(4, 4, 16, 16);
+    ctx.strokeRect(4, 4, 14, 14);
   }
 }
 
 // ─── Default blue pen profile ─────────────────────────────────────────────────
-// Covers light blue, sky blue, cyan-blue, royal blue and common ballpoint blues
-// Hue range: ~185–250 (cyan-blue to blue), generous tolerance
 const DEFAULT_BLUE_PROFILE = {
-  h: 210,    // centre: sky/light blue
-  hTol: 40,  // covers 170–250 (cyan → deep blue)
-  sMin: 0.25, // allow lighter/washed-out blues
-  vMin: 0.20, // allow slightly dark blues
+  h: 210,
+  hTol: 40,   // 170–250: cyan-blue → deep blue
+  sMin: 0.25,
+  vMin: 0.20,
 };
 
-// ─── AI calibration call ───────────────────────────────────────────────────────
+// ─── AI calibration ───────────────────────────────────────────────────────────
 async function calibrateWithAI(canvas) {
   const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
   const blob = await (await fetch(dataUrl)).blob();
@@ -214,10 +117,10 @@ Return a JSON object describing the colour in HSV terms so we can track it:
 {
   "found": true,
   "penDescription": "blue ballpoint pen",
-  "h": 210,       // hue 0-360 (red=0, yellow=60, green=120, cyan=180, blue=240, magenta=300)
-  "hTol": 40,     // acceptable hue tolerance (degrees)
-  "sMin": 0.25,   // minimum saturation (0-1)
-  "vMin": 0.2     // minimum value/brightness (0-1)
+  "h": 210,
+  "hTol": 40,
+  "sMin": 0.25,
+  "vMin": 0.2
 }
 If no pen is visible return: { "found": false }`,
     file_urls: [file_url],
@@ -236,18 +139,27 @@ If no pen is visible return: { "found": false }`,
   });
 }
 
-// ─── Component ─────────────────────────────────────────────────────────────────
+// ─── Smoothing constants ──────────────────────────────────────────────────────
+// EMA alpha: higher = faster/more responsive, lower = smoother
+// 0.18 gives a nice balance between responsiveness and stability
+const EMA_ALPHA = 0.18;
+// Minimum pixel movement to send update (avoids micro-jitter)
+const DEAD_ZONE = 0.003; // in normalised units (~1px on 320px canvas)
+
+// ─── Component ────────────────────────────────────────────────────────────────
 export default function PenTracker({ onPositionChange, containerRef, isActive }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const debugCanvasRef = useRef(null);
   const animRef = useRef(null);
   const streamRef = useRef(null);
-  const profileRef = useRef(null);        // calibrated colour profile
-  const lastHitRef = useRef(null);        // last detected position
+  const profileRef = useRef(null);
 
-  const [cameraState, setCameraState] = useState('idle'); // idle|loading|active|error
-  const [calibState, setCalibState] = useState('none');   // none|calibrating|done|failed
+  // Smoothed position state (normalised 0-1)
+  const smoothRef = useRef({ x: 0.5, y: 0.5, active: false });
+
+  const [cameraState, setCameraState] = useState('idle');
+  const [calibState, setCalibState] = useState('none');
   const [penFound, setPenFound] = useState(false);
   const [penDesc, setPenDesc] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -260,7 +172,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     setCalibState('none');
     setPenFound(false);
     profileRef.current = null;
-    lastHitRef.current = null;
+    smoothRef.current = { x: 0.5, y: 0.5, active: false };
   }, []);
 
   const startCamera = useCallback(async () => {
@@ -268,7 +180,9 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     setErrorMsg('');
     let stream;
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
+      });
     } catch {
       setCameraState('error');
       setErrorMsg('Não foi possível acessar a câmera. Verifique as permissões do navegador.');
@@ -283,19 +197,16 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       setCameraState('error'); setErrorMsg('Erro ao iniciar o vídeo: ' + err.message); stopCamera(); return;
     }
     setCameraState('active');
-    // Apply default blue profile immediately — user can override with AI calibration
     profileRef.current = DEFAULT_BLUE_PROFILE;
     setPenDesc('azul claro (padrão)');
     setCalibState('done');
   }, [stopCamera]);
 
-  // One-shot AI calibration
   const runCalibration = useCallback(async () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
     if (!canvas || !video || video.readyState < 2) return;
     setCalibState('calibrating');
-    // Draw current frame into canvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     try {
@@ -303,8 +214,8 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       if (result.found && result.h != null) {
         profileRef.current = {
           h: result.h,
-          hTol: result.hTol ?? 30,
-          sMin: result.sMin ?? 0.3,
+          hTol: result.hTol ?? 35,
+          sMin: result.sMin ?? 0.25,
           vMin: result.vMin ?? 0.2,
         };
         setPenDesc(result.penDescription ?? 'caneta detectada');
@@ -317,51 +228,66 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     }
   }, []);
 
-  // Frame loop: 5-scanline detection using calibrated profile
+  // ─── Frame loop ───────────────────────────────────────────────────────────
   useEffect(() => {
     if (cameraState !== 'active') return;
     const canvas = canvasRef.current;
     const video = videoRef.current;
     if (!canvas || !video) return;
+
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    canvas.width = 320;
-    canvas.height = 240;
+    // Smaller canvas = faster pixel reads, still plenty of resolution
+    canvas.width = 160;
+    canvas.height = 120;
+
     let frameN = 0;
+    let penFoundLocal = false;
 
     const loop = () => {
       if (video.readyState >= 2 && profileRef.current) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const hit = detectByGrid(imageData, canvas.width, canvas.height, profileRef.current);
+        const hit = detectCentroid(imageData, canvas.width, canvas.height, profileRef.current);
 
         if (hit.found) {
-          lastHitRef.current = hit;
-          setPenFound(true);
+          const s = smoothRef.current;
+          if (!s.active) {
+            // First detection — snap immediately, no interpolation lag
+            s.x = hit.x;
+            s.y = hit.y;
+            s.active = true;
+          } else {
+            // Exponential moving average for smooth tracking
+            s.x = s.x + EMA_ALPHA * (hit.x - s.x);
+            s.y = s.y + EMA_ALPHA * (hit.y - s.y);
+          }
+
+          if (!penFoundLocal) { setPenFound(true); penFoundLocal = true; }
+
+          // Send to parent only if moved enough (suppress micro-jitter)
+          if (containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect();
+            const outX = (1 - s.x) * rect.width;   // mirror X for selfie view
+            const outY = s.y * rect.height;
+            onPositionChange({ x: outX, y: outY });
+          }
         } else {
-          setPenFound(false);
+          smoothRef.current.active = false;
+          if (penFoundLocal) { setPenFound(false); penFoundLocal = false; }
         }
 
-        // Debug overlay every 2 frames
-        if (frameN % 2 === 0 && debugCanvasRef.current) {
-          drawDebug(debugCanvasRef.current, canvas, hit.found ? hit : null, profileRef.current);
+        // Debug overlay every 3 frames (don't waste GPU on every frame)
+        if (frameN % 3 === 0 && debugCanvasRef.current) {
+          drawDebug(debugCanvasRef.current, canvas, hit, profileRef.current);
         }
-
-        // Send to parent — mirror X (selfie view), map to container space
-        // x=0 (left camera edge) → x=containerWidth (right eye side) and vice-versa
-        if (lastHitRef.current && containerRef.current) {
-          const rect = containerRef.current.getBoundingClientRect();
-          onPositionChange({
-            x: (1 - lastHitRef.current.x) * rect.width,
-            y: lastHitRef.current.y * rect.height,
-          });
-        }
-      } else if (video.readyState >= 2 && frameN % 2 === 0 && debugCanvasRef.current) {
+      } else if (video.readyState >= 2 && frameN % 3 === 0 && debugCanvasRef.current) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dctx = debugCanvasRef.current.getContext('2d');
         debugCanvasRef.current.width = canvas.width;
         debugCanvasRef.current.height = canvas.height;
         dctx.drawImage(canvas, 0, 0);
       }
+
       frameN++;
       animRef.current = requestAnimationFrame(loop);
     };
@@ -381,10 +307,8 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
 
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* Hidden processing canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Camera + debug view */}
       <div className={cameraState === 'active' ? 'flex gap-2 items-start' : 'hidden'}>
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] text-slate-400 uppercase tracking-wide">Câmera</span>
@@ -396,16 +320,15 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
           />
         </div>
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Scan H</span>
+          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Detecção</span>
           <canvas
             ref={debugCanvasRef}
-            className="rounded-lg border-2 border-yellow-300 shadow-sm"
+            className="rounded-lg border-2 border-cyan-300 shadow-sm"
             style={{ width: 160, height: 120, transform: 'scaleX(-1)' }}
           />
         </div>
       </div>
 
-      {/* Status */}
       {cameraState === 'active' && calibBadge && (
         <div className="flex items-center gap-1.5 -mt-1">
           <Circle className={`w-2.5 h-2.5 fill-current ${calibBadge.color}`} />
@@ -419,7 +342,6 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         </div>
       )}
 
-      {/* Buttons */}
       <div className="flex gap-2 flex-wrap justify-center">
         {(cameraState === 'idle' || cameraState === 'error') && (
           <button
@@ -467,14 +389,9 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
 
       {errorMsg && <p className="text-xs text-rose-600 text-center max-w-xs">{errorMsg}</p>}
 
-      {cameraState === 'active' && calibState === 'none' && (
-        <p className="text-xs text-slate-500 text-center max-w-xs">
-          Segure a caneta na frente da câmera e clique em <span className="font-semibold text-amber-600">Calibrar com IA</span>.
-        </p>
-      )}
       {cameraState === 'active' && calibState === 'done' && (
         <p className="text-xs text-slate-500 text-center max-w-xs">
-          Rastreando azul claro e variações. Use <span className="font-semibold text-amber-600">Recalibrar com IA</span> para outra cor.
+          Rastreando caneta azul. Use <span className="font-semibold text-amber-600">Recalibrar com IA</span> para outra cor.
         </p>
       )}
     </div>
