@@ -103,9 +103,9 @@ export default function ExtraocularGame() {
       {/* Mode selector */}
       {/* Beta warning badge */}
       {inputMode === 'camera' && (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium px-3 py-2 rounded-lg shadow-sm max-w-[220px]">
-          <span className="text-base">🧪</span>
-          <span><strong>Modo teste:</strong> pode haver irregularidades, ainda em desenvolvimento.</span>
+        <div className="fixed top-16 right-4 z-50 flex items-start gap-2 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium px-3 py-2 rounded-lg shadow-sm max-w-[220px]">
+          <span className="text-base mt-0.5">🧪</span>
+          <span><strong>Modo teste:</strong> ainda em desenvolvimento, pode haver irregularidades. Recalibragens durante o uso podem ser necessárias.</span>
         </div>
       )}
 
