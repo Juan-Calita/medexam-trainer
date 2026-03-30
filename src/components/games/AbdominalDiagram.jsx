@@ -61,12 +61,12 @@ export default function AbdominalDiagram({
               onClick={() => handleTouchZone(name)}
               className={`absolute flex items-center justify-center p-1 rounded-lg border-2 border-dashed transition-all duration-300 ${
                 isPlaced 
-                  ? 'bg-emerald-100/80 border-emerald-400' 
+                  ? 'bg-emerald-100/85 border-emerald-400' 
                   : feedback === 'correct'
-                    ? 'bg-emerald-200 border-emerald-500'
+                    ? 'bg-emerald-200/90 border-emerald-500'
                     : feedback === 'incorrect'
-                      ? 'bg-rose-200 border-rose-500'
-                      : 'bg-white/40 border-slate-300'
+                      ? 'bg-rose-200/90 border-rose-500'
+                      : 'bg-slate-200/70 border-slate-400'
               }`}
               style={{
                 left: `${pos.x}%`,

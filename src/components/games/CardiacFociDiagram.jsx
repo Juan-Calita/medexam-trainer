@@ -56,10 +56,10 @@ export default function CardiacFociDiagram({ placedLabels, onDrop, highlightedRe
                   ? 'border-emerald-500 bg-emerald-100/90'
                   : 'border-rose-500 bg-rose-100/90'
                 : isPlaced
-                ? 'border-teal-500 bg-teal-100/70'
+                ? 'border-teal-500 bg-teal-100/80'
                 : isHighlighted
-                ? 'border-amber-400 bg-amber-100/50'
-                : 'border-slate-300 border-dashed bg-white/30'
+                ? 'border-amber-400 bg-amber-100/70'
+                : 'border-slate-300 border-dashed bg-slate-200/70'
             }`}
             style={{
               left: `${coords.x}%`,
