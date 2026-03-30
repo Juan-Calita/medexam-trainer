@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { DragDropContext } from '@hello-pangea/dnd';
@@ -14,6 +15,7 @@ const POINTS_PER_CORRECT = 10;
 const MAX_RETRIES = 3;
 
 export default function AbdominalGame() {
+  const isTouch = useIsTouchDevice();
   const [gameState, setGameState] = useState('loading'); // 'loading' | 'playing' | 'completed'
   const [placedLabels, setPlacedLabels] = useState({});
   const [retries, setRetries] = useState({});
@@ -22,6 +24,7 @@ export default function AbdominalGame() {
   const [totalAttempts, setTotalAttempts] = useState(0);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [draggingLabel, setDraggingLabel] = useState(null);
+  const [selectedLabel, setSelectedLabel] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [feedbackRegion, setFeedbackRegion] = useState(null);
   const [mistakes, setMistakes] = useState([]);
@@ -87,8 +90,13 @@ export default function AbdominalGame() {
     setDraggingLabel(label);
   };
 
+  const handleSelectLabel = (label) => {
+    setSelectedLabel(prev => prev === label ? null : label);
+  };
+
   const handleDropZone = useCallback((label, targetRegion) => {
     if (!label || placedLabels[label]) return;
+    setSelectedLabel(null);
     
     setTotalAttempts(prev => prev + 1);
     
@@ -202,8 +210,11 @@ export default function AbdominalGame() {
         >
           <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-slate-600">
-            <span className="font-medium text-slate-800">Arraste cada rótulo</span> para sua posição 
-            anatômica correta no abdome. Você tem {MAX_RETRIES} tentativas por região.
+            {isTouch ? (
+            <><span className="font-medium text-slate-800">Toque em um rótulo</span> para selecioná-lo (ficará azul), depois <span className="font-medium text-slate-800">toque na zona</span> correta no diagrama. Você tem {MAX_RETRIES} tentativas por região.</>
+          ) : (
+            <><span className="font-medium text-slate-800">Arraste cada rótulo</span> para sua posição anatômica correta no abdome. Você tem {MAX_RETRIES} tentativas por região.</>
+          )}
           </p>
         </motion.div>
 
@@ -218,6 +229,7 @@ export default function AbdominalGame() {
               onDropZone={handleDropZone}
               highlightedRegion={draggingLabel}
               feedbackRegion={feedbackRegion}
+              selectedLabel={selectedLabel}
             />
           </div>
 
@@ -241,6 +253,8 @@ export default function AbdominalGame() {
                       isPlaced={placedLabels[label]}
                       retriesLeft={retries[label]}
                       onDragStart={handleDragStart}
+                      isSelected={selectedLabel === label}
+                      onSelect={handleSelectLabel}
                     />
                   </motion.div>
                 ))}

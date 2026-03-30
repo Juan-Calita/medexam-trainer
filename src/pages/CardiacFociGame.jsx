@@ -16,6 +16,7 @@ export default function CardiacFociGame() {
   const [placedLabels, setPlacedLabels] = useState({});
   const [availableLabels, setAvailableLabels] = useState([]);
   const [draggedLabel, setDraggedLabel] = useState(null);
+  const [selectedLabel, setSelectedLabel] = useState(null);
   const [highlightedRegion, setHighlightedRegion] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -82,9 +83,14 @@ export default function CardiacFociGame() {
     setDraggedLabel(label);
   };
 
+  const handleSelectLabel = (label) => {
+    setSelectedLabel(prev => prev === label ? null : label);
+  };
+
   const handleDrop = (region, label) => {
     setDraggedLabel(null);
     setHighlightedRegion(null);
+    setSelectedLabel(null);
 
     if (placedLabels[region]) return;
 
@@ -195,13 +201,16 @@ export default function CardiacFociGame() {
         >
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">
-              Arraste os focos para suas posições corretas no tórax
+              {typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)
+                ? 'Toque em um foco para selecioná-lo, depois toque na posição correta'
+                : 'Arraste os focos para suas posições corretas no tórax'}
             </h2>
             <CardiacFociDiagram
               placedLabels={placedLabels}
               onDrop={handleDrop}
               highlightedRegion={highlightedRegion}
               feedback={feedback}
+              selectedLabel={selectedLabel}
             />
           </div>
 
@@ -216,6 +225,8 @@ export default function CardiacFociGame() {
                   isPlaced={Object.values(placedLabels).includes(label)}
                   retries={retries[label] || 0}
                   maxRetries={MAX_RETRIES}
+                  isSelected={selectedLabel === label}
+                  onSelect={handleSelectLabel}
                 />
               ))}
             </div>

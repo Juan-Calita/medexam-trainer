@@ -1,13 +1,17 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
 
 export default function AbdominalDiagram({ 
   placedLabels, 
   onDropZone, 
   highlightedRegion,
-  feedbackRegion 
+  feedbackRegion,
+  selectedLabel,
 }) {
+  const isTouch = useIsTouchDevice();
+
   const { data: regions = [] } = useQuery({
     queryKey: ['regions', 'abdominal_regions'],
     queryFn: () => base44.entities.GameRegion.filter({ game_type: 'abdominal_regions', active: true }),
@@ -17,6 +21,7 @@ export default function AbdominalDiagram({
     acc[r.region_name] = { x: r.x, y: r.y, width: r.width, height: r.height };
     return acc;
   }, {});
+
   const handleDragOver = (e) => {
     e.preventDefault();
   };
@@ -25,6 +30,11 @@ export default function AbdominalDiagram({
     e.preventDefault();
     const label = e.dataTransfer.getData('text/plain');
     onDropZone(label, regionName);
+  };
+
+  const handleTouchZone = (regionName) => {
+    if (!isTouch || !selectedLabel) return;
+    onDropZone(selectedLabel, regionName);
   };
 
   return (
@@ -46,8 +56,9 @@ export default function AbdominalDiagram({
           return (
             <div
               key={name}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, name)}
+              onDragOver={!isTouch ? handleDragOver : undefined}
+              onDrop={!isTouch ? (e) => handleDrop(e, name) : undefined}
+              onClick={() => handleTouchZone(name)}
               className={`absolute flex items-center justify-center p-1 rounded-lg border-2 border-dashed transition-all duration-300 ${
                 isPlaced 
                   ? 'bg-emerald-100/80 border-emerald-400' 
