@@ -1,6 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
-// Eye physics: constrain pupil inside iris circle
 function constrainPupil(dx, dy, maxRadius) {
   const dist = Math.sqrt(dx * dx + dy * dy);
   if (dist > maxRadius) {
@@ -9,62 +8,37 @@ function constrainPupil(dx, dy, maxRadius) {
   return { x: dx, y: dy };
 }
 
-// Apply muscle impairment to pupil offset
 function applyImpairment(px, py, failedDirection, eyeSide) {
   if (!failedDirection) return { x: px, y: py };
-
-  let x = px;
-  let y = py;
-
-  // Convenção de coordenadas na tela (canvas centrado no olho):
-  // x > 0 = direita da tela, x < 0 = esquerda da tela
-  // Para OD (eyeSide='right'): temporal = direita da tela (x > 0), nasal = esquerda (x < 0)
-  // Para OE (eyeSide='left'):  temporal = esquerda da tela (x < 0), nasal = direita (x > 0)
-  // y < 0 = para cima, y > 0 = para baixo
-
-  // Coordenadas relativas ao centro de cada olho no canvas:
-  // OD (eyeSide='right', à ESQUERDA da tela, cx=0.35W):
-  //   mouse vai p/ direita → rawDx = mouseX - 0.35W > 0 → x > 0 = NASAL
-  //   mouse vai p/ esquerda → x < 0 = TEMPORAL
-  // OE (eyeSide='left', à DIREITA da tela, cx=0.65W):
-  //   mouse vai p/ esquerda → rawDx = mouseX - 0.65W < 0 → x < 0 = NASAL
-  //   mouse vai p/ direita → x > 0 = TEMPORAL
-
+  let x = px, y = py;
   switch (failedDirection) {
     case 'abduction':
-      // Não consegue mover temporalmente (para fora)
-      if (eyeSide === 'right' && x < 0) x = Math.max(x, -4);  // OD: temporal = x < 0
-      if (eyeSide === 'left'  && x > 0) x = Math.min(x, 4);   // OE: temporal = x > 0
+      if (eyeSide === 'right' && x < 0) x = Math.max(x, -4);
+      if (eyeSide === 'left'  && x > 0) x = Math.min(x, 4);
       break;
     case 'adduction':
-      // Não consegue mover nasalmente (para dentro)
-      if (eyeSide === 'right' && x > 0) x = Math.min(x, 4);   // OD: nasal = x > 0
-      if (eyeSide === 'left'  && x < 0) x = Math.max(x, -4);  // OE: nasal = x < 0
+      if (eyeSide === 'right' && x > 0) x = Math.min(x, 4);
+      if (eyeSide === 'left'  && x < 0) x = Math.max(x, -4);
       break;
     case 'elevation':
-      // Cannot move up
       if (y < 0) y = Math.max(y, -4);
       break;
     case 'depression':
-      // Cannot move down
       if (y > 0) y = Math.min(y, 4);
       break;
     case 'depression_adduction':
-      // Não consegue deprimir em adução
-      if (eyeSide === 'right' && x > 0 && y > 0) y = Math.min(y, 3); // OD: nasal = x > 0
-      if (eyeSide === 'left'  && x < 0 && y > 0) y = Math.min(y, 3); // OE: nasal = x < 0
+      if (eyeSide === 'right' && x > 0 && y > 0) y = Math.min(y, 3);
+      if (eyeSide === 'left'  && x < 0 && y > 0) y = Math.min(y, 3);
       break;
     case 'elevation_adduction':
-      // Não consegue elevar em adução
-      if (eyeSide === 'right' && x > 0 && y < 0) y = Math.max(y, -3); // OD: nasal = x > 0
-      if (eyeSide === 'left'  && x < 0 && y < 0) y = Math.max(y, -3); // OE: nasal = x < 0
+      if (eyeSide === 'right' && x > 0 && y < 0) y = Math.max(y, -3);
+      if (eyeSide === 'left'  && x < 0 && y < 0) y = Math.max(y, -3);
       break;
     case 'cn3_complete':
-      // Olho "down and out": sem adução (bloqueia nasal), sem elevação
-      if (eyeSide === 'right' && x > 0) x = Math.min(x, 2);  // OD: bloqueia nasal = x > 0
-      if (eyeSide === 'left'  && x < 0) x = Math.max(x, -2); // OE: bloqueia nasal = x < 0
-      if (y < 0) y = Math.max(y, -2); // sem elevação
-      if (y > 0) y = Math.min(y, 4);  // depressão moderada (SO funcional)
+      if (eyeSide === 'right' && x > 0) x = Math.min(x, 2);
+      if (eyeSide === 'left'  && x < 0) x = Math.max(x, -2);
+      if (y < 0) y = Math.max(y, -2);
+      if (y > 0) y = Math.min(y, 4);
       break;
     default:
       break;
@@ -93,7 +67,6 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
     const canvas = canvasRef.current;
     if (!canvas || !containerRect) return;
     const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
 
     const draw = () => {
       const W = size * 2;
@@ -105,19 +78,14 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
       const pupilR = irisR * 0.45;
       const maxPupilTravel = scleraR - irisR - 1;
 
-      // Compute target offset from mouse
-      const eyeScreenX = containerRect.left + cx;
-      const eyeScreenY = containerRect.top + cy;
-      const rawDx = mousePos.x - (cx);
-      const rawDy = mousePos.y - (cy);
+      const rawDx = mousePos.x - cx;
+      const rawDy = mousePos.y - cy;
       const angle = Math.atan2(rawDy, rawDx);
       const dist = Math.sqrt(rawDx * rawDx + rawDy * rawDy);
       const clamped = Math.min(dist * 0.12, maxPupilTravel);
       let targetX = Math.cos(angle) * clamped;
       let targetY = Math.sin(angle) * clamped;
 
-      // For CN III palsy: eye rests "down and out" (temporal = fora)
-      // OD: temporal = x < 0 (esquerda da tela); OE: temporal = x > 0 (direita da tela)
       if (failedDirection === 'cn3_complete') {
         const restX = eyeSide === 'right' ? -maxPupilTravel * 0.6 : maxPupilTravel * 0.6;
         const restY = maxPupilTravel * 0.35;
@@ -125,70 +93,89 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
         targetY = restY + (targetY - restY) * 0.15;
       }
 
-      // Apply muscle impairment
       const impaired = applyImpairment(targetX, targetY, failedDirection, eyeSide);
       targetX = impaired.x;
       targetY = impaired.y;
 
-      // Smooth interpolation
       pupilRef.current.x += (targetX - pupilRef.current.x) * 0.12;
       pupilRef.current.y += (targetY - pupilRef.current.y) * 0.12;
 
       ctx.clearRect(0, 0, W, H);
 
-      // Sclera
+      // Sclera with dark-mode feel
       ctx.beginPath();
       ctx.arc(eyeCX, eyeCY, scleraR, 0, Math.PI * 2);
-      ctx.fillStyle = '#FAFAFA';
+      const scleraGrad = ctx.createRadialGradient(eyeCX - scleraR * 0.2, eyeCY - scleraR * 0.2, 0, eyeCX, eyeCY, scleraR);
+      scleraGrad.addColorStop(0, '#e8f4f8');
+      scleraGrad.addColorStop(1, '#c8dce8');
+      ctx.fillStyle = scleraGrad;
       ctx.fill();
-      ctx.strokeStyle = '#CBD5E1';
+      ctx.strokeStyle = 'rgba(148,163,184,0.4)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
       // Iris
       const irisCX = eyeCX + pupilRef.current.x;
       const irisCY = eyeCY + pupilRef.current.y;
-      const irisGrad = ctx.createRadialGradient(irisCX - irisR * 0.2, irisCY - irisR * 0.2, 0, irisCX, irisCY, irisR);
-      irisGrad.addColorStop(0, '#4E8EC7');
-      irisGrad.addColorStop(1, '#1E4E8C');
+      const irisGrad = ctx.createRadialGradient(irisCX - irisR * 0.25, irisCY - irisR * 0.25, 0, irisCX, irisCY, irisR);
+      irisGrad.addColorStop(0, '#06b6d4');
+      irisGrad.addColorStop(0.6, '#0e7490');
+      irisGrad.addColorStop(1, '#164e63');
       ctx.beginPath();
       ctx.arc(irisCX, irisCY, irisR, 0, Math.PI * 2);
       ctx.fillStyle = irisGrad;
       ctx.fill();
 
+      // Iris texture lines
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(irisCX + Math.cos(a) * pupilR * 1.1, irisCY + Math.sin(a) * pupilR * 1.1);
+        ctx.lineTo(irisCX + Math.cos(a) * irisR * 0.9, irisCY + Math.sin(a) * irisR * 0.9);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      ctx.restore();
+
       // Pupil
       ctx.beginPath();
       ctx.arc(irisCX, irisCY, pupilR, 0, Math.PI * 2);
-      ctx.fillStyle = '#111827';
+      ctx.fillStyle = '#050a0f';
       ctx.fill();
 
-      // Light reflection
+      // Reflection
       ctx.beginPath();
-      ctx.arc(irisCX - pupilR * 0.4, irisCY - pupilR * 0.4, pupilR * 0.22, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.arc(irisCX - pupilR * 0.35, irisCY - pupilR * 0.35, pupilR * 0.25, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(irisCX + pupilR * 0.2, irisCY - pupilR * 0.1, pupilR * 0.1, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
       ctx.fill();
 
-      // Ptose overlay (CN III)
-      if (hasPtose) {
-        ctx.beginPath();
-        ctx.rect(eyeCX - scleraR, eyeCY - scleraR, scleraR * 2, scleraR * 1.1);
-        ctx.fillStyle = 'rgba(180,140,100,0.82)';
-        ctx.fill();
-        // eyelid bottom border
-        ctx.beginPath();
-        ctx.moveTo(eyeCX - scleraR, eyeCY - scleraR + scleraR * 1.1);
-        ctx.lineTo(eyeCX + scleraR, eyeCY - scleraR + scleraR * 1.1);
-        ctx.strokeStyle = '#8B6347';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-
-      // Impairment indicator (subtle red arc if showing hint)
+      // Impairment ring
       if (showImpairmentHint && failedDirection) {
         ctx.beginPath();
         ctx.arc(eyeCX, eyeCY, scleraR - 1, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(239,68,68,0.35)';
+        ctx.strokeStyle = 'rgba(239,68,68,0.6)';
         ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      // Ptose
+      if (hasPtose) {
+        ctx.beginPath();
+        ctx.rect(eyeCX - scleraR, eyeCY - scleraR, scleraR * 2, scleraR * 1.1);
+        ctx.fillStyle = 'rgba(120,90,60,0.88)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(eyeCX - scleraR, eyeCY - scleraR + scleraR * 1.1);
+        ctx.lineTo(eyeCX + scleraR, eyeCY - scleraR + scleraR * 1.1);
+        ctx.strokeStyle = '#5a3e28';
+        ctx.lineWidth = 2;
         ctx.stroke();
       }
 
@@ -197,22 +184,20 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
 
     animRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(animRef.current);
-  }, [mousePos, failedDirection, eyeSide, cx, cy, size, containerRect, showImpairmentHint]);
+  }, [mousePos, failedDirection, eyeSide, cx, cy, size, containerRect, showImpairmentHint, hasPtose]);
 
   return (
     <div style={{ position: 'absolute', left: cx - size, top: cy - size, width: size * 2, height: size * 2 }}>
-      <canvas ref={canvasRef} />
+      <canvas ref={canvasRef} style={{ borderRadius: '50%' }} />
       {hasPtose && (
         <div
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '54%',
-            background: 'rgba(180,140,100,0.85)',
+            top: 0, left: 0,
+            width: '100%', height: '54%',
+            background: 'rgba(120,90,60,0.88)',
             borderRadius: '50% 50% 0 0 / 60% 60% 0 0',
-            borderBottom: '2px solid #8B6347',
+            borderBottom: '2px solid #5a3e28',
             pointerEvents: 'none',
           }}
         />
@@ -224,7 +209,7 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
 export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impairedEye = 'right', gameState, inputMode = 'mouse' }) {
   const faceRef = useRef(null);
   const [containerRect, setContainerRect] = React.useState(null);
-  const [faceSize, setFaceSize] = React.useState({ w: 320, h: 220 });
+  const [faceSize, setFaceSize] = React.useState({ w: 340, h: 230 });
 
   React.useEffect(() => {
     const update = () => {
@@ -244,18 +229,15 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
   const eyeY = H * 0.42;
   const leftEyeX = W * 0.35;
   const rightEyeX = W * 0.65;
-  const eyeSize = Math.min(W * 0.13, 42);
+  const eyeSize = Math.min(W * 0.13, 44);
 
   const failedDir = impairedMuscle ? impairedMuscle.failedDirection : null;
   const showHint = gameState === 'feedback';
   const leftImpaired = impairedEye === 'left';
   const eyeLabel = impairedEye === 'left' ? 'Olho esquerdo' : 'Olho direito';
   const isCN3 = failedDir === 'cn3_complete';
-  // Ptose only shows during playing/feedback
   const showPtose = isCN3 && (gameState === 'playing' || gameState === 'feedback');
 
-  // mousePos is relative to containerRef (top-left = 0,0).
-  // Eyes expect coordinates relative to the face div.
   const faceClientRect = faceRef.current ? faceRef.current.getBoundingClientRect() : null;
   const containerClientRect = containerRef.current ? containerRef.current.getBoundingClientRect() : null;
   const relMouse = {
@@ -265,46 +247,44 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
 
   return (
     <div className="flex flex-col items-center">
-      {/* Instruction label */}
-      <p className="text-xs text-slate-400 mb-3 tracking-wide uppercase font-medium">
-        {inputMode === 'camera' ? 'Mova a caneta sobre o rosto — observe o movimento ocular' : 'Mova o mouse sobre o rosto — observe o movimento ocular'}
+      {/* Instruction */}
+      <p className="text-[11px] text-slate-500 mb-3 tracking-widest uppercase font-medium">
+        {inputMode === 'camera'
+          ? 'Mova a caneta sobre o rosto — observe o movimento ocular'
+          : 'Mova o mouse sobre o rosto — observe o movimento ocular'}
       </p>
 
       {/* Face */}
       <div
         ref={faceRef}
-        className="relative bg-[#FFF8F0] rounded-[60%] border border-slate-200 shadow-md"
-        style={{ width: '320px', height: '220px', maxWidth: '90vw' }}
+        className="relative rounded-[60%] border shadow-2xl"
+        style={{
+          width: '340px',
+          height: '230px',
+          maxWidth: '90vw',
+          background: 'linear-gradient(135deg, #2a1f18 0%, #1c1510 100%)',
+          borderColor: 'rgba(100,80,60,0.4)',
+          boxShadow: '0 0 40px rgba(6,182,212,0.08), 0 20px 60px rgba(0,0,0,0.6)',
+        }}
       >
         {/* Eyebrows */}
-        <div style={{ position: 'absolute', top: '22%', left: '24%', width: '20%', height: '4px', background: '#6B7280', borderRadius: '4px', transform: 'rotate(-5deg)' }} />
-        <div style={{ position: 'absolute', top: '22%', right: '24%', width: '20%', height: '4px', background: '#6B7280', borderRadius: '4px', transform: 'rotate(5deg)' }} />
+        <div style={{ position: 'absolute', top: '22%', left: '24%', width: '20%', height: '3px', background: 'rgba(180,140,100,0.7)', borderRadius: '4px', transform: 'rotate(-5deg)' }} />
+        <div style={{ position: 'absolute', top: '22%', right: '24%', width: '20%', height: '3px', background: 'rgba(180,140,100,0.7)', borderRadius: '4px', transform: 'rotate(5deg)' }} />
 
-        {/* Eyes — perspectiva do examinador:
-            lado esquerdo da tela = OD (olho direito do paciente) = eyeSide "right"
-            lado direito da tela  = OE (olho esquerdo do paciente) = eyeSide "left"
-        */}
+        {/* Eyes */}
         {containerRect !== null && (
           <>
-            {/* OD — aparece à esquerda da tela */}
             <Eye
-              cx={leftEyeX}
-              cy={eyeY}
-              size={eyeSize}
-              mousePos={relMouse}
-              containerRect={containerRect}
+              cx={leftEyeX} cy={eyeY} size={eyeSize}
+              mousePos={relMouse} containerRect={containerRect}
               failedDirection={!leftImpaired ? failedDir : null}
               eyeSide="right"
               showImpairmentHint={!leftImpaired ? showHint : false}
               hasPtose={!leftImpaired && showPtose}
             />
-            {/* OE — aparece à direita da tela */}
             <Eye
-              cx={rightEyeX}
-              cy={eyeY}
-              size={eyeSize}
-              mousePos={relMouse}
-              containerRect={containerRect}
+              cx={rightEyeX} cy={eyeY} size={eyeSize}
+              mousePos={relMouse} containerRect={containerRect}
               failedDirection={leftImpaired ? failedDir : null}
               eyeSide="left"
               showImpairmentHint={leftImpaired ? showHint : false}
@@ -314,31 +294,30 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
         )}
 
         {/* Nose */}
-        <div style={{ position: 'absolute', top: '58%', left: '50%', transform: 'translateX(-50%)', width: '12px', height: '16px', borderLeft: '2px solid #D1B99A', borderRight: '2px solid #D1B99A', borderBottom: '2px solid #D1B99A', borderRadius: '0 0 50% 50%' }} />
+        <div style={{ position: 'absolute', top: '58%', left: '50%', transform: 'translateX(-50%)', width: '10px', height: '14px', borderLeft: '1.5px solid rgba(180,140,100,0.4)', borderRight: '1.5px solid rgba(180,140,100,0.4)', borderBottom: '1.5px solid rgba(180,140,100,0.4)', borderRadius: '0 0 50% 50%' }} />
 
         {/* Mouth */}
-        <div style={{ position: 'absolute', top: '76%', left: '50%', transform: 'translateX(-50%)', width: '40px', height: '12px', borderBottom: '2px solid #C2856A', borderRadius: '0 0 50% 50%' }} />
+        <div style={{ position: 'absolute', top: '76%', left: '50%', transform: 'translateX(-50%)', width: '36px', height: '10px', borderBottom: '1.5px solid rgba(180,100,80,0.5)', borderRadius: '0 0 50% 50%' }} />
 
-        {/* Impaired eye label — OE fica à direita da tela, OD fica à esquerda */}
+        {/* Impaired label */}
         {gameState === 'playing' && (
-          <div style={{ position: 'absolute', top: 4, ...(leftImpaired ? { right: 8 } : { left: 8 }) }}>
-            <span className="text-[10px] text-rose-400 font-medium bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100">
+          <div style={{ position: 'absolute', top: 6, ...(leftImpaired ? { right: 8 } : { left: 8 }) }}>
+            <span className="text-[10px] text-rose-300 font-semibold bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
               {eyeLabel} comprometido
             </span>
           </div>
         )}
       </div>
 
-      {/* Orientation label — perspectiva do examinador olhando para o paciente */}
+      {/* Orientation labels */}
       <div className="flex justify-between w-full max-w-xs mt-2 px-2">
-        <span className="text-[10px] text-slate-400">← Temporal (E)</span>
-        <span className="text-[10px] text-slate-400">{impairedMuscle ? (leftImpaired ? 'OD normal' : 'OE normal') : ''}</span>
-        <span className="text-[10px] text-slate-400">Temporal (D) →</span>
+        <span className="text-[10px] text-slate-600">← Temporal (E)</span>
+        <span className="text-[10px] text-slate-600">{impairedMuscle ? (leftImpaired ? 'OD normal' : 'OE normal') : ''}</span>
+        <span className="text-[10px] text-slate-600">Temporal (D) →</span>
       </div>
-      {/* Legenda dos olhos */}
       <div className="flex justify-between w-full max-w-xs px-2">
-        <span className="text-[10px] text-slate-400 font-medium">OD</span>
-        <span className="text-[10px] text-slate-400 font-medium">OE</span>
+        <span className="text-[10px] text-slate-500 font-semibold">OD</span>
+        <span className="text-[10px] text-slate-500 font-semibold">OE</span>
       </div>
     </div>
   );
