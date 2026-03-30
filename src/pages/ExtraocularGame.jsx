@@ -3,7 +3,9 @@ import EyeCanvas from '@/components/extraocular/EyeCanvas';
 import QuestionPanel from '@/components/extraocular/QuestionPanel';
 import GameHeader from '@/components/extraocular/ExtraocularHeader';
 import FeedbackPopup from '@/components/extraocular/FeedbackPopup';
+import PenTracker from '@/components/extraocular/PenTracker';
 import { MUSCLES, getMusclesForDifficulty, getImpairedMovement } from '@/components/extraocular/muscleData';
+import { Mouse, Camera } from 'lucide-react';
 
 export default function ExtraocularGame() {
   const [difficulty, setDifficulty] = useState('basic');
@@ -17,6 +19,7 @@ export default function ExtraocularGame() {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [correctStreak, setCorrectStreak] = useState(0);
   const [muscleHistory, setMuscleHistory] = useState({});
+  const [inputMode, setInputMode] = useState('mouse'); // 'mouse' | 'camera'
   const containerRef = useRef(null);
 
   const DIFFICULTY_LEVELS = ['basic', 'intermediate', 'advanced'];
@@ -89,14 +92,36 @@ export default function ExtraocularGame() {
   return (
     <div
       className="min-h-screen bg-white flex flex-col items-center"
-      onMouseMove={handleMouseMove}
+      onMouseMove={inputMode === 'mouse' ? handleMouseMove : undefined}
       ref={containerRef}
     >
       {/* Header */}
       <GameHeader score={score} round={round} difficulty={difficulty} setDifficulty={setDifficulty} gameState={gameState} />
 
+      {/* Mode selector */}
+      <div className="flex items-center gap-2 mt-4 bg-slate-100 rounded-full p-1">
+        <button
+          onClick={() => setInputMode('mouse')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            inputMode === 'mouse' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Mouse className="w-4 h-4" />
+          Mouse
+        </button>
+        <button
+          onClick={() => setInputMode('camera')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            inputMode === 'camera' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Camera className="w-4 h-4" />
+          Câmera (caneta vermelha)
+        </button>
+      </div>
+
       {/* Face + Eyes */}
-      <div className="flex flex-col items-center mt-6 w-full max-w-2xl px-4">
+      <div className="flex flex-col items-center mt-4 w-full max-w-2xl px-4">
         <EyeCanvas
           mousePos={mousePos}
           containerRef={containerRef}
@@ -104,6 +129,17 @@ export default function ExtraocularGame() {
           impairedEye={impairedEye}
           gameState={gameState}
         />
+
+        {/* Camera tracker */}
+        {inputMode === 'camera' && (
+          <div className="mt-4">
+            <PenTracker
+              onPositionChange={setMousePos}
+              containerRef={containerRef}
+              isActive={inputMode === 'camera'}
+            />
+          </div>
+        )}
 
         {/* Start button */}
         {gameState === 'idle' && (
