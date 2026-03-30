@@ -128,28 +128,27 @@ export default function ExtraocularGame() {
           gameState={gameState} />
         
 
-        {/* Camera tracker */}
+        {/* Camera tracker — always mounted when camera mode, visibility toggled via CSS */}
         {inputMode === 'camera' && (
           <div className="mt-4 w-full flex flex-col items-center">
-            {!showCameraPanel ? (
+            <div className={showCameraPanel ? '' : 'hidden'}>
+              <PenTracker
+                onPositionChange={setMousePos}
+                containerRef={containerRef}
+                isActive={true} />
+              <button
+                onClick={() => setShowCameraPanel(false)}
+                className="mt-2 text-xs text-slate-400 hover:text-slate-600 underline block mx-auto">
+                Ocultar câmera
+              </button>
+            </div>
+            {!showCameraPanel && (
               <button
                 onClick={() => setShowCameraPanel(true)}
                 className="flex items-center gap-2 px-3 py-1.5 text-xs text-cyan-600 bg-cyan-50 border border-cyan-200 rounded-lg hover:bg-cyan-100 transition-colors">
                 <Camera className="w-3.5 h-3.5" />
                 Mostrar câmera / recalibrar
               </button>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <PenTracker
-                  onPositionChange={setMousePos}
-                  containerRef={containerRef}
-                  isActive={true} />
-                <button
-                  onClick={() => setShowCameraPanel(false)}
-                  className="text-xs text-slate-400 hover:text-slate-600 underline">
-                  Ocultar câmera
-                </button>
-              </div>
             )}
           </div>
         )}
