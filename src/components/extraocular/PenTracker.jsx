@@ -25,14 +25,13 @@ function matchesPen(r, g, b, profile) {
   return Math.min(diff, 360 - diff) <= profile.hTol;
 }
 
-// ─── Connected-blob detector ──────────────────────────────────────────────────
-// Instead of a global centroid (confused by clothes), we find ALL blobs via
-// flood-fill on a downsampled grid and pick the SMALLEST qualifying blob.
-// A pen tip is always a small, compact object. Clothes produce huge blobs.
-
-function detectSmallestBlob(imageData, W, H, profile, maxBlobFraction = 0.12) {
+// ─── Blob detector — returns the TIP (topmost point of the smallest blob) ─────
+// The pen tip is always the smallest blue blob in the scene.
+// We track the TOPMOST pixel of that blob (the physical tip of the pen)
+// instead of the centroid, so it's always anchored to the same extremity.
+function detectPenTip(imageData, W, H, profile, maxBlobFraction = 0.10) {
   const data = imageData.data;
-  const STRIDE = 2; // sample every 2px for speed
+  const STRIDE = 2;
   const GW = Math.ceil(W / STRIDE);
   const GH = Math.ceil(H / STRIDE);
 
@@ -46,23 +45,26 @@ function detectSmallestBlob(imageData, W, H, profile, maxBlobFraction = 0.12) {
     }
   }
 
-  const maxBlobSize = GW * GH * maxBlobFraction; // ignore blobs larger than X% of frame
+  const maxBlobSize = GW * GH * maxBlobFraction;
   const visited = new Uint8Array(GW * GH);
   const blobs = [];
 
-  // BFS flood fill
   for (let start = 0; start < GW * GH; start++) {
     if (!grid[start] || visited[start]) continue;
     const queue = [start];
     visited[start] = 1;
+    let minX = GW, maxX = 0, minY = GH, maxY = 0;
     let sumX = 0, sumY = 0, size = 0;
     let head = 0;
     while (head < queue.length) {
       const idx = queue[head++];
       const gx = idx % GW, gy = Math.floor(idx / GW);
       sumX += gx; sumY += gy; size++;
-      if (size > maxBlobSize) break; // too large — skip rest
-      // 4-connected neighbours
+      if (gx < minX) minX = gx;
+      if (gx > maxX) maxX = gx;
+      if (gy < minY) minY = gy;
+      if (gy > maxY) maxY = gy;
+      if (size > maxBlobSize) break;
       const neighbours = [
         gy > 0      ? idx - GW : -1,
         gy < GH - 1 ? idx + GW : -1,
@@ -77,17 +79,21 @@ function detectSmallestBlob(imageData, W, H, profile, maxBlobFraction = 0.12) {
       }
     }
     if (size >= 4 && size <= maxBlobSize) {
-      blobs.push({ cx: sumX / size / GW, cy: sumY / size / GH, size });
+      blobs.push({ sumX, sumY, size, minX, maxX, minY, maxY });
     }
   }
 
   if (blobs.length === 0) return { found: false };
 
-  // Pick the smallest blob — that's almost certainly the pen tip, not clothes
+  // Smallest blob = pen (not clothes)
   blobs.sort((a, b) => a.size - b.size);
   const best = blobs[0];
 
-  return { found: true, x: best.cx, y: best.cy, size: best.size };
+  // Tip = topmost pixel of the blob (minY) + horizontal centroid for X
+  const tipX = (best.sumX / best.size) / GW;
+  const tipY = best.minY / GH;  // topmost extreme = pen tip
+
+  return { found: true, x: tipX, y: tipY, size: best.size };
 }
 
 // ─── Debug overlay ────────────────────────────────────────────────────────────
@@ -96,9 +102,8 @@ function drawDebug(debugCanvas, sourceCanvas, hit, profile) {
   const W = sourceCanvas.width, H = sourceCanvas.height;
   debugCanvas.width = W;
   debugCanvas.height = H;
-
   ctx.drawImage(sourceCanvas, 0, 0);
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
   ctx.fillRect(0, 0, W, H);
 
   if (hit && hit.found) {
@@ -110,12 +115,12 @@ function drawDebug(debugCanvas, sourceCanvas, hit, profile) {
     ctx.moveTo(px, 0); ctx.lineTo(px, H);
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(px, py, 7, 0, Math.PI * 2);
+    ctx.arc(px, py, 5, 0, Math.PI * 2);
     ctx.strokeStyle = '#00ff88';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.arc(px, py, 2, 0, Math.PI * 2);
     ctx.fillStyle = '#00ff88';
     ctx.fill();
   }
@@ -131,10 +136,7 @@ function drawDebug(debugCanvas, sourceCanvas, hit, profile) {
 
 // ─── Default blue pen profile ─────────────────────────────────────────────────
 const DEFAULT_BLUE_PROFILE = {
-  h: 210,
-  hTol: 35,
-  sMin: 0.30,
-  vMin: 0.25,
+  h: 210, hTol: 35, sMin: 0.30, vMin: 0.25,
 };
 
 // ─── AI calibration ───────────────────────────────────────────────────────────
@@ -143,30 +145,17 @@ async function calibrateWithAI(canvas) {
   const blob = await (await fetch(dataUrl)).blob();
   const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' });
   const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
   return base44.integrations.Core.InvokeLLM({
-    prompt: `This is a webcam frame. The user is holding a pen or pointer in front of the camera.
-Look at the pen tip and determine its dominant colour.
-Return a JSON object describing the colour in HSV terms so we can track it:
-{
-  "found": true,
-  "penDescription": "blue ballpoint pen",
-  "h": 210,
-  "hTol": 35,
-  "sMin": 0.30,
-  "vMin": 0.25
-}
-If no pen is visible return: { "found": false }`,
+    prompt: `Webcam frame. User holds a pen. Find the pen tip colour and return HSV tracking params:
+{ "found": true, "penDescription": "blue pen", "h": 210, "hTol": 35, "sMin": 0.30, "vMin": 0.25 }
+If no pen visible: { "found": false }`,
     file_urls: [file_url],
     response_json_schema: {
       type: 'object',
       properties: {
-        found: { type: 'boolean' },
-        penDescription: { type: 'string' },
-        h: { type: 'number' },
-        hTol: { type: 'number' },
-        sMin: { type: 'number' },
-        vMin: { type: 'number' },
+        found: { type: 'boolean' }, penDescription: { type: 'string' },
+        h: { type: 'number' }, hTol: { type: 'number' },
+        sMin: { type: 'number' }, vMin: { type: 'number' },
       },
       required: ['found'],
     },
@@ -174,11 +163,12 @@ If no pen is visible return: { "found": false }`,
 }
 
 // ─── Smoothing ────────────────────────────────────────────────────────────────
-// Adaptive EMA: faster when pen moves a lot, slower when nearly still
-function adaptiveEMA(current, target, baseAlpha = 0.22) {
+// Strong low-pass filter: alpha=0.15 baseline, never exceeds 0.45
+// This kills the jitter while keeping movements responsive
+function smooth(current, target) {
   const dist = Math.sqrt((target.x - current.x) ** 2 + (target.y - current.y) ** 2);
-  // Boost alpha for fast movements so we don't lag behind; slow down for stillness
-  const alpha = Math.min(0.6, baseAlpha + dist * 2);
+  // Ramp alpha: fast for big moves, slow for small moves (kills micro-jitter)
+  const alpha = Math.min(0.45, 0.12 + dist * 1.5);
   return {
     x: current.x + alpha * (target.x - current.x),
     y: current.y + alpha * (target.y - current.y),
@@ -194,8 +184,6 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
   const streamRef = useRef(null);
   const profileRef = useRef(null);
   const smoothRef = useRef({ x: 0.5, y: 0.5, active: false });
-
-  // Max blob fraction — user can tighten this after calibration
   const maxBlobFractionRef = useRef(0.10);
 
   const [cameraState, setCameraState] = useState('idle');
@@ -203,7 +191,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
   const [penFound, setPenFound] = useState(false);
   const [penDesc, setPenDesc] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [showCalibHint, setShowCalibHint] = useState(false);
+  const [blobCalibrated, setBlobCalibrated] = useState(false);
 
   const stopCamera = useCallback(() => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -212,6 +200,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     setCameraState('idle');
     setCalibState('none');
     setPenFound(false);
+    setBlobCalibrated(false);
     profileRef.current = null;
     smoothRef.current = { x: 0.5, y: 0.5, active: false };
   }, []);
@@ -241,24 +230,25 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     profileRef.current = DEFAULT_BLUE_PROFILE;
     setPenDesc('azul (padrão)');
     setCalibState('done');
-    setShowCalibHint(true);
-    setTimeout(() => setShowCalibHint(false), 5000);
   }, [stopCamera]);
 
-  // Capture current blob size as the reference max — eliminates clothing confusion
+  // User points pen at camera → captures blob size to discriminate from clothes
   const calibrateBlobSize = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !profileRef.current) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const hit = detectSmallestBlob(imageData, canvas.width, canvas.height, profileRef.current, 0.5);
+    const hit = detectPenTip(imageData, canvas.width, canvas.height, profileRef.current, 0.5);
     if (hit.found) {
-      // Set max to 3× current pen blob size — roupa será muito maior
       const STRIDE = 2;
       const GW = Math.ceil(canvas.width / STRIDE);
       const GH = Math.ceil(canvas.height / STRIDE);
       const fraction = hit.size / (GW * GH);
-      maxBlobFractionRef.current = Math.min(0.25, fraction * 4);
+      // Allow up to 4× the pen's current blob — anything larger is clothes
+      maxBlobFractionRef.current = Math.min(0.20, fraction * 4);
+      setBlobCalibrated(true);
+      // Reset smooth so it snaps to new calibrated position
+      smoothRef.current.active = false;
     }
   }, []);
 
@@ -273,15 +263,12 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       const result = await calibrateWithAI(canvas);
       if (result.found && result.h != null) {
         profileRef.current = {
-          h: result.h,
-          hTol: result.hTol ?? 35,
-          sMin: result.sMin ?? 0.30,
-          vMin: result.vMin ?? 0.25,
+          h: result.h, hTol: result.hTol ?? 35,
+          sMin: result.sMin ?? 0.30, vMin: result.vMin ?? 0.25,
         };
         setPenDesc(result.penDescription ?? 'caneta detectada');
         setCalibState('done');
-        // Also capture blob size right after AI calibration
-        setTimeout(calibrateBlobSize, 200);
+        setTimeout(calibrateBlobSize, 300);
       } else {
         setCalibState('failed');
       }
@@ -298,6 +285,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     if (!canvas || !video) return;
 
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    // 160×120 is fast enough and covers all quadrants perfectly
     canvas.width = 160;
     canvas.height = 120;
 
@@ -308,15 +296,16 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       if (video.readyState >= 2 && profileRef.current) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const hit = detectSmallestBlob(imageData, canvas.width, canvas.height, profileRef.current, maxBlobFractionRef.current);
+        const hit = detectPenTip(imageData, canvas.width, canvas.height, profileRef.current, maxBlobFractionRef.current);
 
         if (hit.found) {
           const s = smoothRef.current;
           if (!s.active) {
+            // Snap to position on first detection
             s.x = hit.x; s.y = hit.y; s.active = true;
           } else {
-            const smoothed = adaptiveEMA({ x: s.x, y: s.y }, { x: hit.x, y: hit.y });
-            s.x = smoothed.x; s.y = smoothed.y;
+            const next = smooth({ x: s.x, y: s.y }, { x: hit.x, y: hit.y });
+            s.x = next.x; s.y = next.y;
           }
 
           if (!penFoundLocal) { setPenFound(true); penFoundLocal = true; }
@@ -324,7 +313,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
           if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
             onPositionChange({
-              x: (1 - s.x) * rect.width,
+              x: (1 - s.x) * rect.width,   // mirror X for selfie
               y: s.y * rect.height,
             });
           }
@@ -343,7 +332,6 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         debugCanvasRef.current.height = canvas.height;
         dctx.drawImage(canvas, 0, 0);
       }
-
       frameN++;
       animRef.current = requestAnimationFrame(loop);
     };
@@ -356,15 +344,16 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
 
   const calibBadge = {
     none: null,
-    calibrating: { color: 'text-amber-500', label: 'IA analisando caneta...' },
+    calibrating: { color: 'text-amber-500', label: 'IA analisando...' },
     done: { color: 'text-emerald-500', label: penDesc || 'Calibrado!' },
-    failed: { color: 'text-rose-500', label: 'IA não encontrou caneta — tente novamente' },
+    failed: { color: 'text-rose-500', label: 'Tente recalibrar' },
   }[calibState];
 
   return (
     <div className="flex flex-col items-center gap-3">
       <canvas ref={canvasRef} className="hidden" />
 
+      {/* Camera + debug preview */}
       <div className={cameraState === 'active' ? 'flex gap-2 items-start' : 'hidden'}>
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] text-slate-400 uppercase tracking-wide">Câmera</span>
@@ -385,6 +374,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         </div>
       </div>
 
+      {/* Status badges */}
       {cameraState === 'active' && calibBadge && (
         <div className="flex items-center gap-1.5 -mt-1">
           <Circle className={`w-2.5 h-2.5 fill-current ${calibBadge.color}`} />
@@ -392,27 +382,30 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         </div>
       )}
       {cameraState === 'active' && calibState === 'done' && (
-        <div className="flex items-center gap-1.5 -mt-1">
-          <Circle className={`w-2.5 h-2.5 fill-current ${penFound ? 'text-emerald-500' : 'text-slate-300'}`} />
-          <span className="text-xs text-slate-500">{penFound ? 'Caneta detectada' : 'Rastreando...'}</span>
+        <div className="flex items-center gap-2 -mt-1">
+          <div className="flex items-center gap-1.5">
+            <Circle className={`w-2.5 h-2.5 fill-current ${penFound ? 'text-emerald-500' : 'text-slate-300'}`} />
+            <span className="text-xs text-slate-500">{penFound ? 'Ponta detectada' : 'Rastreando...'}</span>
+          </div>
+          {blobCalibrated && (
+            <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">tamanho calibrado</span>
+          )}
         </div>
       )}
 
-      {/* Calibrate blob size hint */}
-      {cameraState === 'active' && calibState === 'done' && showCalibHint && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700 text-center max-w-xs">
-          Aponte a caneta para a câmera e clique em <strong>Calibrar Tamanho</strong> para evitar confusão com roupas.
+      {/* Instruction when not yet blob-calibrated */}
+      {cameraState === 'active' && calibState === 'done' && !blobCalibrated && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-700 text-center max-w-xs">
+          👆 Aponte a <strong>ponta da caneta</strong> para a câmera e clique em <strong>Calibrar Tamanho</strong>
         </div>
       )}
 
+      {/* Buttons */}
       <div className="flex gap-2 flex-wrap justify-center">
         {(cameraState === 'idle' || cameraState === 'error') && (
-          <button
-            onClick={startCamera}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <Camera className="w-4 h-4" />
-            Ativar Câmera
+          <button onClick={startCamera}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
+            <Camera className="w-4 h-4" /> Ativar Câmera
           </button>
         )}
         {cameraState === 'loading' && (
@@ -423,51 +416,25 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         )}
         {cameraState === 'active' && (
           <>
-            {/* Calibrate blob size — key button to avoid clothes confusion */}
-            <button
-              onClick={calibrateBlobSize}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-200 transition-colors"
-            >
+            <button onClick={calibrateBlobSize}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${blobCalibrated ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-blue-500 text-white hover:bg-blue-600 shadow-sm'}`}>
               <Crosshair className="w-3.5 h-3.5" />
               Calibrar Tamanho
             </button>
-
-            {calibState === 'failed' ? (
-              <button
-                onClick={runCalibration}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors shadow-sm"
-              >
-                <Scan className="w-4 h-4" />
-                Calibrar com IA
-              </button>
-            ) : (
-              <button
-                onClick={runCalibration}
-                className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-medium hover:bg-amber-200 transition-colors"
-              >
-                <Scan className="w-3.5 h-3.5" />
-                Recalibrar cor (IA)
-              </button>
-            )}
-
-            <button
-              onClick={stopCamera}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors"
-            >
-              <CameraOff className="w-4 h-4" />
-              Desativar
+            <button onClick={runCalibration}
+              className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-xs font-medium hover:bg-amber-200 transition-colors">
+              <Scan className="w-3.5 h-3.5" />
+              Recalibrar Cor (IA)
+            </button>
+            <button onClick={stopCamera}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors">
+              <CameraOff className="w-4 h-4" /> Desativar
             </button>
           </>
         )}
       </div>
 
       {errorMsg && <p className="text-xs text-rose-600 text-center max-w-xs">{errorMsg}</p>}
-
-      {cameraState === 'active' && calibState === 'done' && !showCalibHint && (
-        <p className="text-xs text-slate-400 text-center max-w-xs">
-          Aponte a caneta → <span className="font-semibold text-blue-600">Calibrar Tamanho</span> para ignorar roupas da mesma cor.
-        </p>
-      )}
     </div>
   );
 }
