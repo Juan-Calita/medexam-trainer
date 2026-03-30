@@ -24,12 +24,12 @@ export default function QuestionPanel({
 
   return (
     <div className="mt-8 w-full max-w-xl">
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-md p-6">
         <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">
           Questão Clínica
         </p>
         {impairedMuscle.scenario && (
-          <p className="text-sm text-slate-600 italic bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 mb-3">
+          <p className="text-sm text-slate-600 italic bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 mb-3">
             {impairedMuscle.scenario}
           </p>
         )}
@@ -39,11 +39,11 @@ export default function QuestionPanel({
 
         <div className="grid grid-cols-2 gap-3">
           {muscles.map((muscle) => {
-            let btnClass = 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300';
+            let btnClass = 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-purple-300 hover:shadow-sm';
 
             if (selectedAnswer) {
               if (muscle.id === impairedMuscle.id) {
-                btnClass = 'border-2 border-green-500 bg-green-50 text-green-800 font-semibold';
+                btnClass = 'border-2 border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold';
               } else if (muscle.id === selectedAnswer && muscle.id !== impairedMuscle.id) {
                 btnClass = 'border-2 border-red-400 bg-red-50 text-red-700';
               } else {
@@ -67,7 +67,7 @@ export default function QuestionPanel({
 
         {/* Explanation */}
         {feedback && (
-          <div className={`mt-5 rounded-lg p-4 text-sm leading-relaxed ${feedback.correct ? 'bg-green-50 border border-green-200 text-green-900' : 'bg-red-50 border border-red-200 text-red-900'}`}>
+          <div className={`mt-5 rounded-lg p-4 text-sm leading-relaxed ${feedback.correct ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-red-50 border border-red-200 text-red-900'}`}>
             <p className="font-semibold mb-1">
               {feedback.correct ? '✓ Correto!' : '✗ Incorreto'}
               {!feedback.correct && (
@@ -79,7 +79,7 @@ export default function QuestionPanel({
             <p>{impairedMuscle.explanation}</p>
             {showCranialNerve && (
               <p className="mt-2 font-medium text-slate-700">
-                Nervo craniano: <span className="text-blue-700">{impairedMuscle.nerve}</span>
+                Nervo craniano: <span className="text-purple-700">{impairedMuscle.nerve}</span>
               </p>
             )}
           </div>
@@ -93,7 +93,7 @@ export default function QuestionPanel({
               {Array.from({ length: streakToAdvance }).map((_, i) => (
                 <div
                   key={i}
-                  className={`w-4 h-4 rounded-full border-2 transition-all ${i < correctStreak ? 'bg-green-500 border-green-500' : 'bg-white border-slate-300'}`}
+                  className={`w-4 h-4 rounded-full border-2 transition-all ${i < correctStreak ? 'bg-purple-600 border-purple-600' : 'bg-white border-slate-300'}`}
                 />
               ))}
             </div>
@@ -104,7 +104,7 @@ export default function QuestionPanel({
         {gameState === 'feedback' && (
           <button
             onClick={onNext}
-            className="mt-4 w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm transition-colors shadow-sm"
+            className="mt-4 w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg font-semibold text-sm transition-all shadow-sm"
           >
             Próximo Caso →
           </button>

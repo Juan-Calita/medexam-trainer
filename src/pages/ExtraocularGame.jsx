@@ -93,7 +93,7 @@ export default function ExtraocularGame() {
 
   return (
     <div
-      className="min-h-screen bg-white flex flex-col items-center"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-slate-50 flex flex-col items-center"
       onMouseMove={inputMode === 'mouse' ? handleMouseMove : undefined}
       ref={containerRef}>
       
@@ -109,11 +109,11 @@ export default function ExtraocularGame() {
         </div>
       )}
 
-      <div className="flex items-center gap-2 mt-4 bg-slate-100 rounded-full p-1">
+      <div className="flex items-center gap-2 mt-6 bg-white rounded-full p-1 shadow-sm border border-slate-200">
         <button
           onClick={() => setInputMode('mouse')}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-          inputMode === 'mouse' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
+          inputMode === 'mouse' ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
           }>
           
           <Mouse className="w-4 h-4" />
@@ -121,7 +121,7 @@ export default function ExtraocularGame() {
         </button>
         <button
           onClick={() => { setInputMode('camera'); setShowCameraPanel(true); }}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${inputMode === 'camera' ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${inputMode === 'camera' ? 'bg-gradient-to-r from-cyan-600 to-cyan-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
           <Camera className="w-4 h-4" />
           Câmera (caneta azul)
         </button>
@@ -167,8 +167,8 @@ export default function ExtraocularGame() {
         {gameState === 'idle' &&
         <button
           onClick={startNewRound}
-          className="mt-8 px-8 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold tracking-wide hover:bg-blue-700 transition-colors shadow-md">
-          
+          className="mt-8 px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg text-base font-semibold tracking-wide hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg">
+
             Iniciar Caso
           </button>
         }
