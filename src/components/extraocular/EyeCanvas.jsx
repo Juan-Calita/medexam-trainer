@@ -267,7 +267,7 @@ export default function EyeCanvas({ mousePos, containerRef, impairedMuscle, impa
     <div className="flex flex-col items-center">
       {/* Instruction label */}
       <p className="text-xs text-slate-400 mb-3 tracking-wide uppercase font-medium">
-        Move your mouse over the face — observe eye movement
+        Mova o mouse sobre o rosto — observe o movimento ocular
       </p>
 
       {/* Face */}
