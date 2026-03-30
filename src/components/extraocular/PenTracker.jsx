@@ -144,35 +144,27 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {cameraState === 'active' && (
-        <div className="flex gap-2 items-start">
-          {/* Live camera feed */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wide">Câmera</span>
-            <video
-              ref={videoRef}
-              className="rounded-lg border-2 border-slate-200 shadow-sm"
-              style={{ width: 160, height: 120, objectFit: 'cover', transform: 'scaleX(-1)' }}
-              playsInline
-              muted
-            />
-          </div>
-          {/* Debug mask — red pixels highlighted */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-[10px] text-slate-400 uppercase tracking-wide">Detecção</span>
-            <canvas
-              ref={debugCanvasRef}
-              className="rounded-lg border-2 border-rose-200 shadow-sm"
-              style={{ width: 160, height: 120, transform: 'scaleX(-1)' }}
-            />
-          </div>
+      {/* Video always in DOM so ref stays stable */}
+      <div className={cameraState === 'active' ? 'flex gap-2 items-start' : 'hidden'}>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Câmera</span>
+          <video
+            ref={videoRef}
+            className="rounded-lg border-2 border-slate-200 shadow-sm"
+            style={{ width: 160, height: 120, objectFit: 'cover', transform: 'scaleX(-1)' }}
+            playsInline
+            muted
+          />
         </div>
-      )}
-
-      {/* Video hidden when not active */}
-      {cameraState !== 'active' && (
-        <video ref={videoRef} className="hidden" playsInline muted />
-      )}
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Detecção</span>
+          <canvas
+            ref={debugCanvasRef}
+            className="rounded-lg border-2 border-rose-200 shadow-sm"
+            style={{ width: 160, height: 120, transform: 'scaleX(-1)' }}
+          />
+        </div>
+      </div>
 
       {cameraState === 'active' && (
         <div className="flex items-center gap-1.5 -mt-1">
