@@ -29,92 +29,164 @@ function matchesPen(r, g, b, profile) {
   return hueDiff <= profile.hTol && s >= profile.sMin && v >= profile.vMin;
 }
 
-// ─── 5-scanline H detector ─────────────────────────────────────────────────────
-// Scans 5 horizontal lines evenly distributed across the frame height.
-// For each scanline, finds the run of matching pixels and takes its centre.
-// Returns the scanline hit with the most matching pixels (densest cluster).
-function detectByScanlines(imageData, W, H, profile) {
+// ─── 1000×1000 grid detector ──────────────────────────────────────────────────
+// Scans 1000 horizontal lines + 1000 vertical lines across the full frame.
+// For each line, finds the longest run of matching pixels.
+// The winning intersection (H-line row + V-line col with most hits) gives position.
+function detectByGrid(imageData, W, H, profile) {
   const data = imageData.data;
-  const scanYs = [0.15, 0.30, 0.50, 0.70, 0.85].map(f => Math.floor(f * H));
 
-  let bestHit = null;
+  // Sample 1000 evenly-spaced rows
+  const LINES = 1000;
+  const hBest = new Float32Array(LINES); // best run length per H-line (normalised 0-1 x centre)
+  const hCx   = new Float32Array(LINES); // centre x of best run per H-line
 
-  for (const sy of scanYs) {
-    let runStart = -1, bestRun = null;
+  for (let li = 0; li < LINES; li++) {
+    const sy = Math.floor((li / (LINES - 1)) * (H - 1));
+    let runStart = -1, bestLen = 0, bestCx = 0;
     for (let x = 0; x < W; x++) {
       const i = (sy * W + x) * 4;
-      const matches = matchesPen(data[i], data[i + 1], data[i + 2], profile);
-      if (matches) {
+      if (matchesPen(data[i], data[i + 1], data[i + 2], profile)) {
         if (runStart === -1) runStart = x;
       } else {
         if (runStart !== -1) {
           const len = x - runStart;
-          if (!bestRun || len > bestRun.len) bestRun = { start: runStart, len };
+          if (len > bestLen) { bestLen = len; bestCx = (runStart + x) / 2; }
           runStart = -1;
         }
       }
     }
-    // Close any open run at line end
     if (runStart !== -1) {
       const len = W - runStart;
-      if (!bestRun || len > bestRun.len) bestRun = { start: runStart, len };
+      if (len > bestLen) { bestLen = len; bestCx = (runStart + W) / 2; }
     }
-
-    if (bestRun && bestRun.len >= 4) {
-      const cx = bestRun.start + bestRun.len / 2;
-      if (!bestHit || bestRun.len > bestHit.len) {
-        bestHit = { x: cx / W, y: sy / H, len: bestRun.len };
-      }
-    }
+    hBest[li] = bestLen;
+    hCx[li]   = bestCx / W;
   }
 
-  return bestHit ? { x: bestHit.x, y: bestHit.y, found: true } : { found: false };
+  // Sample 1000 evenly-spaced columns
+  const vBest = new Float32Array(LINES);
+  const vCy   = new Float32Array(LINES);
+
+  for (let li = 0; li < LINES; li++) {
+    const sx = Math.floor((li / (LINES - 1)) * (W - 1));
+    let runStart = -1, bestLen = 0, bestCy = 0;
+    for (let y = 0; y < H; y++) {
+      const i = (y * W + sx) * 4;
+      if (matchesPen(data[i], data[i + 1], data[i + 2], profile)) {
+        if (runStart === -1) runStart = y;
+      } else {
+        if (runStart !== -1) {
+          const len = y - runStart;
+          if (len > bestLen) { bestLen = len; bestCy = (runStart + y) / 2; }
+          runStart = -1;
+        }
+      }
+    }
+    if (runStart !== -1) {
+      const len = H - runStart;
+      if (len > bestLen) { bestLen = len; bestCy = (runStart + H) / 2; }
+    }
+    vBest[li] = bestLen;
+    vCy[li]   = bestCy / H;
+  }
+
+  // Find best H-line and best V-line
+  let bestHIdx = 0, bestVIdx = 0;
+  for (let i = 1; i < LINES; i++) {
+    if (hBest[i] > hBest[bestHIdx]) bestHIdx = i;
+    if (vBest[i] > vBest[bestVIdx]) bestVIdx = i;
+  }
+
+  if (hBest[bestHIdx] < 3 && vBest[bestVIdx] < 3) return { found: false };
+
+  // Intersection point: x from H-line centroid, y from V-line centroid
+  const x = hBest[bestHIdx] >= 3 ? hCx[bestHIdx] : bestVIdx / (LINES - 1);
+  const y = vBest[bestVIdx] >= 3 ? vCy[bestVIdx] : bestHIdx / (LINES - 1);
+
+  return { x, y, found: true, bestHIdx, bestVIdx, hBest, vBest };
 }
 
 // ─── Debug overlay ─────────────────────────────────────────────────────────────
-function drawDebug(debugCanvas, sourceCanvas, scanYs, hit, profile) {
+// Renders the 1000×1000 heatmap (H lines as horizontal bars, V lines as vertical bars)
+// The intensity of each bar encodes the run-length found on that line.
+// The detected point crosshair is drawn in screen space, directly mapping:
+//   x=0 → left edge, x=1 → right edge (mirrored for selfie view externally)
+//   y=0 → top edge,  y=1 → bottom edge
+function drawDebug(debugCanvas, sourceCanvas, hit, profile) {
   const ctx = debugCanvas.getContext('2d');
   const W = sourceCanvas.width, H = sourceCanvas.height;
   debugCanvas.width = W;
   debugCanvas.height = H;
+
+  // Base frame (dimmed)
   ctx.drawImage(sourceCanvas, 0, 0);
-  ctx.fillStyle = 'rgba(0,0,0,0.25)';
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.fillRect(0, 0, W, H);
 
-  // Draw 5 scanlines
-  const ys = [0.15, 0.30, 0.50, 0.70, 0.85].map(f => Math.floor(f * H));
-  for (const sy of ys) {
-    ctx.strokeStyle = 'rgba(255,220,0,0.5)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(0, sy); ctx.lineTo(W, sy);
-    ctx.stroke();
-    ctx.setLineDash([]);
+  if (hit && hit.hBest && hit.vBest) {
+    const LINES = hit.hBest.length;
+
+    // Find max run for normalisation
+    let maxH = 1, maxV = 1;
+    for (let i = 0; i < LINES; i++) {
+      if (hit.hBest[i] > maxH) maxH = hit.hBest[i];
+      if (hit.vBest[i] > maxV) maxV = hit.vBest[i];
+    }
+
+    // Draw H-line heatmap: each of the 1000 rows gets a 1px horizontal bar
+    // colour intensity proportional to the run length found
+    for (let li = 0; li < LINES; li++) {
+      if (hit.hBest[li] < 1) continue;
+      const py = Math.floor((li / (LINES - 1)) * (H - 1));
+      const alpha = (hit.hBest[li] / maxH) * 0.8;
+      ctx.fillStyle = `rgba(255,200,0,${alpha})`;
+      ctx.fillRect(0, py, W, 1);
+    }
+
+    // Draw V-line heatmap: each of the 1000 columns gets a 1px vertical bar
+    for (let li = 0; li < LINES; li++) {
+      if (hit.vBest[li] < 1) continue;
+      const px = Math.floor((li / (LINES - 1)) * (W - 1));
+      const alpha = (hit.vBest[li] / maxV) * 0.8;
+      ctx.fillStyle = `rgba(0,180,255,${alpha})`;
+      ctx.fillRect(px, 0, 1, H);
+    }
   }
 
-  // Draw detected point
-  if (hit) {
+  // Crosshair at detected point
+  if (hit && hit.found) {
     const px = hit.x * W, py = hit.y * H;
+
+    // Full-width/height crosshair lines
+    ctx.strokeStyle = 'rgba(0,255,136,0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, py); ctx.lineTo(W, py);
+    ctx.moveTo(px, 0); ctx.lineTo(px, H);
+    ctx.stroke();
+
+    // Circle at intersection
+    ctx.beginPath();
+    ctx.arc(px, py, 8, 0, Math.PI * 2);
     ctx.strokeStyle = '#00ff88';
     ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(px - 12, py); ctx.lineTo(px + 12, py);
-    ctx.moveTo(px, py - 12); ctx.lineTo(px, py + 12);
     ctx.stroke();
+
+    // Small filled dot
     ctx.beginPath();
-    ctx.arc(px, py, 7, 0, Math.PI * 2);
-    ctx.strokeStyle = '#00ff88';
-    ctx.stroke();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#00ff88';
+    ctx.fill();
   }
 
-  // Show profile colour swatch
+  // Profile colour swatch
   if (profile) {
     ctx.fillStyle = `hsl(${profile.h}, 80%, 50%)`;
-    ctx.fillRect(4, 4, 18, 18);
+    ctx.fillRect(4, 4, 16, 16);
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 1;
-    ctx.strokeRect(4, 4, 18, 18);
+    ctx.strokeRect(4, 4, 16, 16);
   }
 }
 
@@ -242,13 +314,11 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     canvas.height = 240;
     let frameN = 0;
 
-    const scanYs = [0.15, 0.30, 0.50, 0.70, 0.85];
-
     const loop = () => {
       if (video.readyState >= 2 && profileRef.current) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const hit = detectByScanlines(imageData, canvas.width, canvas.height, profileRef.current);
+        const hit = detectByGrid(imageData, canvas.width, canvas.height, profileRef.current);
 
         if (hit.found) {
           lastHitRef.current = hit;
@@ -257,12 +327,13 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
           setPenFound(false);
         }
 
-        // Debug overlay every 3 frames
-        if (frameN % 3 === 0 && debugCanvasRef.current) {
-          drawDebug(debugCanvasRef.current, canvas, scanYs, hit.found ? hit : null, profileRef.current);
+        // Debug overlay every 2 frames
+        if (frameN % 2 === 0 && debugCanvasRef.current) {
+          drawDebug(debugCanvasRef.current, canvas, hit.found ? hit : null, profileRef.current);
         }
 
-        // Send to parent (mirror X for selfie view)
+        // Send to parent — mirror X (selfie view), map to container space
+        // x=0 (left camera edge) → x=containerWidth (right eye side) and vice-versa
         if (lastHitRef.current && containerRef.current) {
           const rect = containerRef.current.getBoundingClientRect();
           onPositionChange({
@@ -270,8 +341,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
             y: lastHitRef.current.y * rect.height,
           });
         }
-      } else if (video.readyState >= 2 && frameN % 3 === 0 && debugCanvasRef.current) {
-        // No profile yet — just mirror video into debug canvas
+      } else if (video.readyState >= 2 && frameN % 2 === 0 && debugCanvasRef.current) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dctx = debugCanvasRef.current.getContext('2d');
         debugCanvasRef.current.width = canvas.width;
