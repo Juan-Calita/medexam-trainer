@@ -29,17 +29,16 @@ function drawDebugMask(debugCanvas, sourceCanvas, dotX, dotY) {
 }
 
 function isRedPixel(r, g, b) {
-  // Strict HSV-based red: high saturation, high value, hue near 0/360
+  // Blue detection: blue is clearly the dominant channel
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   const saturation = max === 0 ? 0 : (max - min) / max;
-  // Red must be clearly dominant channel with high saturation
   return (
-    r === max &&          // red is brightest channel
+    b === max &&          // blue is brightest channel
     saturation > 0.45 &&  // highly saturated (not gray/white)
     max > 80 &&           // not too dark
-    r - g > 50 &&         // red much more than green
-    r - b > 50            // red much more than blue
+    b - r > 50 &&         // blue much more than red
+    b - g > 30            // blue more than green
   );
 }
 
@@ -253,7 +252,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
 
       {cameraState === 'active' && (
         <p className="text-xs text-slate-500 text-center max-w-xs">
-          Segure uma <span className="font-semibold text-rose-600">caneta vermelha</span> em frente à câmera para mover os olhos.
+          Segure uma <span className="font-semibold text-blue-600">caneta azul</span> em frente à câmera para mover os olhos.
         </p>
       )}
     </div>
