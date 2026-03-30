@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Camera, CameraOff, Circle, Scan, CheckCircle2 } from 'lucide-react';
+import { Camera, CameraOff, Circle, Scan } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
 // ─── Colour matching ───────────────────────────────────────────────────────────
+// Convert RGB → HSV (h:0-360, s:0-1, v:0-1)
 function rgbToHsv(r, g, b) {
   const rn = r / 255, gn = g / 255, bn = b / 255;
   const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
@@ -17,21 +18,28 @@ function rgbToHsv(r, g, b) {
   return { h, s: max === 0 ? 0 : d / max, v: max };
 }
 
+// Check if a pixel matches the calibrated pen colour profile
 function matchesPen(r, g, b, profile) {
   if (!profile) return false;
   const { h, s, v } = rgbToHsv(r, g, b);
   if (s < 0.25 || v < 0.15) return false;
+  // Hue tolerance (wraps around 0/360)
   const diff = Math.abs(h - profile.h);
   const hueDiff = Math.min(diff, 360 - diff);
   return hueDiff <= profile.hTol && s >= profile.sMin && v >= profile.vMin;
 }
 
-// ─── Grid detector ─────────────────────────────────────────────────────────────
+// ─── 1000×1000 grid detector ──────────────────────────────────────────────────
+// Scans 1000 horizontal lines + 1000 vertical lines across the full frame.
+// For each line, finds the longest run of matching pixels.
+// The winning intersection (H-line row + V-line col with most hits) gives position.
 function detectByGrid(imageData, W, H, profile) {
   const data = imageData.data;
-  const LINES = 100000;
-  const hBest = new Float32Array(LINES);
-  const hCx = new Float32Array(LINES);
+
+  // Sample 1000 evenly-spaced rows
+  const LINES = 1000;
+  const hBest = new Float32Array(LINES); // best run length per H-line (normalised 0-1 x centre)
+  const hCx   = new Float32Array(LINES); // centre x of best run per H-line
 
   for (let li = 0; li < LINES; li++) {
     const sy = Math.floor((li / (LINES - 1)) * (H - 1));
@@ -53,11 +61,13 @@ function detectByGrid(imageData, W, H, profile) {
       if (len > bestLen) { bestLen = len; bestCx = (runStart + W) / 2; }
     }
     hBest[li] = bestLen;
-    hCx[li] = bestCx / W;
+    hCx[li]   = bestCx / W;
   }
 
+  // Sample 1000 evenly-spaced columns
   const vBest = new Float32Array(LINES);
-  const vCy = new Float32Array(LINES);
+  const vCy   = new Float32Array(LINES);
+
   for (let li = 0; li < LINES; li++) {
     const sx = Math.floor((li / (LINES - 1)) * (W - 1));
     let runStart = -1, bestLen = 0, bestCy = 0;
@@ -78,9 +88,10 @@ function detectByGrid(imageData, W, H, profile) {
       if (len > bestLen) { bestLen = len; bestCy = (runStart + H) / 2; }
     }
     vBest[li] = bestLen;
-    vCy[li] = bestCy / H;
+    vCy[li]   = bestCy / H;
   }
 
+  // Find best H-line and best V-line
   let bestHIdx = 0, bestVIdx = 0;
   for (let i = 1; i < LINES; i++) {
     if (hBest[i] > hBest[bestHIdx]) bestHIdx = i;
@@ -89,25 +100,98 @@ function detectByGrid(imageData, W, H, profile) {
 
   if (hBest[bestHIdx] < 3 && vBest[bestVIdx] < 3) return { found: false };
 
+  // Intersection point: x from H-line centroid, y from V-line centroid
   const x = hBest[bestHIdx] >= 3 ? hCx[bestHIdx] : bestVIdx / (LINES - 1);
   const y = vBest[bestVIdx] >= 3 ? vCy[bestVIdx] : bestHIdx / (LINES - 1);
-  return { x, y, found: true };
+
+  return { x, y, found: true, bestHIdx, bestVIdx, hBest, vBest };
 }
 
-// ─── Coordinate mapping using calibration bounds ───────────────────────────────
-// Maps raw camera [0,1] coords to normalized [0,1] using recorded min/max bounds
-function mapWithBounds(rawX, rawY, bounds) {
-  const { xMin, xMax, yMin, yMax } = bounds;
-  const rangeX = xMax - xMin || 0.01;
-  const rangeY = yMax - yMin || 0.01;
-  return {
-    x: Math.max(0, Math.min(1, (rawX - xMin) / rangeX)),
-    y: Math.max(0, Math.min(1, (rawY - yMin) / rangeY)),
-  };
+// ─── Debug overlay ─────────────────────────────────────────────────────────────
+// Renders the 1000×1000 heatmap (H lines as horizontal bars, V lines as vertical bars)
+// The intensity of each bar encodes the run-length found on that line.
+// The detected point crosshair is drawn in screen space, directly mapping:
+//   x=0 → left edge, x=1 → right edge (mirrored for selfie view externally)
+//   y=0 → top edge,  y=1 → bottom edge
+function drawDebug(debugCanvas, sourceCanvas, hit, profile) {
+  const ctx = debugCanvas.getContext('2d');
+  const W = sourceCanvas.width, H = sourceCanvas.height;
+  debugCanvas.width = W;
+  debugCanvas.height = H;
+
+  // Base frame (dimmed)
+  ctx.drawImage(sourceCanvas, 0, 0);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.fillRect(0, 0, W, H);
+
+  if (hit && hit.hBest && hit.vBest) {
+    const LINES = hit.hBest.length;
+
+    // Find max run for normalisation
+    let maxH = 1, maxV = 1;
+    for (let i = 0; i < LINES; i++) {
+      if (hit.hBest[i] > maxH) maxH = hit.hBest[i];
+      if (hit.vBest[i] > maxV) maxV = hit.vBest[i];
+    }
+
+    // Draw H-line heatmap: each of the 1000 rows gets a 1px horizontal bar
+    // colour intensity proportional to the run length found
+    for (let li = 0; li < LINES; li++) {
+      if (hit.hBest[li] < 1) continue;
+      const py = Math.floor((li / (LINES - 1)) * (H - 1));
+      const alpha = (hit.hBest[li] / maxH) * 0.8;
+      ctx.fillStyle = `rgba(255,200,0,${alpha})`;
+      ctx.fillRect(0, py, W, 1);
+    }
+
+    // Draw V-line heatmap: each of the 1000 columns gets a 1px vertical bar
+    for (let li = 0; li < LINES; li++) {
+      if (hit.vBest[li] < 1) continue;
+      const px = Math.floor((li / (LINES - 1)) * (W - 1));
+      const alpha = (hit.vBest[li] / maxV) * 0.8;
+      ctx.fillStyle = `rgba(0,180,255,${alpha})`;
+      ctx.fillRect(px, 0, 1, H);
+    }
+  }
+
+  // Crosshair at detected point
+  if (hit && hit.found) {
+    const px = hit.x * W, py = hit.y * H;
+
+    // Full-width/height crosshair lines
+    ctx.strokeStyle = 'rgba(0,255,136,0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, py); ctx.lineTo(W, py);
+    ctx.moveTo(px, 0); ctx.lineTo(px, H);
+    ctx.stroke();
+
+    // Circle at intersection
+    ctx.beginPath();
+    ctx.arc(px, py, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Small filled dot
+    ctx.beginPath();
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#00ff88';
+    ctx.fill();
+  }
+
+  // Profile colour swatch
+  if (profile) {
+    ctx.fillStyle = `hsl(${profile.h}, 80%, 50%)`;
+    ctx.fillRect(4, 4, 16, 16);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(4, 4, 16, 16);
+  }
 }
 
-// ─── AI colour detection ───────────────────────────────────────────────────────
-async function detectColourWithAI(canvas) {
+// ─── AI calibration call ───────────────────────────────────────────────────────
+async function calibrateWithAI(canvas) {
   const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
   const blob = await (await fetch(dataUrl)).blob();
   const file = new File([blob], 'frame.jpg', { type: 'image/jpeg' });
@@ -120,10 +204,10 @@ Return a JSON object describing the colour in HSV terms so we can track it:
 {
   "found": true,
   "penDescription": "blue ballpoint pen",
-  "h": 220,
-  "hTol": 30,
-  "sMin": 0.35,
-  "vMin": 0.2
+  "h": 220,       // hue 0-360 (red=0, yellow=60, green=120, cyan=180, blue=240, magenta=300)
+  "hTol": 30,     // acceptable hue tolerance (degrees)
+  "sMin": 0.35,   // minimum saturation (0-1)
+  "vMin": 0.2     // minimum value/brightness (0-1)
 }
 If no pen is visible return: { "found": false }`,
     file_urls: [file_url],
@@ -142,96 +226,22 @@ If no pen is visible return: { "found": false }`,
   });
 }
 
-// ─── H-pattern calibration points (9 positions) ────────────────────────────────
-// The user traces an "H": top-left → bottom-left → middle-left →
-// middle-right → top-right → bottom-right
-// We record raw camera coords at each extreme to build a bounding box.
-const H_STEPS = [
-  { label: 'Canto superior esquerdo', hint: '↖', targetX: 0, targetY: 0 },
-  { label: 'Canto inferior esquerdo', hint: '↙', targetX: 0, targetY: 1 },
-  { label: 'Centro esquerdo',         hint: '←', targetX: 0, targetY: 0.5 },
-  { label: 'Centro',                  hint: '·', targetX: 0.5, targetY: 0.5 },
-  { label: 'Centro direito',          hint: '→', targetX: 1, targetY: 0.5 },
-  { label: 'Canto superior direito',  hint: '↗', targetX: 1, targetY: 0 },
-  { label: 'Canto inferior direito',  hint: '↘', targetX: 1, targetY: 1 },
-];
-
-// ─── H-pattern overlay on mini camera view ─────────────────────────────────────
-function HPatternOverlay({ step, total, collected }) {
-  // Show the target dot position for current step
-  const cur = H_STEPS[step];
-  if (!cur) return null;
-
-  // mirror x for selfie view (camera is flipped)
-  const dotX = (1 - cur.targetX) * 100;
-  const dotY = cur.targetY * 100;
-
-  return (
-    <div className="absolute inset-0 pointer-events-none">
-      {/* Lines of the H pattern (faint) */}
-      {collected.map((pt, i) => {
-        const next = collected[i + 1];
-        if (!next) return null;
-        // Draw in % space (mirrored x)
-        const x1 = (1 - pt.rawX) * 100;
-        const y1 = pt.rawY * 100;
-        const x2 = (1 - next.rawX) * 100;
-        const y2 = next.rawY * 100;
-        return (
-          <svg key={i} className="absolute inset-0 w-full h-full" style={{ overflow: 'visible' }}>
-            <line
-              x1={`${x1}%`} y1={`${y1}%`}
-              x2={`${x2}%`} y2={`${y2}%`}
-              stroke="rgba(99,255,150,0.5)" strokeWidth="1.5"
-            />
-          </svg>
-        );
-      })}
-      {/* Collected dots */}
-      {collected.map((pt, i) => (
-        <div
-          key={i}
-          className="absolute w-2 h-2 rounded-full bg-emerald-400 border border-white"
-          style={{ left: `${(1 - pt.rawX) * 100}%`, top: `${pt.rawY * 100}%`, transform: 'translate(-50%,-50%)' }}
-        />
-      ))}
-      {/* Target dot (pulsing) */}
-      <div
-        className="absolute w-4 h-4 rounded-full bg-amber-400 border-2 border-white animate-pulse shadow-lg"
-        style={{ left: `${dotX}%`, top: `${dotY}%`, transform: 'translate(-50%,-50%)' }}
-      />
-    </div>
-  );
-}
-
-// ─── Main Component ─────────────────────────────────────────────────────────────
+// ─── Component ─────────────────────────────────────────────────────────────────
 export default function PenTracker({ onPositionChange, containerRef, isActive }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const debugCanvasRef = useRef(null);
   const animRef = useRef(null);
   const streamRef = useRef(null);
-  const profileRef = useRef(null);
-  const boundsRef = useRef(null);       // { xMin, xMax, yMin, yMax }
-  const smoothRef = useRef({ x: 0.5, y: 0.5 });
-  const missFramesRef = useRef(0);
-  const latestHitRef = useRef(null);    // latest raw hit for H-calib capture
+  const profileRef = useRef(null);        // calibrated colour profile
+  const lastHitRef = useRef(null);        // last detected position
 
-  const [cameraState, setCameraState] = useState('idle');
-  // calibState: none | ai_detecting | ai_failed | h_calib | done
-  const [calibState, setCalibState] = useState('none');
+  const [cameraState, setCameraState] = useState('idle'); // idle|loading|active|error
+  const [calibState, setCalibState] = useState('none');   // none|calibrating|done|failed
   const [penFound, setPenFound] = useState(false);
   const [penDesc, setPenDesc] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // H-calibration state
-  const [hStep, setHStep] = useState(0);
-  const [hCollected, setHCollected] = useState([]);
-  const [hCapturing, setHCapturing] = useState(false); // brief flash on capture
-
-  const showCamera = cameraState === 'active' &&
-    (calibState === 'none' || calibState === 'ai_detecting' || calibState === 'ai_failed' || calibState === 'h_calib');
-
-  // ── Stop ──────────────────────────────────────────────────────────────────────
   const stopCamera = useCallback(() => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
     if (streamRef.current) { streamRef.current.getTracks().forEach(t => t.stop()); streamRef.current = null; }
@@ -240,14 +250,9 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     setCalibState('none');
     setPenFound(false);
     profileRef.current = null;
-    boundsRef.current = null;
-    smoothRef.current = { x: 0.5, y: 0.5 };
-    missFramesRef.current = 0;
-    setHStep(0);
-    setHCollected([]);
+    lastHitRef.current = null;
   }, []);
 
-  // ── Start camera ──────────────────────────────────────────────────────────────
   const startCamera = useCallback(async () => {
     setCameraState('loading');
     setErrorMsg('');
@@ -265,21 +270,22 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     video.srcObject = stream;
     await new Promise(resolve => { video.onloadedmetadata = resolve; });
     try { await video.play(); } catch (err) {
-      setCameraState('error'); setErrorMsg('Erro: ' + err.message); stopCamera(); return;
+      setCameraState('error'); setErrorMsg('Erro ao iniciar o vídeo: ' + err.message); stopCamera(); return;
     }
     setCameraState('active');
   }, [stopCamera]);
 
-  // ── Step 1: AI detects pen colour ─────────────────────────────────────────────
-  const runAIDetect = useCallback(async () => {
+  // One-shot AI calibration
+  const runCalibration = useCallback(async () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
     if (!canvas || !video || video.readyState < 2) return;
-    setCalibState('ai_detecting');
+    setCalibState('calibrating');
+    // Draw current frame into canvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     try {
-      const result = await detectColourWithAI(canvas);
+      const result = await calibrateWithAI(canvas);
       if (result.found && result.h != null) {
         profileRef.current = {
           h: result.h,
@@ -287,51 +293,17 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
           sMin: result.sMin ?? 0.3,
           vMin: result.vMin ?? 0.2,
         };
-        setPenDesc(result.penDescription ?? 'caneta');
-        // Move to H-calibration phase
-        setHStep(0);
-        setHCollected([]);
-        boundsRef.current = null;
-        setCalibState('h_calib');
+        setPenDesc(result.penDescription ?? 'caneta detectada');
+        setCalibState('done');
       } else {
-        setCalibState('ai_failed');
+        setCalibState('failed');
       }
     } catch {
-      setCalibState('ai_failed');
+      setCalibState('failed');
     }
   }, []);
 
-  // ── Step 2: capture current pen position for H-calib ─────────────────────────
-  const captureHPoint = useCallback(() => {
-    const hit = latestHitRef.current;
-    if (!hit) return;
-    setHCapturing(true);
-    setTimeout(() => setHCapturing(false), 300);
-
-    const newPoint = { rawX: hit.x, rawY: hit.y, step: hStep };
-    const newCollected = [...hCollected, newPoint];
-    setHCollected(newCollected);
-
-    const nextStep = hStep + 1;
-    if (nextStep >= H_STEPS.length) {
-      // Build bounding box from all collected raw points
-      const xs = newCollected.map(p => p.rawX);
-      const ys = newCollected.map(p => p.rawY);
-      boundsRef.current = {
-        xMin: Math.min(...xs),
-        xMax: Math.max(...xs),
-        yMin: Math.min(...ys),
-        yMax: Math.max(...ys),
-      };
-      smoothRef.current = { x: 0.5, y: 0.5 };
-      missFramesRef.current = 0;
-      setCalibState('done');
-    } else {
-      setHStep(nextStep);
-    }
-  }, [hStep, hCollected]);
-
-  // ── Frame loop ────────────────────────────────────────────────────────────────
+  // Frame loop: 5-scanline detection using calibrated profile
   useEffect(() => {
     if (cameraState !== 'active') return;
     const canvas = canvasRef.current;
@@ -340,8 +312,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     canvas.width = 320;
     canvas.height = 240;
-    const ALPHA = 0.08;
-    const MISS_THRESHOLD = 20;
+    let frameN = 0;
 
     const loop = () => {
       if (video.readyState >= 2 && profileRef.current) {
@@ -350,31 +321,34 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         const hit = detectByGrid(imageData, canvas.width, canvas.height, profileRef.current);
 
         if (hit.found) {
-          latestHitRef.current = hit;
-          missFramesRef.current = 0;
+          lastHitRef.current = hit;
           setPenFound(true);
-
-          // Only update smooth position after H-calib is done
-          if (boundsRef.current) {
-            const mapped = mapWithBounds(hit.x, hit.y, boundsRef.current);
-            smoothRef.current.x += ALPHA * (mapped.x - smoothRef.current.x);
-            smoothRef.current.y += ALPHA * (mapped.y - smoothRef.current.y);
-          }
         } else {
-          latestHitRef.current = null;
-          missFramesRef.current++;
-          if (missFramesRef.current >= MISS_THRESHOLD) setPenFound(false);
+          setPenFound(false);
         }
 
-        // Send smoothed mapped position to parent
-        if (boundsRef.current && containerRef.current) {
+        // Debug overlay every 2 frames
+        if (frameN % 2 === 0 && debugCanvasRef.current) {
+          drawDebug(debugCanvasRef.current, canvas, hit.found ? hit : null, profileRef.current);
+        }
+
+        // Send to parent — mirror X (selfie view), map to container space
+        // x=0 (left camera edge) → x=containerWidth (right eye side) and vice-versa
+        if (lastHitRef.current && containerRef.current) {
           const rect = containerRef.current.getBoundingClientRect();
           onPositionChange({
-            x: (1 - smoothRef.current.x) * rect.width,
-            y: smoothRef.current.y * rect.height,
+            x: (1 - lastHitRef.current.x) * rect.width,
+            y: lastHitRef.current.y * rect.height,
           });
         }
+      } else if (video.readyState >= 2 && frameN % 2 === 0 && debugCanvasRef.current) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dctx = debugCanvasRef.current.getContext('2d');
+        debugCanvasRef.current.width = canvas.width;
+        debugCanvasRef.current.height = canvas.height;
+        dctx.drawImage(canvas, 0, 0);
       }
+      frameN++;
       animRef.current = requestAnimationFrame(loop);
     };
     animRef.current = requestAnimationFrame(loop);
@@ -384,110 +358,60 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
   useEffect(() => { if (!isActive) stopCamera(); }, [isActive, stopCamera]);
   useEffect(() => () => stopCamera(), [stopCamera]);
 
-  const resetCalib = () => {
-    profileRef.current = null;
-    boundsRef.current = null;
-    setCalibState('none');
-    setPenFound(false);
-    setHStep(0);
-    setHCollected([]);
-    missFramesRef.current = 0;
-  };
-
-  const currentHStep = H_STEPS[hStep];
+  const calibBadge = {
+    none: null,
+    calibrating: { color: 'text-amber-500', label: 'IA analisando caneta...' },
+    done: { color: 'text-emerald-500', label: penDesc || 'Calibrado!' },
+    failed: { color: 'text-rose-500', label: 'IA não encontrou caneta — tente novamente' },
+  }[calibState];
 
   return (
     <div className="flex flex-col items-center gap-3">
       {/* Hidden processing canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Video always in DOM so ref is always valid; visibility via display */}
-      <div style={{ display: showCamera ? 'flex' : 'none' }} className="flex-col items-center gap-1">
-        <div className="relative rounded-lg overflow-hidden border-2 border-slate-200 shadow-sm"
-          style={{ width: 240, height: 180 }}>
+      {/* Camera + debug view */}
+      <div className={cameraState === 'active' ? 'flex gap-2 items-start' : 'hidden'}>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Câmera</span>
           <video
             ref={videoRef}
-            className="w-full h-full object-cover"
-            style={{ transform: 'scaleX(-1)' }}
+            className="rounded-lg border-2 border-slate-200 shadow-sm"
+            style={{ width: 160, height: 120, objectFit: 'cover', transform: 'scaleX(-1)' }}
             playsInline muted
           />
-          {calibState === 'h_calib' && (
-            <HPatternOverlay step={hStep} total={H_STEPS.length} collected={hCollected} />
-          )}
-          {hCapturing && (
-            <div className="absolute inset-0 bg-white/50 rounded-lg" />
-          )}
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Scan H</span>
+          <canvas
+            ref={debugCanvasRef}
+            className="rounded-lg border-2 border-yellow-300 shadow-sm"
+            style={{ width: 160, height: 120, transform: 'scaleX(-1)' }}
+          />
         </div>
       </div>
 
-      {/* ── H-Calibration UI ── */}
-      {cameraState === 'active' && calibState === 'h_calib' && currentHStep && (
-        <div className="flex flex-col items-center gap-2 w-full max-w-xs">
-          <div className="text-center">
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">
-              Passo {hStep + 1} de {H_STEPS.length}
-            </p>
-            <p className="text-sm font-semibold text-slate-700 mt-0.5">
-              Aponte a caneta para: <span className="text-amber-600">{currentHStep.label}</span>
-            </p>
-            <p className="text-2xl mt-1">{currentHStep.hint}</p>
-          </div>
-          {/* Progress dots */}
-          <div className="flex gap-1.5">
-            {H_STEPS.map((_, i) => (
-              <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all ${
-                i < hCollected.length ? 'bg-emerald-500' :
-                i === hStep ? 'bg-amber-400 scale-125' : 'bg-slate-200'
-              }`} />
-            ))}
-          </div>
-          <button
-            onClick={captureHPoint}
-            disabled={!penFound}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors shadow-sm ${
-              penFound
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            Capturar ponto
-          </button>
-          {!penFound && (
-            <p className="text-xs text-amber-600 text-center">
-              Caneta não detectada — aponte para a câmera
-            </p>
-          )}
+      {/* Status */}
+      {cameraState === 'active' && calibBadge && (
+        <div className="flex items-center gap-1.5 -mt-1">
+          <Circle className={`w-2.5 h-2.5 fill-current ${calibBadge.color}`} />
+          <span className="text-xs text-slate-500">{calibBadge.label}</span>
         </div>
       )}
-
-      {/* ── Status when tracking ── */}
       {cameraState === 'active' && calibState === 'done' && (
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
-          penFound
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-            : 'bg-amber-50 border-amber-200 text-amber-700'
-        }`}>
-          <Circle className={`w-2.5 h-2.5 fill-current ${penFound ? 'text-emerald-500' : 'text-amber-500'}`} />
-          {penFound ? `Rastreando: ${penDesc}` : 'Caneta não detectada — aponte para a câmera'}
+        <div className="flex items-center gap-1.5 -mt-1">
+          <Circle className={`w-2.5 h-2.5 fill-current ${penFound ? 'text-emerald-500' : 'text-slate-300'}`} />
+          <span className="text-xs text-slate-500">{penFound ? 'Caneta detectada' : 'Rastreando...'}</span>
         </div>
       )}
 
-      {cameraState === 'active' && calibState === 'ai_detecting' && (
-        <div className="flex items-center gap-2 text-xs text-amber-600">
-          <div className="w-3 h-3 border-2 border-amber-400 border-t-amber-600 rounded-full animate-spin" />
-          IA identificando cor da caneta...
-        </div>
-      )}
-      {cameraState === 'active' && calibState === 'ai_failed' && (
-        <p className="text-xs text-rose-500 text-center">IA não encontrou caneta — tente novamente</p>
-      )}
-
-      {/* ── Buttons ── */}
+      {/* Buttons */}
       <div className="flex gap-2 flex-wrap justify-center">
         {(cameraState === 'idle' || cameraState === 'error') && (
-          <button onClick={startCamera}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm">
+          <button
+            onClick={startCamera}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+          >
             <Camera className="w-4 h-4" />
             Ativar Câmera
           </button>
@@ -498,23 +422,29 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
             Conectando...
           </div>
         )}
-        {cameraState === 'active' && (calibState === 'none' || calibState === 'ai_failed') && (
-          <button onClick={runAIDetect}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors shadow-sm">
+        {cameraState === 'active' && (calibState === 'none' || calibState === 'failed') && (
+          <button
+            onClick={runCalibration}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors shadow-sm"
+          >
             <Scan className="w-4 h-4" />
-            {calibState === 'ai_failed' ? 'Tentar novamente' : 'Iniciar calibração'}
+            Calibrar com IA
           </button>
         )}
         {cameraState === 'active' && calibState === 'done' && (
-          <button onClick={resetCalib}
-            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors">
+          <button
+            onClick={() => { profileRef.current = null; setCalibState('none'); setPenFound(false); }}
+            className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors"
+          >
             <Scan className="w-3.5 h-3.5" />
             Recalibrar
           </button>
         )}
         {cameraState === 'active' && (
-          <button onClick={stopCamera}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors">
+          <button
+            onClick={stopCamera}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-300 transition-colors"
+          >
             <CameraOff className="w-4 h-4" />
             Desativar
           </button>
@@ -525,8 +455,12 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
 
       {cameraState === 'active' && calibState === 'none' && (
         <p className="text-xs text-slate-500 text-center max-w-xs">
-          Segure a caneta na frente da câmera e clique em{' '}
-          <span className="font-semibold text-amber-600">Iniciar calibração</span>.
+          Segure a caneta na frente da câmera e clique em <span className="font-semibold text-amber-600">Calibrar com IA</span>.
+        </p>
+      )}
+      {cameraState === 'active' && calibState === 'done' && (
+        <p className="text-xs text-slate-500 text-center max-w-xs">
+          5 linhas de varredura horizontal rastreiam a caneta em tempo real.
         </p>
       )}
     </div>
