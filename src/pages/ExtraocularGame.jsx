@@ -30,7 +30,7 @@ export default function ExtraocularGame() {
       const rect = containerRef.current.getBoundingClientRect();
       setMousePos({
         x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        y: e.clientY - rect.top
       });
     }
   }, []);
@@ -38,10 +38,10 @@ export default function ExtraocularGame() {
   const startNewRound = useCallback(() => {
     const available = getMusclesForDifficulty(difficulty);
     const historyForLevel = muscleHistory[difficulty] || {};
-    const filtered = available.filter(m => (historyForLevel[m.id] || 0) < 2);
+    const filtered = available.filter((m) => (historyForLevel[m.id] || 0) < 2);
     const pool = filtered.length > 0 ? filtered : available;
     const muscle = pool[Math.floor(Math.random() * pool.length)];
-    setMuscleHistory(prev => {
+    setMuscleHistory((prev) => {
       const levelHistory = { ...(prev[difficulty] || {}) };
       if (filtered.length === 0) {
         // reset counts when all hit the limit
@@ -56,7 +56,7 @@ export default function ExtraocularGame() {
     setGameState('playing');
     setFeedback(null);
     setSelectedAnswer(null);
-    setRound(r => r + 1);
+    setRound((r) => r + 1);
   }, [difficulty, muscleHistory]);
 
   const handleAnswer = useCallback((muscleId) => {
@@ -65,8 +65,8 @@ export default function ExtraocularGame() {
     setSelectedAnswer(muscleId);
     setFeedback({ correct, muscle: impairedMuscle, chosenId: muscleId });
     if (correct) {
-      setScore(s => s + 1);
-      setCorrectStreak(prev => {
+      setScore((s) => s + 1);
+      setCorrectStreak((prev) => {
         const newStreak = prev + 1;
         if (newStreak >= STREAK_TO_ADVANCE) {
           const currentIndex = DIFFICULTY_LEVELS.indexOf(difficulty);
@@ -93,8 +93,8 @@ export default function ExtraocularGame() {
     <div
       className="min-h-screen bg-white flex flex-col items-center"
       onMouseMove={inputMode === 'mouse' ? handleMouseMove : undefined}
-      ref={containerRef}
-    >
+      ref={containerRef}>
+      
       {/* Header */}
       <GameHeader score={score} round={round} difficulty={difficulty} setDifficulty={setDifficulty} gameState={gameState} />
 
@@ -103,20 +103,20 @@ export default function ExtraocularGame() {
         <button
           onClick={() => setInputMode('mouse')}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-            inputMode === 'mouse' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
+          inputMode === 'mouse' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`
+          }>
+          
           <Mouse className="w-4 h-4" />
           Mouse
         </button>
         <button
-          onClick={() => setInputMode('camera')}
-          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-            inputMode === 'camera' ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-          }`}
-        >
+          onClick={() => setInputMode('camera')} className="bg-white text-cyan-500 px-4 py-1.5 text-sm font-medium rounded-full flex items-center gap-2 transition-all shadow-sm">
+
+
+
+          
           <Camera className="w-4 h-4" />
-          Câmera (caneta azul)
+          Câmera (caneta vermelha)
         </button>
       </div>
 
@@ -127,52 +127,52 @@ export default function ExtraocularGame() {
           containerRef={containerRef}
           impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
           impairedEye={impairedEye}
-          gameState={gameState}
-        />
+          gameState={gameState} />
+        
 
         {/* Camera tracker */}
-        {inputMode === 'camera' && (
-          <div className="mt-4">
+        {inputMode === 'camera' &&
+        <div className="mt-4">
             <PenTracker
-              onPositionChange={setMousePos}
-              containerRef={containerRef}
-              isActive={inputMode === 'camera'}
-            />
+            onPositionChange={setMousePos}
+            containerRef={containerRef}
+            isActive={inputMode === 'camera'} />
+          
           </div>
-        )}
+        }
 
         {/* Start button */}
-        {gameState === 'idle' && (
-          <button
-            onClick={startNewRound}
-            className="mt-8 px-8 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold tracking-wide hover:bg-blue-700 transition-colors shadow-md"
-          >
+        {gameState === 'idle' &&
+        <button
+          onClick={startNewRound}
+          className="mt-8 px-8 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold tracking-wide hover:bg-blue-700 transition-colors shadow-md">
+          
             Iniciar Caso
           </button>
-        )}
+        }
 
         {/* Question */}
-        {(gameState === 'playing' || gameState === 'feedback') && (
-          <QuestionPanel
-            muscles={availableMuscles}
-            difficulty={difficulty}
-            impairedMuscle={impairedMuscle}
-            impairedEye={impairedEye}
-            selectedAnswer={selectedAnswer}
-            onAnswer={handleAnswer}
-            gameState={gameState}
-            onNext={handleNext}
-            feedback={feedback}
-            correctStreak={correctStreak}
-            streakToAdvance={STREAK_TO_ADVANCE}
-          />
-        )}
+        {(gameState === 'playing' || gameState === 'feedback') &&
+        <QuestionPanel
+          muscles={availableMuscles}
+          difficulty={difficulty}
+          impairedMuscle={impairedMuscle}
+          impairedEye={impairedEye}
+          selectedAnswer={selectedAnswer}
+          onAnswer={handleAnswer}
+          gameState={gameState}
+          onNext={handleNext}
+          feedback={feedback}
+          correctStreak={correctStreak}
+          streakToAdvance={STREAK_TO_ADVANCE} />
+
+        }
       </div>
 
       {/* Feedback popup */}
-      {feedback && (
-        <FeedbackPopup feedback={feedback} onNext={handleNext} />
-      )}
-    </div>
-  );
+      {feedback &&
+      <FeedbackPopup feedback={feedback} onNext={handleNext} />
+      }
+    </div>);
+
 }
