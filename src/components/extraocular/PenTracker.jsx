@@ -401,35 +401,24 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       {/* Hidden processing canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Camera preview — only during calibration phases */}
-      {showCamera && (
-        <div className="flex flex-col items-center gap-1">
-          <div className="relative rounded-lg overflow-hidden border-2 border-slate-200 shadow-sm"
-            style={{ width: 240, height: 180 }}>
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              style={{ transform: 'scaleX(-1)' }}
-              playsInline muted
-            />
-            {/* H-pattern overlay */}
-            {calibState === 'h_calib' && (
-              <HPatternOverlay step={hStep} total={H_STEPS.length} collected={hCollected} />
-            )}
-            {/* Capture flash */}
-            {hCapturing && (
-              <div className="absolute inset-0 bg-white/50 rounded-lg" />
-            )}
-          </div>
+      {/* Video always in DOM so ref is always valid; visibility via display */}
+      <div style={{ display: showCamera ? 'flex' : 'none' }} className="flex-col items-center gap-1">
+        <div className="relative rounded-lg overflow-hidden border-2 border-slate-200 shadow-sm"
+          style={{ width: 240, height: 180 }}>
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover"
+            style={{ transform: 'scaleX(-1)' }}
+            playsInline muted
+          />
+          {calibState === 'h_calib' && (
+            <HPatternOverlay step={hStep} total={H_STEPS.length} collected={hCollected} />
+          )}
+          {hCapturing && (
+            <div className="absolute inset-0 bg-white/50 rounded-lg" />
+          )}
         </div>
-      )}
-
-      {/* Video always in DOM when camera active — hidden when not calibrating */}
-      {!showCamera && cameraState === 'active' && (
-        <div style={{ display: 'none' }}>
-          <video ref={videoRef} playsInline muted />
-        </div>
-      )}
+      </div>
 
       {/* ── H-Calibration UI ── */}
       {cameraState === 'active' && calibState === 'h_calib' && currentHStep && (
