@@ -233,14 +233,20 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
   const debugCanvasRef = useRef(null);
   const animRef = useRef(null);
   const streamRef = useRef(null);
-  const profileRef = useRef(null);        // calibrated colour profile
-  const lastHitRef = useRef(null);        // last detected position
+  const profileRef = useRef(null);
+  // Smoothed position (EMA) — avoids jitter
+  const smoothRef = useRef({ x: 0.5, y: 0.5 });
+  // Frames since last detection — for "not found" warning
+  const missFramesRef = useRef(0);
 
   const [cameraState, setCameraState] = useState('idle'); // idle|loading|active|error
   const [calibState, setCalibState] = useState('none');   // none|calibrating|done|failed
   const [penFound, setPenFound] = useState(false);
   const [penDesc, setPenDesc] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Show camera only during calibration phases
+  const showCamera = cameraState === 'active' && (calibState === 'none' || calibState === 'calibrating' || calibState === 'failed');
 
   const stopCamera = useCallback(() => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -250,7 +256,8 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     setCalibState('none');
     setPenFound(false);
     profileRef.current = null;
-    lastHitRef.current = null;
+    smoothRef.current = { x: 0.5, y: 0.5 };
+    missFramesRef.current = 0;
   }, []);
 
   const startCamera = useCallback(async () => {
@@ -281,7 +288,6 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     const video = videoRef.current;
     if (!canvas || !video || video.readyState < 2) return;
     setCalibState('calibrating');
-    // Draw current frame into canvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     try {
@@ -294,6 +300,8 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
           vMin: result.vMin ?? 0.2,
         };
         setPenDesc(result.penDescription ?? 'caneta detectada');
+        smoothRef.current = { x: 0.5, y: 0.5 };
+        missFramesRef.current = 0;
         setCalibState('done');
       } else {
         setCalibState('failed');
@@ -303,7 +311,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     }
   }, []);
 
-  // Frame loop: 5-scanline detection using calibrated profile
+  // Frame loop with EMA smoothing
   useEffect(() => {
     if (cameraState !== 'active') return;
     const canvas = canvasRef.current;
@@ -312,6 +320,10 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     canvas.width = 320;
     canvas.height = 240;
+    // EMA alpha: lower = smoother but more lag; 0.08 is fluid yet responsive
+    const ALPHA = 0.08;
+    // Frames without detection before showing warning
+    const MISS_THRESHOLD = 20;
     let frameN = 0;
 
     const loop = () => {
@@ -321,24 +333,30 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         const hit = detectByGrid(imageData, canvas.width, canvas.height, profileRef.current);
 
         if (hit.found) {
-          lastHitRef.current = hit;
+          missFramesRef.current = 0;
           setPenFound(true);
+          // EMA smoothing — only update smooth position when pen is detected
+          smoothRef.current.x += ALPHA * (hit.x - smoothRef.current.x);
+          smoothRef.current.y += ALPHA * (hit.y - smoothRef.current.y);
         } else {
-          setPenFound(false);
+          missFramesRef.current++;
+          if (missFramesRef.current >= MISS_THRESHOLD) {
+            setPenFound(false);
+          }
+          // Do NOT update smoothRef when pen is lost — hold last position
         }
 
-        // Debug overlay every 2 frames
+        // Debug overlay every 2 frames (only visible during recalibration)
         if (frameN % 2 === 0 && debugCanvasRef.current) {
           drawDebug(debugCanvasRef.current, canvas, hit.found ? hit : null, profileRef.current);
         }
 
-        // Send to parent — mirror X (selfie view), map to container space
-        // x=0 (left camera edge) → x=containerWidth (right eye side) and vice-versa
-        if (lastHitRef.current && containerRef.current) {
+        // Always send the smoothed position to parent
+        if (containerRef.current) {
           const rect = containerRef.current.getBoundingClientRect();
           onPositionChange({
-            x: (1 - lastHitRef.current.x) * rect.width,
-            y: lastHitRef.current.y * rect.height,
+            x: (1 - smoothRef.current.x) * rect.width,
+            y: smoothRef.current.y * rect.height,
           });
         }
       } else if (video.readyState >= 2 && frameN % 2 === 0 && debugCanvasRef.current) {
@@ -358,20 +376,13 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
   useEffect(() => { if (!isActive) stopCamera(); }, [isActive, stopCamera]);
   useEffect(() => () => stopCamera(), [stopCamera]);
 
-  const calibBadge = {
-    none: null,
-    calibrating: { color: 'text-amber-500', label: 'IA analisando caneta...' },
-    done: { color: 'text-emerald-500', label: penDesc || 'Calibrado!' },
-    failed: { color: 'text-rose-500', label: 'IA não encontrou caneta — tente novamente' },
-  }[calibState];
-
   return (
     <div className="flex flex-col items-center gap-3">
       {/* Hidden processing canvas */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Camera + debug view */}
-      <div className={cameraState === 'active' ? 'flex gap-2 items-start' : 'hidden'}>
+      {/* Camera + debug — only visible during calibration */}
+      <div style={{ display: showCamera ? 'flex' : 'none' }} className="gap-2 items-start">
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] text-slate-400 uppercase tracking-wide">Câmera</span>
           <video
@@ -382,7 +393,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
           />
         </div>
         <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Scan H</span>
+          <span className="text-[10px] text-slate-400 uppercase tracking-wide">Debug</span>
           <canvas
             ref={debugCanvasRef}
             className="rounded-lg border-2 border-yellow-300 shadow-sm"
@@ -391,18 +402,27 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         </div>
       </div>
 
-      {/* Status */}
-      {cameraState === 'active' && calibBadge && (
-        <div className="flex items-center gap-1.5 -mt-1">
-          <Circle className={`w-2.5 h-2.5 fill-current ${calibBadge.color}`} />
-          <span className="text-xs text-slate-500">{calibBadge.label}</span>
+      {/* Pen not detected warning — shown when calibrated but pen lost */}
+      {cameraState === 'active' && calibState === 'done' && !penFound && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+          <Circle className="w-2.5 h-2.5 fill-current text-amber-500" />
+          <span className="text-xs text-amber-700 font-medium">Caneta não detectada — aponte para a câmera</span>
         </div>
       )}
-      {cameraState === 'active' && calibState === 'done' && (
-        <div className="flex items-center gap-1.5 -mt-1">
-          <Circle className={`w-2.5 h-2.5 fill-current ${penFound ? 'text-emerald-500' : 'text-slate-300'}`} />
-          <span className="text-xs text-slate-500">{penFound ? 'Caneta detectada' : 'Rastreando...'}</span>
+      {cameraState === 'active' && calibState === 'done' && penFound && (
+        <div className="flex items-center gap-1.5">
+          <Circle className="w-2.5 h-2.5 fill-current text-emerald-500" />
+          <span className="text-xs text-slate-500">Rastreando: {penDesc}</span>
         </div>
+      )}
+      {cameraState === 'active' && calibState === 'calibrating' && (
+        <div className="flex items-center gap-2 text-xs text-amber-600">
+          <div className="w-3 h-3 border-2 border-amber-400 border-t-amber-600 rounded-full animate-spin" />
+          IA analisando caneta...
+        </div>
+      )}
+      {cameraState === 'active' && calibState === 'failed' && (
+        <p className="text-xs text-rose-500">IA não encontrou caneta — tente novamente</p>
       )}
 
       {/* Buttons */}
@@ -433,7 +453,7 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
         )}
         {cameraState === 'active' && calibState === 'done' && (
           <button
-            onClick={() => { profileRef.current = null; setCalibState('none'); setPenFound(false); }}
+            onClick={() => { profileRef.current = null; setCalibState('none'); setPenFound(false); missFramesRef.current = 0; }}
             className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-medium hover:bg-slate-200 transition-colors"
           >
             <Scan className="w-3.5 h-3.5" />
@@ -456,11 +476,6 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       {cameraState === 'active' && calibState === 'none' && (
         <p className="text-xs text-slate-500 text-center max-w-xs">
           Segure a caneta na frente da câmera e clique em <span className="font-semibold text-amber-600">Calibrar com IA</span>.
-        </p>
-      )}
-      {cameraState === 'active' && calibState === 'done' && (
-        <p className="text-xs text-slate-500 text-center max-w-xs">
-          5 linhas de varredura horizontal rastreiam a caneta em tempo real.
         </p>
       )}
     </div>
