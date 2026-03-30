@@ -1,6 +1,24 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Camera, CameraOff, Circle } from 'lucide-react';
 
+// Draws red mask on debug canvas so user can see what's detected
+function drawDebugMask(debugCanvas, sourceCanvas) {
+  const ctx = debugCanvas.getContext('2d');
+  debugCanvas.width = sourceCanvas.width;
+  debugCanvas.height = sourceCanvas.height;
+  const src = sourceCanvas.getContext('2d').getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+  const out = ctx.createImageData(sourceCanvas.width, sourceCanvas.height);
+  for (let i = 0; i < src.data.length; i += 4) {
+    const r = src.data[i], g = src.data[i + 1], b = src.data[i + 2];
+    const isRed = r > 100 && r > g * 1.4 && r > b * 1.4 && (r - g) > 40 && (r - b) > 40;
+    out.data[i]     = isRed ? 255 : r / 3;
+    out.data[i + 1] = isRed ? 0   : g / 3;
+    out.data[i + 2] = isRed ? 0   : b / 3;
+    out.data[i + 3] = 255;
+  }
+  ctx.putImageData(out, 0, 0);
+}
+
 function detectRedObject(canvas, ctx, video) {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -8,20 +26,24 @@ function detectRedObject(canvas, ctx, video) {
   let sumX = 0, sumY = 0, count = 0;
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i], g = data[i + 1], b = data[i + 2];
-    if (r > 150 && g < 80 && b < 80 && r > g * 2 && r > b * 2) {
+    // More lenient HSV-style red detection
+    // Hue close to red: r is dominant, significantly greater than g and b
+    const isRed = r > 100 && r > g * 1.4 && r > b * 1.4 && (r - g) > 40 && (r - b) > 40;
+    if (isRed) {
       const idx = i / 4;
       sumX += idx % canvas.width;
       sumY += Math.floor(idx / canvas.width);
       count++;
     }
   }
-  if (count > 30) return { x: sumX / count, y: sumY / count, found: true };
+  if (count > 20) return { x: sumX / count, y: sumY / count, found: true };
   return { x: 0, y: 0, found: false };
 }
 
 export default function PenTracker({ onPositionChange, containerRef, isActive }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const debugCanvasRef = useRef(null);
   const animRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraState, setCameraState] = useState('idle'); // idle | loading | active | error
@@ -87,10 +109,16 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
     canvas.width = 320;
     canvas.height = 240;
 
+    let frameCount = 0;
     const loop = () => {
       if (containerRef.current && video.readyState >= 2) {
         const result = detectRedObject(canvas, ctx, video);
         setPenFound(result.found);
+        // Draw debug mask every 3 frames to save CPU
+        frameCount++;
+        if (frameCount % 3 === 0 && debugCanvasRef.current) {
+          drawDebugMask(debugCanvasRef.current, canvas);
+        }
         if (result.found) {
           const rect = containerRef.current.getBoundingClientRect();
           onPositionChange({
@@ -116,14 +144,35 @@ export default function PenTracker({ onPositionChange, containerRef, isActive })
       {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Single video element — shown when active */}
-      <video
-        ref={videoRef}
-        className={cameraState === 'active' ? 'rounded-lg border-2 border-slate-200 shadow-sm' : 'hidden'}
-        style={{ width: 160, height: 120, objectFit: 'cover', transform: 'scaleX(-1)' }}
-        playsInline
-        muted
-      />
+      {cameraState === 'active' && (
+        <div className="flex gap-2 items-start">
+          {/* Live camera feed */}
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-[10px] text-slate-400 uppercase tracking-wide">Câmera</span>
+            <video
+              ref={videoRef}
+              className="rounded-lg border-2 border-slate-200 shadow-sm"
+              style={{ width: 160, height: 120, objectFit: 'cover', transform: 'scaleX(-1)' }}
+              playsInline
+              muted
+            />
+          </div>
+          {/* Debug mask — red pixels highlighted */}
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-[10px] text-slate-400 uppercase tracking-wide">Detecção</span>
+            <canvas
+              ref={debugCanvasRef}
+              className="rounded-lg border-2 border-rose-200 shadow-sm"
+              style={{ width: 160, height: 120, transform: 'scaleX(-1)' }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Video hidden when not active */}
+      {cameraState !== 'active' && (
+        <video ref={videoRef} className="hidden" playsInline muted />
+      )}
 
       {cameraState === 'active' && (
         <div className="flex items-center gap-1.5 -mt-1">
