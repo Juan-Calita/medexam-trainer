@@ -112,7 +112,7 @@ function Eye({ cx, cy, size, mousePos, containerRect, failedDirection, eyeSide, 
       const rawDy = mousePos.y - (cy);
       const angle = Math.atan2(rawDy, rawDx);
       const dist = Math.sqrt(rawDx * rawDx + rawDy * rawDy);
-      const clamped = Math.min(dist * 0.12, maxPupilTravel);
+      const clamped = Math.min(dist * 0.04, maxPupilTravel * 0.55);
       let targetX = Math.cos(angle) * clamped;
       let targetY = Math.sin(angle) * clamped;
 
