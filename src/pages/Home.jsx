@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Stethoscope, Grid3X3, Wind, Heart, GraduationCap, MapPin, Settings, Eye, Brain } from 'lucide-react';
+import { Stethoscope, Grid3X3, Wind, Heart, GraduationCap, MapPin, Settings, Eye, Brain, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import GameCard from '@/components/dashboard/GameCard';
 import StatsOverview from '@/components/dashboard/StatsOverview';
 
 export default function Home() {
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+  }, []);
+
   const { data: progressData = [] } = useQuery({
     queryKey: ['gameProgress'],
     queryFn: () => base44.entities.GameProgress.list('-created_date', 100),
@@ -61,13 +67,25 @@ export default function Home() {
       <header className="sticky top-0 z-40" style={{ backgroundColor: '#7c3aed' }}>
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-                <a 
-                  href="https://anamnes.chat"
-                  className="px-4 py-2 rounded-lg text-white font-semibold hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+            <div className="flex items-center gap-2">
+              <a 
+                href="https://anamnes.chat"
+                className="px-4 py-2 rounded-lg text-white font-semibold hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+              >
+                ← Voltar
+              </a>
+              {currentUser?.role === 'admin' && (
+                <Link
+                  to="/admin/analytics"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold hover:opacity-80 transition-opacity"
+                  style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
                 >
-                  ← Voltar
-                </a>
+                  <BarChart2 className="w-4 h-4" />
+                  Admin
+                </Link>
+              )}
+            </div>
                 <div className="flex items-center gap-3">
               <div className="p-3 rounded-lg shadow-lg" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
                 <img 
