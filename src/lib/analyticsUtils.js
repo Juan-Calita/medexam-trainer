@@ -43,7 +43,7 @@ export function groupProgressByUser(progressData, users) {
     }
   });
 
-  return Object.values(userMap);
+  return Object.values(userMap).sort((a, b) => (b.records?.length || 0) - (a.records?.length || 0));
 }
 
 // Aggregate stats for a set of records
