@@ -171,7 +171,7 @@ export default function AdminAnalytics() {
               <UserTable
                 users={usersWithRecords}
                 onSelectUser={setSelectedUser}
-                selectedUserId={activeUser?.email}
+                selectedUserId={activeUser?.isAnonymous ? `anon:${activeUser?.ip_address}` : activeUser?.email}
               />
             </div>
 
