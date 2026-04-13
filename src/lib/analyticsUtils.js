@@ -17,19 +17,27 @@ export const MODULE_COLORS = {
 
 export const ALL_MODULES = Object.keys(MODULE_LABELS);
 
-// Group progress records by user
+// Group progress records by user (logged) or IP (anonymous)
 export function groupProgressByUser(progressData, users) {
   const userMap = {};
   users.forEach(u => {
-    userMap[u.email] = { ...u, records: [] };
+    userMap[u.email] = { ...u, records: [], isAnonymous: false };
   });
 
   progressData.forEach(p => {
     const email = p.created_by;
-    if (!userMap[email]) {
-      userMap[email] = { email, full_name: email, role: 'user', records: [] };
+    if (email && userMap[email]) {
+      userMap[email].records.push(p);
+    } else if (email && !userMap[email]) {
+      userMap[email] = { email, full_name: email, role: 'user', records: [p], isAnonymous: false };
+    } else if (!email && p.ip_address) {
+      // Anonymous user — group by IP
+      const key = `anon:${p.ip_address}`;
+      if (!userMap[key]) {
+        userMap[key] = { email: null, full_name: `Anônimo (${p.ip_address})`, role: 'anonymous', ip_address: p.ip_address, records: [], isAnonymous: true };
+      }
+      userMap[key].records.push(p);
     }
-    userMap[email].records.push(p);
   });
 
   return Object.values(userMap);

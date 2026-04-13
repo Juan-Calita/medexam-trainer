@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getClientIPIfAnonymous } from '@/lib/getClientIP';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,15 +67,18 @@ export default function CardiacFociGame() {
       setGameState('completed');
       const correctCount = REGIONS.filter(region => placedLabels[region] === region).length;
       const accuracy = Math.round((correctCount / REGIONS.length) * 100);
-      saveProgressMutation.mutate({
-        game_type: 'cardiac_foci',
-        score,
-        total_possible: REGIONS.length * POINTS_PER_CORRECT,
-        accuracy,
-        completion_time: timeElapsed,
-        difficulty: 'medium',
-        mistakes,
-        completed: true
+      getClientIPIfAnonymous().then(ip => {
+        saveProgressMutation.mutate({
+          game_type: 'cardiac_foci',
+          score,
+          total_possible: REGIONS.length * POINTS_PER_CORRECT,
+          accuracy,
+          completion_time: timeElapsed,
+          difficulty: 'medium',
+          mistakes,
+          completed: true,
+          ...(ip ? { ip_address: ip } : {})
+        });
       });
     }
   }, [placedLabels, gameState]);

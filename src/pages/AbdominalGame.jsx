@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getClientIPIfAnonymous } from '@/lib/getClientIP';
 import { useIsTouchDevice } from '@/hooks/useIsTouchDevice';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
@@ -73,15 +74,18 @@ export default function AbdominalGame() {
     if (allPlaced || allRetriesUsed) {
       setGameState('completed');
       const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;
-      saveProgressMutation.mutate({
-        game_type: 'abdominal_regions',
-        score,
-        total_possible: ALL_LABELS.length * POINTS_PER_CORRECT,
-        accuracy,
-        completion_time: timeElapsed,
-        difficulty: 'easy',
-        mistakes,
-        completed: true
+      getClientIPIfAnonymous().then(ip => {
+        saveProgressMutation.mutate({
+          game_type: 'abdominal_regions',
+          score,
+          total_possible: ALL_LABELS.length * POINTS_PER_CORRECT,
+          accuracy,
+          completion_time: timeElapsed,
+          difficulty: 'easy',
+          mistakes,
+          completed: true,
+          ...(ip ? { ip_address: ip } : {})
+        });
       });
     }
   }, [placedLabels, retries]);

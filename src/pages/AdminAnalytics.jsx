@@ -6,6 +6,7 @@ import { ArrowLeft, Download, Users, Activity, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
 import UserTable from '@/components/admin/UserTable';
+import { Globe } from 'lucide-react';
 import AnalyticsCharts from '@/components/admin/AnalyticsCharts';
 import { groupProgressByUser, aggregateStats, statsByModule, weeklyStats } from '@/lib/analyticsUtils';
 import html2canvas from 'html2canvas';
@@ -181,8 +182,11 @@ export default function AdminAnalytics() {
                   {/* User header */}
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h2 className="text-xl font-bold text-slate-800">{activeUser.full_name || activeUser.email}</h2>
-                      <p className="text-sm text-slate-500">{activeUser.email} · {activeUser.records?.length || 0} jogos registrados</p>
+                      <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        {activeUser.isAnonymous && <Globe className="w-4 h-4 text-slate-400" />}
+                        {activeUser.full_name || activeUser.email}
+                      </h2>
+                      <p className="text-sm text-slate-500">{activeUser.isAnonymous ? `IP: ${activeUser.ip_address}` : activeUser.email} · {activeUser.records?.length || 0} jogos registrados</p>
                     </div>
                     <Button
                       onClick={generatePDF}

@@ -1,0 +1,71 @@
+{
+  "name": "GameProgress",
+  "type": "object",
+  "properties": {
+    "game_type": {
+      "type": "string",
+      "enum": [
+        "abdominal_regions",
+        "auscultation_pulmonar",
+        "auscultation_cardiaca",
+        "cardiac_foci"
+      ],
+      "description": "Type of game"
+    },
+    "score": {
+      "type": "number",
+      "description": "Points earned"
+    },
+    "total_possible": {
+      "type": "number",
+      "description": "Maximum possible points"
+    },
+    "accuracy": {
+      "type": "number",
+      "description": "Percentage accuracy"
+    },
+    "completion_time": {
+      "type": "number",
+      "description": "Time to complete in seconds"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "description": "Difficulty level"
+    },
+    "mistakes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string"
+          },
+          "user_answer": {
+            "type": "string"
+          },
+          "correct_answer": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "List of mistakes made"
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "IP address of the user (only for anonymous/non-logged users)"
+    }
+  },
+  "required": [
+    "game_type",
+    "score"
+  ]
+}

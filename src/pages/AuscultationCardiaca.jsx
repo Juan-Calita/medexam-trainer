@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { getClientIPIfAnonymous } from '@/lib/getClientIP';
 import { base44 } from '@/api/base44Client';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -114,16 +115,19 @@ export default function AuscultationCardiaca() {
     if (currentIndex >= QUESTIONS.length - 1) {
       setGameState('completed');
       const accuracy = Math.round((correctCount / QUESTIONS.length) * 100);
-      saveProgressMutation.mutate({
-        game_type: 'auscultation_cardiaca',
-        score,
-        total_possible: QUESTIONS.length * POINTS_PER_CORRECT + 
-          QUESTIONS.reduce((sum, q) => sum + BONUS_POINTS[q.difficulty], 0),
-        accuracy,
-        completion_time: timeElapsed,
-        difficulty: 'mixed',
-        mistakes,
-        completed: true
+      getClientIPIfAnonymous().then(ip => {
+        saveProgressMutation.mutate({
+          game_type: 'auscultation_cardiaca',
+          score,
+          total_possible: QUESTIONS.length * POINTS_PER_CORRECT + 
+            QUESTIONS.reduce((sum, q) => sum + BONUS_POINTS[q.difficulty], 0),
+          accuracy,
+          completion_time: timeElapsed,
+          difficulty: 'mixed',
+          mistakes,
+          completed: true,
+          ...(ip ? { ip_address: ip } : {})
+        });
       });
     } else {
       setCurrentIndex(prev => prev + 1);
