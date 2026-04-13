@@ -26,15 +26,18 @@ export function groupProgressByUser(progressData, users) {
 
   progressData.forEach(p => {
     const email = p.created_by;
-    if (email && userMap[email]) {
+    const isAnon = !email || email === 'anonymous';
+
+    if (!isAnon && userMap[email]) {
       userMap[email].records.push(p);
-    } else if (email && !userMap[email]) {
+    } else if (!isAnon && !userMap[email]) {
       userMap[email] = { email, full_name: email, role: 'user', records: [p], isAnonymous: false };
-    } else if (!email && p.ip_address) {
-      // Anonymous user — group by IP
-      const key = `anon:${p.ip_address}`;
+    } else {
+      // Anonymous user — group by IP if available, otherwise single 'anonymous' bucket
+      const key = p.ip_address ? `anon:${p.ip_address}` : 'anon:unknown';
+      const label = p.ip_address ? `Anônimo (${p.ip_address})` : 'Anônimo';
       if (!userMap[key]) {
-        userMap[key] = { email: null, full_name: `Anônimo (${p.ip_address})`, role: 'anonymous', ip_address: p.ip_address, records: [], isAnonymous: true };
+        userMap[key] = { email: null, full_name: label, role: 'anonymous', ip_address: p.ip_address || null, records: [], isAnonymous: true };
       }
       userMap[key].records.push(p);
     }
