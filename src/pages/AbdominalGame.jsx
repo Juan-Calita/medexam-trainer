@@ -68,6 +68,7 @@ export default function AbdominalGame() {
 
   // Check completion
   useEffect(() => {
+    if (ALL_LABELS.length === 0) return;
     const allPlaced = ALL_LABELS.every(label => placedLabels[label]);
     const allRetriesUsed = ALL_LABELS.every(label => placedLabels[label] || retries[label] === 0);
     
