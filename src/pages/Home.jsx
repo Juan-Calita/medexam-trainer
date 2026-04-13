@@ -17,8 +17,11 @@ export default function Home() {
   }, []);
 
   const { data: progressData = [] } = useQuery({
-    queryKey: ['gameProgress'],
-    queryFn: () => base44.entities.GameProgress.list('-created_date', 100),
+    queryKey: ['gameProgress', currentUser?.email],
+    queryFn: () => currentUser
+      ? base44.entities.GameProgress.filter({ created_by: currentUser.email }, '-created_date', 100)
+      : Promise.resolve([]),
+    enabled: currentUser !== null,
   });
 
   const abdominalStats = React.useMemo(() => {
