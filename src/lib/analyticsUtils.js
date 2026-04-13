@@ -6,6 +6,8 @@ export const MODULE_LABELS = {
   auscultation_pulmonar: 'Ausculta Pulmonar',
   auscultation_cardiaca: 'Ausculta Cardíaca',
   cardiac_foci: 'Focos Cardíacos',
+  extraocular: 'Musculatura Extraocular',
+  neuro_peripheral: 'Nervos Periféricos',
 };
 
 export const MODULE_COLORS = {
@@ -13,6 +15,8 @@ export const MODULE_COLORS = {
   auscultation_pulmonar: '#6366f1',
   auscultation_cardiaca: '#f43f5e',
   cardiac_foci: '#f97316',
+  extraocular: '#8b5cf6',
+  neuro_peripheral: '#06b6d4',
 };
 
 export const ALL_MODULES = Object.keys(MODULE_LABELS);

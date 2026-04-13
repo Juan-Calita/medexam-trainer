@@ -1,4 +1,7 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
+import { getClientIPIfAnonymous } from '@/lib/getClientIP';
+import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { CASES, LEVEL_CONFIG } from './caseDatabase';
@@ -27,6 +30,16 @@ export default function NeuroGameEngine({ level, onBackToMenu }) {
   const [totalCorrect, setTotalCorrect] = useState(0);
   const [attemptsLeft, setAttemptsLeft] = useState(config.attempts);
   const [lastResult, setLastResult] = useState(null); // { correct, answers }
+  const [timeElapsed, setTimeElapsed] = useState(0);
+
+  const saveProgressMutation = useMutation({
+    mutationFn: (data) => base44.entities.GameProgress.create(data),
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => setTimeElapsed(t => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const currentCase = queue[caseIndex % queue.length];
 
@@ -56,6 +69,24 @@ export default function NeuroGameEngine({ level, onBackToMenu }) {
     setLastResult(null);
   }, [config.attempts]);
 
+  const handleBackToMenu = useCallback(() => {
+    if (totalAnswered > 0) {
+      getClientIPIfAnonymous().then(ip => {
+        saveProgressMutation.mutate({
+          game_type: 'neuro_peripheral',
+          score,
+          total_possible: totalAnswered * 100,
+          accuracy: Math.round((totalCorrect / totalAnswered) * 100),
+          completion_time: timeElapsed,
+          difficulty: 'mixed',
+          completed: true,
+          ...(ip ? { ip_address: ip } : {})
+        });
+      });
+    }
+    onBackToMenu();
+  }, [totalAnswered, totalCorrect, score, timeElapsed, level, onBackToMenu]);
+
   const accuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
 
   const renderDiagram = () => {
@@ -80,7 +111,7 @@ export default function NeuroGameEngine({ level, onBackToMenu }) {
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={onBackToMenu}
+              onClick={handleBackToMenu}
               className="flex items-center gap-1.5 text-white/90 hover:text-white text-sm font-semibold transition-colors"
             >
               ← Níveis

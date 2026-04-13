@@ -8,7 +8,9 @@
         "abdominal_regions",
         "auscultation_pulmonar",
         "auscultation_cardiaca",
-        "cardiac_foci"
+        "cardiac_foci",
+        "extraocular",
+        "neuro_peripheral"
       ],
       "description": "Type of game"
     },
@@ -33,7 +35,8 @@
       "enum": [
         "easy",
         "medium",
-        "hard"
+        "hard",
+        "mixed"
       ],
       "description": "Difficulty level"
     },

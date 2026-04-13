@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { base44 } from '@/api/base44Client';
+import { getClientIPIfAnonymous } from '@/lib/getClientIP';
+import { useMutation } from '@tanstack/react-query';
 import EyeCanvas from '@/components/extraocular/EyeCanvas';
 import QuestionPanel from '@/components/extraocular/QuestionPanel';
 import GameHeader from '@/components/extraocular/ExtraocularHeader';
@@ -21,7 +24,21 @@ export default function ExtraocularGame() {
   const [muscleHistory, setMuscleHistory] = useState({});
   const [inputMode, setInputMode] = useState('mouse'); // 'mouse' | 'camera'
   const [showCameraPanel, setShowCameraPanel] = useState(false);
+  const [totalAnswered, setTotalAnswered] = useState(0);
+  const [totalCorrect, setTotalCorrect] = useState(0);
+  const [timeElapsed, setTimeElapsed] = useState(0);
   const containerRef = useRef(null);
+
+  const saveProgressMutation = useMutation({
+    mutationFn: (data) => base44.entities.GameProgress.create(data),
+  });
+
+  // Timer
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+    const timer = setInterval(() => setTimeElapsed(t => t + 1), 1000);
+    return () => clearInterval(timer);
+  }, [gameState]);
 
   const DIFFICULTY_LEVELS = ['basic', 'intermediate', 'advanced'];
   const STREAK_TO_ADVANCE = 3;
@@ -68,6 +85,7 @@ export default function ExtraocularGame() {
     setFeedback({ correct, muscle: impairedMuscle, chosenId: muscleId });
     if (correct) {
       setScore((s) => s + 1);
+      setTotalCorrect(c => c + 1);
       setCorrectStreak((prev) => {
         const newStreak = prev + 1;
         if (newStreak >= STREAK_TO_ADVANCE) {
@@ -82,8 +100,28 @@ export default function ExtraocularGame() {
     } else {
       setCorrectStreak(0);
     }
+    setTotalAnswered(t => {
+      const newTotal = t + 1;
+      // Save every 10 rounds
+      if (newTotal > 0 && newTotal % 10 === 0) {
+        const acc = Math.round(((totalCorrect + (muscleId === impairedMuscle.id ? 1 : 0)) / newTotal) * 100);
+        getClientIPIfAnonymous().then(ip => {
+          saveProgressMutation.mutate({
+            game_type: 'extraocular',
+            score,
+            total_possible: newTotal * 1,
+            accuracy: acc,
+            completion_time: timeElapsed,
+            difficulty,
+            completed: false,
+            ...(ip ? { ip_address: ip } : {})
+          });
+        });
+      }
+      return newTotal;
+    });
     setGameState('feedback');
-  }, [gameState, impairedMuscle, difficulty, correctStreak]);
+  }, [gameState, impairedMuscle, difficulty, correctStreak, score, totalCorrect, timeElapsed]);
 
   const handleNext = useCallback(() => {
     startNewRound();
