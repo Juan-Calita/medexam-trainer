@@ -38,7 +38,7 @@ export default function AdminAnalytics() {
 
   const { data: progressData = [], isLoading: loadingProgress, refetch } = useQuery({
     queryKey: ['adminProgress'],
-    queryFn: () => base44.entities.GameProgress.list('-created_date', 500),
+    queryFn: () => base44.entities.GameProgress.list('-created_date', 2000),
   });
 
   const usersWithRecords = useMemo(() => {
