@@ -1,6 +1,6 @@
 import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, PerspectiveCamera, Environment } from '@react-three/drei';
+import { useGLTF, PerspectiveCamera } from '@react-three/drei';
 
 const DORSO_URL    = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/dorso.glb';
 const OLHO_URL     = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/olho.glb';
@@ -107,17 +107,6 @@ function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState
       <Muscles side="right" />
       <Muscles side="left" />
     </>
-  );
-}
-
-function LoadingFallback() {
-  return (
-    <div className="flex items-center justify-center h-full w-full text-slate-500">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm">Carregando modelos 3D...</span>
-      </div>
-    </div>
   );
 }
 
