@@ -1,6 +1,6 @@
 import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, PerspectiveCamera } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 
 const DORSO_URL    = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/dorso.glb';
 const OLHO_URL     = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/olho.glb';
@@ -90,12 +90,22 @@ function Muscles({ side }) {
   return <primitive object={cloned} position={MUSC_POS[side]} />;
 }
 
+function CameraSetup() {
+  const { camera } = useThree();
+  React.useEffect(() => {
+    camera.position.set(0, 0.25, 1.8);
+    camera.fov = 35;
+    camera.updateProjectionMatrix();
+  }, [camera]);
+  return null;
+}
+
 function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState }) {
   const active = gameState === 'playing' || gameState === 'feedback';
   const failedDir = active && impairedMuscle ? impairedMuscle.failedDirection : null;
   return (
     <>
-      <PerspectiveCamera makeDefault position={[0, 0.25, 1.8]} fov={35} />
+      <CameraSetup />
       <ambientLight intensity={0.7} />
       <directionalLight position={[2, 3, 2]} intensity={0.9} />
       <directionalLight position={[-2, 1, 2]} intensity={0.4} />
