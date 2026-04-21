@@ -1,7 +1,6 @@
 import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, PerspectiveCamera } from '@react-three/drei';
-import * as THREE from 'three';
+import { useGLTF, PerspectiveCamera, Environment } from '@react-three/drei';
 
 const DORSO_URL    = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/dorso.glb';
 const OLHO_URL     = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/olho.glb';
@@ -11,7 +10,7 @@ useGLTF.preload(DORSO_URL);
 useGLTF.preload(OLHO_URL);
 useGLTF.preload(MUSCULOS_URL);
 
-const MAX_ROT = 0.44; // ~25 degrees
+const MAX_ROT = 0.44;
 const OLHO_POS = {
   right: [-0.152, 0.190, 0.664],
   left:  [ 0.152, 0.190, 0.664],
@@ -56,7 +55,7 @@ function Skull() {
   return <primitive object={scene} />;
 }
 
-function Eye({ side, mousePos, containerSize, failedDirection, showPtose }) {
+function Eye({ side, mousePos, containerSize, failedDirection }) {
   const { scene } = useGLTF(OLHO_URL);
   const cloned = useMemo(() => scene.clone(), [scene]);
   const groupRef = useRef();
@@ -67,8 +66,10 @@ function Eye({ side, mousePos, containerSize, failedDirection, showPtose }) {
     const { width, height } = containerSize;
     const nx = width  > 0 ? (mousePos.x - width  / 2) / (width  / 2) : 0;
     const ny = height > 0 ? (mousePos.y - height / 2) / (height / 2) : 0;
-    let tYaw   =  Math.max(-1, Math.min(1, nx)) * MAX_ROT;
-    let tPitch = -Math.max(-1, Math.min(1, ny)) * MAX_ROT;
+    const cx = Math.max(-1, Math.min(1, nx));
+    const cy = Math.max(-1, Math.min(1, ny));
+    let tYaw   =  cx * MAX_ROT;
+    let tPitch = -cy * MAX_ROT;
     const clamped = applyImpairment3D(tYaw, tPitch, failedDirection, side);
     rotRef.current.yaw   += (clamped.yaw   - rotRef.current.yaw)   * 0.15;
     rotRef.current.pitch += (clamped.pitch - rotRef.current.pitch) * 0.15;
@@ -79,12 +80,6 @@ function Eye({ side, mousePos, containerSize, failedDirection, showPtose }) {
   return (
     <group position={OLHO_POS[side]} ref={groupRef}>
       <primitive object={cloned} />
-      {showPtose && (
-        <mesh position={[0, 0.08, 0.02]}>
-          <boxGeometry args={[0.3, 0.18, 0.28]} />
-          <meshStandardMaterial color="#d4a373" transparent opacity={0.85} />
-        </mesh>
-      )}
     </group>
   );
 }
@@ -98,20 +93,17 @@ function Muscles({ side }) {
 function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState }) {
   const active = gameState === 'playing' || gameState === 'feedback';
   const failedDir = active && impairedMuscle ? impairedMuscle.failedDirection : null;
-  const hasPtose = active && (impairedMuscle?.visualHints?.includes('ptose') ?? false);
   return (
     <>
       <PerspectiveCamera makeDefault position={[0, 0.25, 1.8]} fov={35} />
-      <ambientLight intensity={0.65} />
-      <directionalLight position={[2, 3, 2]} intensity={0.8} />
-      <directionalLight position={[-2, 1, 2]} intensity={0.3} />
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[2, 3, 2]} intensity={0.9} />
+      <directionalLight position={[-2, 1, 2]} intensity={0.4} />
       <Skull />
       <Eye side="right" mousePos={mousePos} containerSize={containerSize}
-           failedDirection={impairedEye === 'right' ? failedDir : null}
-           showPtose={impairedEye === 'right' && hasPtose} />
+           failedDirection={impairedEye === 'right' ? failedDir : null} />
       <Eye side="left"  mousePos={mousePos} containerSize={containerSize}
-           failedDirection={impairedEye === 'left' ? failedDir : null}
-           showPtose={impairedEye === 'left' && hasPtose} />
+           failedDirection={impairedEye === 'left' ? failedDir : null} />
       <Muscles side="right" />
       <Muscles side="left" />
     </>
@@ -120,10 +112,10 @@ function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState
 
 function LoadingFallback() {
   return (
-    <div className="flex items-center justify-center h-full text-slate-500">
+    <div className="flex items-center justify-center h-full w-full text-slate-500">
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
-        <span className="text-sm">Carregando modelo 3D...</span>
+        <span className="text-sm">Carregando modelos 3D...</span>
       </div>
     </div>
   );
@@ -146,7 +138,7 @@ export default function EyeCanvas3D({ mousePos, containerRef, impairedMuscle, im
 
   return (
     <div style={{ width: '100%', height: canvasHeight }}
-         className="rounded-xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-200">
+         className="rounded-xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-200 relative">
       <Canvas dpr={[1, 2]} frameloop="always" gl={{ alpha: true, antialias: true }}
               style={{ width: '100%', height: '100%' }}>
         <Suspense fallback={null}>
