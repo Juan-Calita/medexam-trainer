@@ -1,7 +1,7 @@
 import React, { Suspense, useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, OrbitControls } from '@react-three/drei';
-import * as THREE from 'three';
+import { useGLTF } from '@react-three/drei';
+import { SkeletonUtils } from 'three-stdlib';
 
 const SKULL_URL = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/dorso.glb';
 const OLHO_URL  = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/olho.glb';
@@ -15,21 +15,16 @@ const OLHO_POS = {
   right: [-0.152, 0.190, 0.664],
   left:  [ 0.152, 0.190, 0.664],
 };
-const MUSC_POS = {
-  right: [-0.152, 0.190, 0.629],
-  left:  [ 0.152, 0.190, 0.629],
+const MUSC_OFFSET = {
+  right: [-0.152 - -0.152, 0.190 - 0.190, 0.629 - 0.664],
+  left:  [ 0.152 -  0.152, 0.190 - 0.190, 0.629 - 0.664],
 };
 
-const MAX_ROT = 0.44; // ~25°
+const MAX_ROT = 0.44;
 
 function applyImpairment3D(yaw, pitch, failedDirection, eyeSide) {
   let y = yaw;
   let x = pitch;
-
-  // Convention (frontal view, like EyeCanvas.jsx):
-  // right eye: temporal = negative yaw (left on screen), nasal = positive yaw
-  // left  eye: temporal = positive yaw (right on screen), nasal = negative yaw
-  // pitch up = negative x (three.js), pitch down = positive x
 
   switch (failedDirection) {
     case 'abduction':
@@ -55,11 +50,9 @@ function applyImpairment3D(yaw, pitch, failedDirection, eyeSide) {
       if (eyeSide === 'left'  && y < 0 && x < 0) x = Math.max(x, -0.05);
       break;
     case 'cn3_complete':
-      // down-and-out: clamp nasal + elevation
       if (eyeSide === 'right') y = Math.min(y, 0.05);
       else                      y = Math.max(y, -0.05);
-      x = Math.min(x, 0.06); // no elevation (up = negative, so limit minimum below)
-      x = Math.max(x, -0.06); // slight down allowed
+      x = Math.min(x, 0.06);
       break;
     default:
       break;
@@ -67,57 +60,49 @@ function applyImpairment3D(yaw, pitch, failedDirection, eyeSide) {
   return { y, x };
 }
 
-function EyeGroup({ side, olhoScene, muscScene, mousePos, containerSize, failedDirection, gameState, showHint }) {
+function EyeGroup({ side, olhoScene, muscScene, mousePos, containerSize, failedDirection, gameState, showPtose }) {
   const groupRef = useRef();
-  const targetRot = useRef({ x: 0, y: 0 });
+  const rotRef = useRef({ x: 0, y: 0 });
 
-  // Clone scenes once per eye
-  const olhoClone = useMemo(() => olhoScene.clone(), [olhoScene]);
-  const muscClone = useMemo(() => muscScene.clone(), [muscScene]);
+  const olhoClone = useMemo(() => SkeletonUtils.clone(olhoScene), [olhoScene]);
+  const muscClone = useMemo(() => SkeletonUtils.clone(muscScene), [muscScene]);
 
   useFrame(() => {
     if (!groupRef.current) return;
-
     const { width, height } = containerSize;
     const nx = width  > 0 ? (mousePos.x - width  / 2) / (width  / 2) : 0;
     const ny = height > 0 ? (mousePos.y - height / 2) / (height / 2) : 0;
 
-    let targetYaw   =  nx * MAX_ROT;
-    let targetPitch = -ny * MAX_ROT; // invert Y: mouse up → eye up
+    let tYaw   =  nx * MAX_ROT;
+    let tPitch = -ny * MAX_ROT;
 
     const fd = (gameState === 'playing' || gameState === 'feedback') ? failedDirection : null;
     if (fd) {
-      const clamped = applyImpairment3D(targetYaw, targetPitch, fd, side);
-      targetYaw   = clamped.y;
-      targetPitch = clamped.x;
+      const c = applyImpairment3D(tYaw, tPitch, fd, side);
+      tYaw   = c.y;
+      tPitch = c.x;
     }
 
-    // cn3 resting position: down-and-out
     if (fd === 'cn3_complete') {
-      const restYaw   = side === 'right' ? -MAX_ROT * 0.5 : MAX_ROT * 0.5;
-      const restPitch =  MAX_ROT * 0.3;
-      targetYaw   = restYaw   + (targetYaw   - restYaw)   * 0.15;
-      targetPitch = restPitch + (targetPitch - restPitch) * 0.15;
+      const restY = side === 'right' ? -MAX_ROT * 0.5 : MAX_ROT * 0.5;
+      const restX = MAX_ROT * 0.3;
+      tYaw   = restY + (tYaw   - restY) * 0.15;
+      tPitch = restX + (tPitch - restX) * 0.15;
     }
 
-    targetRot.current.x += (targetPitch - targetRot.current.x) * 0.12;
-    targetRot.current.y += (targetYaw   - targetRot.current.y) * 0.12;
+    rotRef.current.x += (tPitch - rotRef.current.x) * 0.12;
+    rotRef.current.y += (tYaw   - rotRef.current.y) * 0.12;
 
-    groupRef.current.rotation.x = targetRot.current.x;
-    groupRef.current.rotation.y = targetRot.current.y;
+    groupRef.current.rotation.x = rotRef.current.x;
+    groupRef.current.rotation.y = rotRef.current.y;
   });
 
   return (
     <group ref={groupRef} position={OLHO_POS[side]}>
       <primitive object={olhoClone} />
-      <primitive object={muscClone} position={[
-        MUSC_POS[side][0] - OLHO_POS[side][0],
-        MUSC_POS[side][1] - OLHO_POS[side][1],
-        MUSC_POS[side][2] - OLHO_POS[side][2],
-      ]} />
-      {/* Ptose overlay for CN III */}
-      {showHint && (gameState === 'playing' || gameState === 'feedback') && (
-        <mesh position={[0, 0.012, 0.01]}>
+      <primitive object={muscClone} position={[0, 0, MUSC_OFFSET.right[2]]} />
+      {showPtose && (gameState === 'playing' || gameState === 'feedback') && (
+        <mesh position={[0, 0.012, 0.012]}>
           <boxGeometry args={[0.055, 0.025, 0.002]} />
           <meshBasicMaterial color="#B48C64" transparent opacity={0.82} />
         </mesh>
@@ -131,18 +116,18 @@ function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState
   const { scene: olhoScene }  = useGLTF(OLHO_URL);
   const { scene: muscScene }  = useGLTF(MUSC_URL);
 
-  const failedDir = impairedMuscle ? impairedMuscle.failedDirection : null;
-  const hasPtose  = impairedMuscle?.visualHints?.includes('ptose') ?? false;
+  const skullClone = useMemo(() => SkeletonUtils.clone(skullScene), [skullScene]);
+
+  const failedDir = (gameState === 'playing' || gameState === 'feedback') && impairedMuscle
+    ? impairedMuscle.failedDirection
+    : null;
+  const hasPtose = impairedMuscle?.visualHints?.includes('ptose') ?? false;
 
   return (
     <>
       <ambientLight intensity={0.6} />
       <directionalLight position={[2, 3, 2]} intensity={0.8} />
-
-      {/* Skull — static */}
-      <primitive object={skullScene} position={[0, 0, 0]} />
-
-      {/* Right eye (patient's right = left side of screen) */}
+      <primitive object={skullClone} position={[0, 0, 0]} />
       <EyeGroup
         side="right"
         olhoScene={olhoScene}
@@ -151,10 +136,8 @@ function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState
         containerSize={containerSize}
         failedDirection={impairedEye === 'right' ? failedDir : null}
         gameState={gameState}
-        showHint={impairedEye === 'right' && hasPtose}
+        showPtose={impairedEye === 'right' && hasPtose}
       />
-
-      {/* Left eye */}
       <EyeGroup
         side="left"
         olhoScene={olhoScene}
@@ -163,7 +146,7 @@ function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState
         containerSize={containerSize}
         failedDirection={impairedEye === 'left' ? failedDir : null}
         gameState={gameState}
-        showHint={impairedEye === 'left' && hasPtose}
+        showPtose={impairedEye === 'left' && hasPtose}
       />
     </>
   );
@@ -178,11 +161,11 @@ function LoadingSpinner() {
   );
 }
 
-export default function EyeCanvas3D({ mousePos, containerRef, impairedMuscle, impairedEye = 'right', gameState, inputMode }) {
-  const [containerSize, setContainerSize] = React.useState({ width: 400, height: 320 });
-  const [hasError, setHasError] = React.useState(false);
+export default function EyeCanvas3D({ mousePos, containerRef, impairedMuscle, impairedEye = 'right', gameState }) {
+  const [containerSize, setContainerSize] = useState({ width: 400, height: 400 });
+  const [hasError, setHasError] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const el = containerRef?.current;
     if (!el) return;
     const update = () => setContainerSize({ width: el.offsetWidth, height: el.offsetHeight });
@@ -210,8 +193,7 @@ export default function EyeCanvas3D({ mousePos, containerRef, impairedMuscle, im
         gl={{ alpha: true, antialias: true }}
         camera={{ position: [0, 0.2, 1.2], fov: 45 }}
         onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
-        style={{ width: '100%', height: '100%' }}
-        onError={() => setHasError(true)}
+        style={{ width: '100%', height: '100%', background: 'transparent' }}
       >
         <Suspense fallback={null}>
           <Scene
