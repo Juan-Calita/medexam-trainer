@@ -1,21 +1,18 @@
 import React, { Suspense, useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 // ---------------------------------------------------------------------------
-// Model URLs — replace with your actual hosted GLB files
+// Fallback 3D scene — no external GLB files needed.
+// Renders two stylised eyeball spheres that follow the mouse, with the same
+// impairment logic as the 2D canvas.
 // ---------------------------------------------------------------------------
-const SKULL_URL = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/dorso.glb';
-const OLHO_URL  = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/olho.glb';
-const MUSC_URL  = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/musculos.glb';
 
 const MAX_ROT = 0.44;
 
-// Eye world positions inside the skull model
 const EYE_POSITIONS = {
-  right: new THREE.Vector3(-0.152, 0.190, 0.664),
-  left:  new THREE.Vector3( 0.152, 0.190, 0.664),
+  right: [-0.55, 0, 0],
+  left:  [ 0.55, 0, 0],
 };
 
 function applyImpairment3D(yaw, pitch, failedDirection, eyeSide) {
@@ -47,29 +44,9 @@ function applyImpairment3D(yaw, pitch, failedDirection, eyeSide) {
   return { y, x };
 }
 
-// Deep-clone a THREE.Object3D without sharing geometries/materials
-function deepClone(obj) {
-  const clone = obj.clone(true);
-  clone.traverse((node) => {
-    if (node.isMesh) {
-      node.geometry = node.geometry.clone();
-      if (Array.isArray(node.material)) {
-        node.material = node.material.map(m => m.clone());
-      } else if (node.material) {
-        node.material = node.material.clone();
-      }
-    }
-  });
-  return clone;
-}
-
-function EyeGroup({ side, olhoScene, muscScene, mousePos, containerSize, failedDirection, showPtose }) {
+function EyeBall({ side, mousePos, containerSize, failedDirection, showPtose }) {
   const groupRef = useRef();
-  const rotRef = useRef({ x: 0, y: 0 });
-
-  // Clone once when scenes are loaded
-  const olhoClone = useMemo(() => olhoScene ? deepClone(olhoScene) : null, [olhoScene]);
-  const muscClone  = useMemo(() => muscScene  ? deepClone(muscScene)  : null, [muscScene]);
+  const rotRef   = useRef({ x: 0, y: 0 });
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -95,7 +72,6 @@ function EyeGroup({ side, olhoScene, muscScene, mousePos, containerSize, failedD
 
     rotRef.current.x += (tPitch - rotRef.current.x) * 0.12;
     rotRef.current.y += (tYaw   - rotRef.current.y) * 0.12;
-
     groupRef.current.rotation.x = rotRef.current.x;
     groupRef.current.rotation.y = rotRef.current.y;
   });
@@ -103,13 +79,36 @@ function EyeGroup({ side, olhoScene, muscScene, mousePos, containerSize, failedD
   const pos = EYE_POSITIONS[side];
 
   return (
-    <group ref={groupRef} position={[pos.x, pos.y, pos.z]}>
-      {olhoClone && <primitive object={olhoClone} />}
-      {muscClone  && <primitive object={muscClone}  />}
+    <group position={pos}>
+      {/* Sclera */}
+      <mesh>
+        <sphereGeometry args={[0.38, 32, 32]} />
+        <meshStandardMaterial color="#f8f8f5" roughness={0.3} />
+      </mesh>
+
+      {/* Iris */}
+      <group ref={groupRef}>
+        <mesh position={[0, 0, 0.32]}>
+          <circleGeometry args={[0.18, 32]} />
+          <meshStandardMaterial color="#2563eb" roughness={0.4} />
+        </mesh>
+        {/* Pupil */}
+        <mesh position={[0, 0, 0.325]}>
+          <circleGeometry args={[0.09, 32]} />
+          <meshStandardMaterial color="#111827" />
+        </mesh>
+        {/* Specular highlight */}
+        <mesh position={[-0.04, 0.05, 0.33]}>
+          <circleGeometry args={[0.025, 16]} />
+          <meshStandardMaterial color="white" emissive="white" emissiveIntensity={1} />
+        </mesh>
+      </group>
+
+      {/* Ptose lid overlay */}
       {showPtose && (
-        <mesh position={[0, 0.012, 0.012]}>
-          <boxGeometry args={[0.055, 0.025, 0.002]} />
-          <meshBasicMaterial color="#B48C64" transparent opacity={0.82} />
+        <mesh position={[0, 0.22, 0.26]}>
+          <boxGeometry args={[0.78, 0.32, 0.05]} />
+          <meshStandardMaterial color="#c8a882" transparent opacity={0.88} />
         </mesh>
       )}
     </group>
@@ -117,34 +116,31 @@ function EyeGroup({ side, olhoScene, muscScene, mousePos, containerSize, failedD
 }
 
 function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState }) {
-  const { scene: skullScene } = useGLTF(SKULL_URL);
-  const { scene: olhoScene }  = useGLTF(OLHO_URL);
-  const { scene: muscScene }  = useGLTF(MUSC_URL);
-
-  const skullClone = useMemo(() => skullScene ? deepClone(skullScene) : null, [skullScene]);
-
-  const active = gameState === 'playing' || gameState === 'feedback';
+  const active    = gameState === 'playing' || gameState === 'feedback';
   const failedDir = active && impairedMuscle ? impairedMuscle.failedDirection : null;
   const hasPtose  = active && (impairedMuscle?.visualHints?.includes('ptose') ?? false);
 
   return (
     <>
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[2, 3, 2]} intensity={0.8} />
-      {skullClone && <primitive object={skullClone} />}
-      <EyeGroup
+      <ambientLight intensity={0.7} />
+      <directionalLight position={[3, 4, 3]} intensity={0.8} />
+      <directionalLight position={[-2, -1, 2]} intensity={0.3} />
+
+      {/* Simple face sphere */}
+      <mesh position={[0, 0, -0.45]}>
+        <sphereGeometry args={[1.1, 48, 48]} />
+        <meshStandardMaterial color="#f5deb3" roughness={0.8} />
+      </mesh>
+
+      <EyeBall
         side="right"
-        olhoScene={olhoScene}
-        muscScene={muscScene}
         mousePos={mousePos}
         containerSize={containerSize}
         failedDirection={impairedEye === 'right' ? failedDir : null}
         showPtose={impairedEye === 'right' && hasPtose}
       />
-      <EyeGroup
+      <EyeBall
         side="left"
-        olhoScene={olhoScene}
-        muscScene={muscScene}
         mousePos={mousePos}
         containerSize={containerSize}
         failedDirection={impairedEye === 'left' ? failedDir : null}
@@ -152,15 +148,6 @@ function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState
       />
     </>
   );
-}
-
-class ErrorBoundary extends React.Component {
-  constructor(props) { super(props); this.state = { hasError: false }; }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  render() {
-    if (this.state.hasError) return this.props.fallback;
-    return this.props.children;
-  }
 }
 
 export default function EyeCanvas3D({ mousePos, containerRef, impairedMuscle, impairedEye = 'right', gameState }) {
@@ -176,34 +163,24 @@ export default function EyeCanvas3D({ mousePos, containerRef, impairedMuscle, im
     return () => ro.disconnect();
   }, [containerRef]);
 
-  const canvasHeight = containerSize.width < 640 ? 320 : 480;
-
-  const fallback = (
-    <div className="flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 text-sm" style={{ height: canvasHeight }}>
-      Modelo 3D indisponível
-    </div>
-  );
+  const canvasHeight = containerSize.width < 640 ? 300 : 420;
 
   return (
-    <ErrorBoundary fallback={fallback}>
-      <div style={{ width: '100%', height: canvasHeight }} className="rounded-xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200">
-        <Canvas
-          dpr={[1, 2]}
-          frameloop="always"
-          camera={{ position: [0, 0.2, 1.2], fov: 45 }}
-          style={{ width: '100%', height: '100%' }}
-        >
-          <Suspense fallback={null}>
-            <Scene
-              mousePos={mousePos}
-              containerSize={{ width: containerSize.width, height: canvasHeight }}
-              impairedMuscle={impairedMuscle}
-              impairedEye={impairedEye}
-              gameState={gameState}
-            />
-          </Suspense>
-        </Canvas>
-      </div>
-    </ErrorBoundary>
+    <div style={{ width: '100%', height: canvasHeight }} className="rounded-xl overflow-hidden bg-gradient-to-b from-slate-800 to-slate-900">
+      <Canvas
+        dpr={[1, 2]}
+        frameloop="always"
+        camera={{ position: [0, 0, 3.2], fov: 45 }}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <Scene
+          mousePos={mousePos}
+          containerSize={{ width: containerSize.width, height: canvasHeight }}
+          impairedMuscle={impairedMuscle}
+          impairedEye={impairedEye}
+          gameState={gameState}
+        />
+      </Canvas>
+    </div>
   );
 }
