@@ -8,7 +8,8 @@ import GameHeader from '@/components/extraocular/ExtraocularHeader';
 import FeedbackPopup from '@/components/extraocular/FeedbackPopup';
 import PenTracker from '@/components/extraocular/PenTracker';
 import { MUSCLES, getMusclesForDifficulty, getImpairedMovement } from '@/components/extraocular/muscleData';
-import { Mouse, Camera } from 'lucide-react';
+import { Mouse, Camera, Square, Box } from 'lucide-react';
+import EyeCanvas3D from '@/components/extraocular/EyeCanvas3D';
 
 export default function ExtraocularGame() {
   const [difficulty, setDifficulty] = useState('basic');
@@ -23,6 +24,7 @@ export default function ExtraocularGame() {
   const [correctStreak, setCorrectStreak] = useState(0);
   const [muscleHistory, setMuscleHistory] = useState({});
   const [inputMode, setInputMode] = useState('mouse'); // 'mouse' | 'camera'
+  const [viewMode, setViewMode] = useState('2d'); // '2d' | '3d'
   const [showCameraPanel, setShowCameraPanel] = useState(false);
   const [totalAnswered, setTotalAnswered] = useState(0);
   const [totalCorrect, setTotalCorrect] = useState(0);
@@ -139,13 +141,21 @@ export default function ExtraocularGame() {
       <GameHeader score={score} round={round} difficulty={difficulty} setDifficulty={setDifficulty} gameState={gameState} />
 
       {/* Mode selector */}
-      {/* Beta warning badge */}
-      {inputMode === 'camera' && (
+      {/* Beta warning badges */}
+      <div className="fixed top-24 right-4 z-50 flex flex-col gap-2 max-w-[220px]">
+        {inputMode === 'camera' && (
         <div className="fixed top-24 right-4 z-50 flex items-start gap-2 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-medium px-3 py-2 rounded-lg shadow-sm max-w-[220px]">
           <span className="text-base mt-0.5">🧪</span>
           <span><strong>Modo teste:</strong> ainda em desenvolvimento, pode haver irregularidades. Recalibragens durante o uso podem ser necessárias.</span>
         </div>
-      )}
+        )}
+        {viewMode === '3d' && (
+          <div className="flex items-start gap-2 bg-indigo-50 border border-indigo-300 text-indigo-800 text-xs font-medium px-3 py-2 rounded-lg shadow-sm">
+            <span className="text-base mt-0.5">🎮</span>
+            <span><strong>Modo 3D beta:</strong> visual em desenvolvimento. A mecânica e a resposta correta seguem a mesma lógica do 2D.</span>
+          </div>
+        )}
+      </div>
 
       <div className="flex items-center gap-2 mt-6 bg-white rounded-full p-1 shadow-sm border border-slate-200">
         <button
@@ -165,15 +175,49 @@ export default function ExtraocularGame() {
         </button>
       </div>
 
+      {/* 2D / 3D toggle */}
+      <div className="flex items-center gap-2 mt-2 bg-white rounded-full p-1 shadow-sm border border-slate-200">
+        <button
+          onClick={() => setViewMode('2d')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            viewMode === '2d' ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Square className="w-4 h-4" />
+          2D
+        </button>
+        <button
+          onClick={() => setViewMode('3d')}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            viewMode === '3d' ? 'bg-gradient-to-r from-cyan-600 to-cyan-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Box className="w-4 h-4" />
+          3D Beta
+        </button>
+      </div>
+
       {/* Face + Eyes */}
       <div className="flex flex-col items-center mt-4 w-full max-w-2xl px-4">
-        <EyeCanvas
-          mousePos={mousePos}
-          containerRef={containerRef}
-          impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
-          impairedEye={impairedEye}
-          gameState={gameState}
-          inputMode={inputMode} />
+        {viewMode === '2d' ? (
+          <EyeCanvas
+            mousePos={mousePos}
+            containerRef={containerRef}
+            impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
+            impairedEye={impairedEye}
+            gameState={gameState}
+            inputMode={inputMode}
+          />
+        ) : (
+          <EyeCanvas3D
+            mousePos={mousePos}
+            containerRef={containerRef}
+            impairedMuscle={gameState === 'playing' || gameState === 'feedback' ? impairedMuscle : null}
+            impairedEye={impairedEye}
+            gameState={gameState}
+            inputMode={inputMode}
+          />
+        )}
         
 
         {/* Camera tracker — always mounted when camera mode, visibility toggled via CSS */}
