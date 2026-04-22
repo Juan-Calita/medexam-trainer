@@ -1,6 +1,7 @@
 import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 const DORSO_URL    = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/dorso.glb';
 const OLHO_URL     = 'https://cdn.jsdelivr.net/gh/Juan-Calita/medexam-trainer@main/models/olho.glb';
@@ -50,19 +51,31 @@ function applyImpairment3D(yaw, pitch, failedDirection, eyeSide) {
   return { yaw: y, pitch: p };
 }
 
+function CameraSetup() {
+  const { camera } = useThree();
+  useEffect(() => {
+    camera.position.set(0, 0.25, 1.8);
+    camera.fov = 35;
+    camera.updateProjectionMatrix();
+  }, [camera]);
+  return null;
+}
+
 function Skull() {
-  const { scene } = useGLTF(DORSO_URL);
-  return <primitive object={scene} />;
+  const gltf = useGLTF(DORSO_URL);
+  const cloned = useMemo(() => gltf.scene ? gltf.scene.clone() : null, [gltf.scene]);
+  if (!cloned) return null;
+  return <primitive object={cloned} />;
 }
 
 function Eye({ side, mousePos, containerSize, failedDirection }) {
-  const { scene } = useGLTF(OLHO_URL);
-  const cloned = useMemo(() => scene.clone(), [scene]);
+  const gltf = useGLTF(OLHO_URL);
+  const cloned = useMemo(() => gltf.scene ? gltf.scene.clone() : null, [gltf.scene]);
   const groupRef = useRef();
   const rotRef = useRef({ yaw: 0, pitch: 0 });
 
   useFrame(() => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || !cloned) return;
     const { width, height } = containerSize;
     const nx = width  > 0 ? (mousePos.x - width  / 2) / (width  / 2) : 0;
     const ny = height > 0 ? (mousePos.y - height / 2) / (height / 2) : 0;
@@ -77,6 +90,8 @@ function Eye({ side, mousePos, containerSize, failedDirection }) {
     groupRef.current.rotation.x = rotRef.current.pitch;
   });
 
+  if (!cloned) return null;
+
   return (
     <group position={OLHO_POS[side]} ref={groupRef}>
       <primitive object={cloned} />
@@ -85,19 +100,20 @@ function Eye({ side, mousePos, containerSize, failedDirection }) {
 }
 
 function Muscles({ side }) {
-  const { scene } = useGLTF(MUSCULOS_URL);
-  const cloned = useMemo(() => scene.clone(), [scene]);
+  const gltf = useGLTF(MUSCULOS_URL);
+  const cloned = useMemo(() => gltf.scene ? gltf.scene.clone() : null, [gltf.scene]);
+  if (!cloned) return null;
   return <primitive object={cloned} position={MUSC_POS[side]} />;
 }
 
-function CameraSetup() {
-  const { camera } = useThree();
-  React.useEffect(() => {
-    camera.position.set(0, 0.25, 1.8);
-    camera.fov = 35;
-    camera.updateProjectionMatrix();
-  }, [camera]);
-  return null;
+function Lights() {
+  return (
+    <>
+      <ambientLight args={[0xffffff, 0.7]} />
+      <directionalLight args={[0xffffff, 0.9]} position={[2, 3, 2]} />
+      <directionalLight args={[0xffffff, 0.4]} position={[-2, 1, 2]} />
+    </>
+  );
 }
 
 function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState }) {
@@ -106,9 +122,7 @@ function Scene({ mousePos, containerSize, impairedMuscle, impairedEye, gameState
   return (
     <>
       <CameraSetup />
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[2, 3, 2]} intensity={0.9} />
-      <directionalLight position={[-2, 1, 2]} intensity={0.4} />
+      <Lights />
       <Skull />
       <Eye side="right" mousePos={mousePos} containerSize={containerSize}
            failedDirection={impairedEye === 'right' ? failedDir : null} />
@@ -138,14 +152,21 @@ export default function EyeCanvas3D({ mousePos, containerRef, impairedMuscle, im
   return (
     <div style={{ width: '100%', height: canvasHeight }}
          className="rounded-xl overflow-hidden bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-200 relative">
-      <Canvas dpr={[1, 2]} frameloop="always" gl={{ alpha: true, antialias: true }}
-              style={{ width: '100%', height: '100%' }}>
+      <Canvas
+        dpr={[1, 2]}
+        frameloop="always"
+        gl={{ alpha: true, antialias: true }}
+        camera={{ position: [0, 0.25, 1.8], fov: 35 }}
+        style={{ width: '100%', height: '100%' }}
+      >
         <Suspense fallback={null}>
-          <Scene mousePos={mousePos}
-                 containerSize={{ width: containerSize.width, height: canvasHeight }}
-                 impairedMuscle={impairedMuscle}
-                 impairedEye={impairedEye}
-                 gameState={gameState} />
+          <Scene
+            mousePos={mousePos}
+            containerSize={{ width: containerSize.width, height: canvasHeight }}
+            impairedMuscle={impairedMuscle}
+            impairedEye={impairedEye}
+            gameState={gameState}
+          />
         </Suspense>
       </Canvas>
     </div>
