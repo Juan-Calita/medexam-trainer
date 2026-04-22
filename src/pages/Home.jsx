@@ -78,16 +78,7 @@ export default function Home() {
               >
                 ← Voltar
               </a>
-              {currentUser?.role === 'admin' && (
-                <Link
-                  to="/admin/analytics"
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-semibold hover:opacity-80 transition-opacity"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}
-                >
-                  <BarChart2 className="w-4 h-4" />
-                  Admin
-                </Link>
-              )}
+
             </div>
                 <div className="flex items-center gap-3">
               <div className="p-3 rounded-lg shadow-lg" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>
