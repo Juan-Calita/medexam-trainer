@@ -114,9 +114,9 @@ export default function AdminAnalytics() {
           <div className="text-4xl mb-4">🔒</div>
           <h2 className="text-xl font-bold text-slate-800 mb-2">Acesso Restrito</h2>
           <p className="text-slate-500 text-sm mb-4">Esta área é exclusiva para administradores.</p>
-          <Link to={createPageUrl('Home')}>
+          <a href="https://www.anamnes.chat/mainpage">
             <Button variant="outline">Voltar ao Início</Button>
-          </Link>
+          </a>
         </div>
       </div>
     );
@@ -130,11 +130,11 @@ export default function AdminAnalytics() {
       <header className="sticky top-0 z-40 shadow-sm" style={{ background: 'linear-gradient(135deg, #2D1B4E 0%, #3D2463 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to={createPageUrl('Home')}>
+            <a href="https://www.anamnes.chat/mainpage">
               <button className="p-2 rounded-lg hover:bg-white/10 text-white/60 transition-colors">
                 <ArrowLeft className="w-4 h-4" />
               </button>
-            </Link>
+            </a>
             <div>
               <h1 className="text-base font-bold text-white">Painel Administrativo</h1>
               <p className="text-xs text-white/50">Analytics & Relatórios</p>

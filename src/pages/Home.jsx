@@ -72,7 +72,7 @@ export default function Home() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <a 
-                href="https://anamnes.chat"
+                href="https://www.anamnes.chat/mainpage"
                 className="px-4 py-2 rounded-lg text-white font-semibold hover:opacity-80 transition-opacity"
                 style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
               >
