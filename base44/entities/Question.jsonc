@@ -1,0 +1,62 @@
+{
+  "name": "Question",
+  "type": "object",
+  "properties": {
+    "game_type": {
+      "type": "string",
+      "enum": [
+        "auscultation_pulmonar",
+        "auscultation_cardiaca"
+      ],
+      "description": "Tipo de jogo"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "description": "N\u00edvel de dificuldade"
+    },
+    "audio_description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do \u00e1udio/contexto cl\u00ednico"
+    },
+    "correct_answer": {
+      "type": "string",
+      "description": "Resposta correta"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Op\u00e7\u00f5es de resposta"
+    },
+    "explanation": {
+      "type": "string",
+      "description": "Explica\u00e7\u00e3o da resposta correta"
+    },
+    "audio_file_id": {
+      "type": "string",
+      "description": "ID do arquivo de \u00e1udio relacionado"
+    },
+    "order": {
+      "type": "number",
+      "description": "Ordem de exibi\u00e7\u00e3o"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a quest\u00e3o est\u00e1 ativa"
+    }
+  },
+  "required": [
+    "game_type",
+    "difficulty",
+    "correct_answer",
+    "options",
+    "explanation"
+  ]
+}

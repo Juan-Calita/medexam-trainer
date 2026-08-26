@@ -1,0 +1,55 @@
+{
+  "name": "GameRegion",
+  "type": "object",
+  "properties": {
+    "game_type": {
+      "type": "string",
+      "enum": [
+        "abdominal_regions",
+        "cardiac_foci"
+      ],
+      "description": "Tipo de jogo"
+    },
+    "region_name": {
+      "type": "string",
+      "description": "Nome da regi\u00e3o"
+    },
+    "x": {
+      "type": "number",
+      "description": "Posi\u00e7\u00e3o X em porcentagem"
+    },
+    "y": {
+      "type": "number",
+      "description": "Posi\u00e7\u00e3o Y em porcentagem"
+    },
+    "width": {
+      "type": "number",
+      "description": "Largura em porcentagem"
+    },
+    "height": {
+      "type": "number",
+      "description": "Altura em porcentagem"
+    },
+    "explanation": {
+      "type": "string",
+      "description": "Explica\u00e7\u00e3o sobre a regi\u00e3o"
+    },
+    "order": {
+      "type": "number",
+      "description": "Ordem de exibi\u00e7\u00e3o"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a regi\u00e3o est\u00e1 ativa"
+    }
+  },
+  "required": [
+    "game_type",
+    "region_name",
+    "x",
+    "y",
+    "width",
+    "height"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "name": "AudioFile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do arquivo de \u00e1udio"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL do arquivo de \u00e1udio"
+    },
+    "game_type": {
+      "type": "string",
+      "enum": [
+        "auscultation_pulmonar",
+        "auscultation_cardiaca"
+      ],
+      "description": "Tipo de jogo ao qual o \u00e1udio pertence"
+    },
+    "sound_type": {
+      "type": "string",
+      "description": "Tipo de som (ex: Murm\u00fario Vesicular, Sopro Sist\u00f3lico)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do \u00e1udio"
+    }
+  },
+  "required": [
+    "name",
+    "file_url",
+    "game_type",
+    "sound_type"
+  ]
+}
